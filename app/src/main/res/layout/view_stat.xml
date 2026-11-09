@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Stat บนพื้นขาว: ค่า + หน่วย / ป้ายกำกับ -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="bottom">
+
+        <TextView
+            android:id="@+id/tvValue"
+            style="@style/Txt.NumM"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="4.62" />
+
+        <TextView
+            android:id="@+id/tvUnit"
+            style="@style/Txt.Unit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginBottom="2dp"
+            tools:text="กม." />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvLabel"
+        style="@style/Txt.Caption"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        tools:text="ระยะทาง" />
+</LinearLayout>

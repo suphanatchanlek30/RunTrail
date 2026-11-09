@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- โทนสีจาก Figma "COLOR SYSTEM" : ขาว · เขียว · เทา · ดำ -->
+<resources>
+    <color name="black">#FF000000</color>
+    <color name="white">#FFFFFFFF</color>
+
+    <!-- run/* -->
+    <color name="run_green">#00D47A</color>
+    <color name="run_green_bright">#0EDA62</color>
+    <color name="run_green_dark">#00A862</color>
+    <color name="run_green_soft">#E3F9EE</color>
+    <color name="run_lime">#A3F51F</color>
+    <color name="run_lime_soft">#F1FDDC</color>
+    <color name="run_ink">#0F1412</color>
+    <color name="run_ink_2">#1C2420</color>
+    <color name="run_ink_3">#2B3530</color>
+
+    <!-- bg/* -->
+    <color name="bg_surface">#FFFFFF</color>
+    <color name="bg_canvas">#F5F7FA</color>
+    <color name="bg_muted">#EEF1F4</color>
+
+    <!-- text/* -->
+    <color name="text_primary">#0B0F17</color>
+    <color name="text_secondary">#475467</color>
+    <color name="text_tertiary">#667085</color>
+    <color name="text_disabled">#98A2B3</color>
+    <color name="text_on_brand">#FFFFFF</color>
+    <color name="text_on_dark_muted">#99FFFFFF</color>
+
+    <!-- border/* -->
+    <color name="border">#E4E7EC</color>
+    <color name="divider">#EEF0F3</color>
+    <color name="grabber">#D0D5DD</color>
+
+    <!-- pace/* (สีเส้นทางบนแผนที่) -->
+    <color name="pace_fast">#0EDA62</color>
+    <color name="pace_steady">#A3E635</color>
+    <color name="pace_moderate">#F5B83D</color>
+    <color name="pace_slow">#F0603F</color>
+
+    <!-- status/* -->
+    <color name="danger">#E5484D</color>
+    <color name="danger_soft">#FDECEC</color>
+    <color name="warning">#E59A0B</color>
+    <color name="warning_soft">#FEF4E0</color>
+
+    <!-- map/* -->
+    <color name="map_land">#EEF2EE</color>
+    <color name="map_block">#E3E8E4</color>
+    <color name="map_road">#FFFFFF</color>
+    <color name="map_park">#D3F0DC</color>
+    <color name="map_water">#CDE5F4</color>
+    <color name="map_dark_land">#18201C</color>
+    <color name="map_dark_block">#1F2924</color>
+    <color name="map_dark_road">#2C3732</color>
+    <color name="map_dark_park">#1B3326</color>
+    <color name="map_dark_water">#15283A</color>
+
+    <color name="scrim">#8C0F1412</color>
+</resources>

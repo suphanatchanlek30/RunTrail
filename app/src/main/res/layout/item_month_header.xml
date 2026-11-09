@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- หัวกลุ่มรายเดือน: พฤศจิกายน 2026 · 8 ครั้ง · 41.6 กม. · 4:12 ชม. · รอซิงก์ 2 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="2dp"
+    android:paddingTop="18dp"
+    android:paddingEnd="2dp"
+    android:paddingBottom="14dp">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvMonth"
+            style="@style/Txt.H3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="พฤศจิกายน 2026" />
+
+        <TextView
+            android:id="@+id/tvSummary"
+            style="@style/Txt.Caption"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="8 ครั้ง · 41.6 กม. · 4:12 ชม." />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvPending"
+        style="@style/Pill"
+        android:background="@drawable/bg_pill_warning_soft"
+        android:paddingStart="10dp"
+        android:paddingEnd="10dp"
+        android:textColor="@color/warning"
+        tools:text="รอซิงก์ 2" />
+</LinearLayout>

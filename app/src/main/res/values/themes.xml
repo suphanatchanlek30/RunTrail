@@ -1,0 +1,86 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Figma ออกแบบโหมดสว่างเท่านั้น จึงล็อกธีมสว่างให้สีตรงกับดีไซน์ทุกหน้า -->
+    <style name="Base.Theme.RunTrail" parent="Theme.Material3.Light.NoActionBar">
+        <item name="colorPrimary">@color/run_green</item>
+        <item name="colorOnPrimary">@color/run_ink</item>
+        <item name="colorPrimaryContainer">@color/run_green_soft</item>
+        <item name="colorSecondary">@color/run_ink</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <item name="colorSurface">@color/bg_surface</item>
+        <item name="colorOnSurface">@color/text_primary</item>
+        <item name="colorOnSurfaceVariant">@color/text_tertiary</item>
+        <item name="colorOutline">@color/border</item>
+        <item name="colorError">@color/danger</item>
+        <item name="android:colorBackground">@color/bg_canvas</item>
+        <item name="android:windowBackground">@color/bg_canvas</item>
+        <item name="android:fontFamily">@font/plex_regular</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_tertiary</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
+        <item name="bottomSheetDialogTheme">@style/ThemeOverlay.RunTrail.BottomSheet</item>
+        <item name="materialAlertDialogTheme">@style/ThemeOverlay.RunTrail.Dialog</item>
+        <item name="popupMenuStyle">@style/Widget.RunTrail.PopupMenu</item>
+    </style>
+
+    <!-- เมนู ⋮ / ตัวกรอง: พื้นขาวมุมมน 16 -->
+    <style name="Widget.RunTrail.PopupMenu" parent="Widget.Material3.PopupMenu">
+        <item name="android:popupBackground">@drawable/bg_popup</item>
+        <item name="android:popupElevation">8dp</item>
+    </style>
+
+    <style name="Theme.RunTrail" parent="Base.Theme.RunTrail" />
+
+    <!-- หน้า Welcome พื้นดำ (Ink) -->
+    <style name="Theme.RunTrail.Dark" parent="Theme.RunTrail">
+        <item name="android:windowBackground">@color/run_ink</item>
+        <item name="android:windowLightStatusBar">false</item>
+        <item name="android:windowLightNavigationBar">false</item>
+    </style>
+
+    <style name="ThemeOverlay.RunTrail.BottomSheet" parent="ThemeOverlay.Material3.BottomSheetDialog">
+        <item name="bottomSheetStyle">@style/Widget.RunTrail.BottomSheet</item>
+        <item name="android:backgroundDimAmount">0.55</item>
+        <item name="android:navigationBarColor">@color/bg_surface</item>
+    </style>
+
+    <style name="Widget.RunTrail.BottomSheet" parent="Widget.Material3.BottomSheet.Modal">
+        <item name="backgroundTint">@android:color/transparent</item>
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+
+    <!-- Dialog แบบกำหนดเอง (ลบ/กู้คืน) ใช้ layout ของเราเอง -->
+    <style name="ThemeOverlay.RunTrail.Dialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
+        <item name="android:backgroundDimAmount">0.55</item>
+        <item name="colorPrimary">@color/run_green_dark</item>
+        <item name="android:fontFamily">@font/plex_regular</item>
+    </style>
+
+    <!-- ปฏิทิน / นาฬิกา (DatePicker · TimePicker) โทนเขียวมุมมน -->
+    <style name="ThemeOverlay.RunTrail.Picker" parent="Theme.Material3.Light.Dialog">
+        <item name="colorAccent">@color/run_green_dark</item>
+        <item name="android:colorAccent">@color/run_green_dark</item>
+        <item name="colorPrimary">@color/run_green_dark</item>
+        <item name="android:colorPrimary">@color/run_green_dark</item>
+        <item name="android:windowBackground">@drawable/bg_dialog_inset</item>
+        <item name="android:fontFamily">@font/plex_medium</item>
+        <item name="android:textColorPrimary">@color/text_primary</item>
+        <item name="android:textColorSecondary">@color/text_tertiary</item>
+        <item name="android:backgroundDimAmount">0.55</item>
+        <item name="android:buttonBarButtonStyle">@style/Widget.RunTrail.PickerButton</item>
+    </style>
+
+    <style name="Widget.RunTrail.PickerButton" parent="Widget.Material3.Button.TextButton.Dialog">
+        <item name="android:textColor">@color/run_green_dark</item>
+        <item name="android:fontFamily">@font/plex_semibold</item>
+    </style>
+
+    <style name="Theme.RunTrail.FloatingDialog" parent="Theme.Material3.Light.Dialog">
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimAmount">0.55</item>
+        <item name="android:fontFamily">@font/plex_regular</item>
+    </style>
+</resources>

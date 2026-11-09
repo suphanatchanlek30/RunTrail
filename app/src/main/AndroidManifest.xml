@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- ตำแหน่ง (GPS) · กิจกรรมทางกาย (Step Counter) · แจ้งเตือน -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+
+    <!-- แผนที่ OpenStreetMap (osmdroid) โหลด tile ผ่านอินเทอร์เน็ต -->
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
+    <!-- เซนเซอร์ไม่บังคับ — เครื่องที่ไม่มีจะใช้ค่าทดแทน (MA12) -->
+    <uses-feature android:name="android.hardware.location.gps" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.stepcounter" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.compass" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.barometer" android:required="false" />
+    <uses-feature android:name="android.hardware.sensor.light" android:required="false" />
+    <uses-feature android:name="android.hardware.camera" android:required="false" />
+
+    <application
+        android:allowBackup="true"
+        android:dataExtractionRules="@xml/data_extraction_rules"
+        android:fullBackupContent="@xml/backup_rules"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:roundIcon="@mipmap/ic_launcher_round"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.RunTrail">
+
+        <!-- หน้าหลัก (ถ้ายังไม่ตั้งค่าครั้งแรกจะเปิด Welcome) -->
+        <activity
+            android:name=".ui.home.MainActivity"
+            android:exported="true"
+            android:windowSoftInputMode="adjustResize">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!-- 01–03 เริ่มต้นใช้งาน -->
+        <activity
+            android:name=".ui.onboarding.WelcomeActivity"
+            android:exported="false"
+            android:theme="@style/Theme.RunTrail.Dark" />
+        <activity
+            android:name=".ui.onboarding.PermissionsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.onboarding.ProfileSetupActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+
+        <!-- 04 ตรวจเซนเซอร์ -->
+        <activity
+            android:name=".ui.sensor.SensorCheckActivity"
+            android:exported="false" />
+
+        <!-- 07–08 บันทึกการวิ่งสด -->
+        <activity
+            android:name=".ui.live.LiveRunActivity"
+            android:exported="false"
+            android:launchMode="singleTask" />
+
+        <!-- 09–10 สรุปผล / Splits และกราฟ -->
+        <activity
+            android:name=".ui.detail.RunDetailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.detail.RunStatsActivity"
+            android:exported="false" />
+
+        <!-- 11 Replay · 12 เพิ่ม/แก้ไข · 14 หน้าเว็บแชร์ -->
+        <activity
+            android:name=".ui.replay.ReplayActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.edit.AddEditRunActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ui.share.WebPreviewActivity"
+            android:exported="false" />
+
+        <!-- 15–17 แท็บ ประวัติ · สถิติ · ตั้งค่า -->
+        <activity
+            android:name=".ui.history.HistoryActivity"
+            android:exported="false"
+            android:windowSoftInputMode="adjustResize" />
+        <activity
+            android:name=".ui.records.RecordsActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ui.settings.SettingsActivity"
+            android:exported="false" />
+    </application>
+
+</manifest>

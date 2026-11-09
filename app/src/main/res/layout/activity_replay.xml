@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 11 · Replay -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/map_land"
+    tools:context=".ui.replay.ReplayActivity">
+
+    <com.example.runtrail.ui.widget.MapRouteView
+        android:id="@+id/map"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <org.osmdroid.views.MapView
+        android:id="@+id/osmMap"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:layout_width="0dp"
+        android:layout_height="120dp"
+        android:background="@drawable/bg_map_top_fade"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <LinearLayout
+        android:id="@+id/top"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="16dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="16dp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:id="@+id/btnBack"
+                style="@style/IconBtn"
+                android:contentDescription="@string/action_back"
+                android:elevation="2dp"
+                android:src="@drawable/ic_chevron_left" />
+
+            <TextView
+                android:id="@+id/tvTitle"
+                style="@style/Txt.LabelM"
+                android:layout_width="wrap_content"
+                android:layout_height="41dp"
+                android:layout_marginStart="10dp"
+                android:background="@drawable/bg_pill_white"
+                android:drawablePadding="8dp"
+                android:elevation="2dp"
+                android:ellipsize="end"
+                android:fontFamily="@font/plex_semibold"
+                android:gravity="center_vertical"
+                android:maxLines="1"
+                android:paddingStart="14dp"
+                android:paddingEnd="14dp"
+                tools:text="Replay · วิ่งเย็นริมสวน" />
+        </LinearLayout>
+
+        <!-- Segment badge -->
+        <LinearLayout
+            android:id="@+id/segmentBadge"
+            android:layout_width="wrap_content"
+            android:layout_height="56dp"
+            android:layout_marginTop="22dp"
+            android:background="@drawable/bg_card"
+            android:elevation="3dp"
+            android:gravity="center_vertical"
+            android:paddingStart="14dp"
+            android:paddingEnd="14dp">
+
+            <View
+                android:id="@+id/segmentDot"
+                android:layout_width="10dp"
+                android:layout_height="10dp"
+                android:background="@drawable/dot_slow" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvSegment"
+                    style="@style/Txt.LabelS"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/plex_semibold"
+                    tools:text="ช่วงช้า · ขึ้นสะพาน" />
+
+                <TextView
+                    android:id="@+id/tvSegmentPace"
+                    style="@style/Txt.Caption"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="เพซ 7:05 /กม." />
+            </LinearLayout>
+        </LinearLayout>
+    </LinearLayout>
+
+    <!-- Bottom sheet -->
+    <LinearLayout
+        android:id="@+id/sheet"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:background="@drawable/bg_sheet"
+        android:elevation="12dp"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingTop="10dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="30dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <View
+            android:layout_width="40dp"
+            android:layout_height="5dp"
+            android:layout_gravity="center_horizontal"
+            android:background="@drawable/bg_grabber" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal">
+
+            <include
+                android:id="@+id/statDistance"
+                layout="@layout/view_stat_large"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+            <include
+                android:id="@+id/statTime"
+                layout="@layout/view_stat_large"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+            <include
+                android:id="@+id/statPace"
+                layout="@layout/view_stat_large"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+        </LinearLayout>
+
+        <SeekBar
+            android:id="@+id/seek"
+            style="@style/Seek"
+            android:layout_width="match_parent"
+            android:layout_height="24dp"
+            android:layout_marginStart="-11dp"
+            android:layout_marginTop="16dp"
+            android:layout_marginEnd="-11dp"
+            android:max="1000" />
+
+        <LinearLayout
+            android:id="@+id/axis"
+            android:layout_width="match_parent"
+            android:layout_height="18dp"
+            android:layout_marginTop="6dp"
+            android:orientation="horizontal" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="72dp"
+            android:layout_marginTop="16dp"
+            android:gravity="center"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:id="@+id/btnPrev"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:background="@drawable/bg_circle_canvas"
+                android:contentDescription="@string/replay_back"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:padding="16dp"
+                android:src="@drawable/ic_chevron_left"
+                app:tint="@color/text_primary" />
+
+            <ImageView
+                android:id="@+id/btnPlay"
+                android:layout_width="72dp"
+                android:layout_height="72dp"
+                android:layout_marginStart="24dp"
+                android:layout_marginEnd="24dp"
+                android:background="@drawable/bg_circle_green"
+                android:contentDescription="@string/replay_play"
+                android:elevation="4dp"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:padding="22dp"
+                android:src="@drawable/ic_pause"
+                app:tint="@color/run_ink" />
+
+            <ImageView
+                android:id="@+id/btnNext"
+                android:layout_width="52dp"
+                android:layout_height="52dp"
+                android:background="@drawable/bg_circle_canvas"
+                android:contentDescription="@string/replay_forward"
+                android:foreground="?attr/selectableItemBackgroundBorderless"
+                android:padding="16dp"
+                android:src="@drawable/ic_chevron_right"
+                app:tint="@color/text_primary" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="34dp"
+            android:layout_gravity="center_horizontal"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/speed1"
+                style="@style/ChipToggle"
+                android:text="1×" />
+
+            <TextView
+                android:id="@+id/speed2"
+                style="@style/ChipToggle"
+                android:layout_marginStart="8dp"
+                android:text="2×" />
+
+            <TextView
+                android:id="@+id/speed4"
+                style="@style/ChipToggle"
+                android:layout_marginStart="8dp"
+                android:text="4×" />
+
+            <TextView
+                android:id="@+id/speed8"
+                style="@style/ChipToggle"
+                android:layout_marginStart="8dp"
+                android:text="8×" />
+        </LinearLayout>
+    </LinearLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

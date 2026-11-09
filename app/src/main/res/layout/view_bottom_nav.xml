@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- BottomNav (Components ใน Figma) : เส้นขอบบน 1dp + 4 แท็บ -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@color/bg_surface"
+    android:orientation="vertical">
+
+    <View style="@style/Divider" android:background="@color/border" />
+
+    <com.google.android.material.bottomnavigation.BottomNavigationView
+        android:id="@+id/bottomNav"
+        style="@style/Widget.RunTrail.BottomNav"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="72dp"
+        android:background="@color/bg_surface"
+        android:theme="@style/Theme.RunTrail"
+        app:menu="@menu/bottom_nav"
+        xmlns:app="http://schemas.android.com/apk/res-auto" />
+</LinearLayout>

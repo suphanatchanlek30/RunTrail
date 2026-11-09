@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Component styles (ปุ่ม การ์ด ชิป) ตามชุด Components ใน Figma -->
+<resources>
+
+    <!-- ปุ่มหลักสีเขียว สูง 54 -->
+    <style name="Btn">
+        <item name="android:layout_height">54dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:fontFamily">@font/plex_semibold</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:textColor">@color/run_ink</item>
+        <item name="android:background">@drawable/bg_btn_primary</item>
+        <item name="android:foreground">?attr/selectableItemBackground</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:drawablePadding">8dp</item>
+        <item name="android:stateListAnimator">@null</item>
+    </style>
+
+    <style name="Btn.Primary" />
+
+    <style name="Btn.Soft">
+        <item name="android:background">@drawable/bg_btn_soft</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <style name="Btn.Danger">
+        <item name="android:background">@drawable/bg_btn_danger</item>
+        <item name="android:textColor">@color/white</item>
+    </style>
+
+    <style name="Btn.Outline">
+        <item name="android:layout_height">48dp</item>
+        <item name="android:background">@drawable/bg_btn_outline</item>
+        <item name="android:textColor">@color/text_primary</item>
+    </style>
+
+    <style name="Btn.Text">
+        <item name="android:layout_height">40dp</item>
+        <item name="android:background">@android:color/transparent</item>
+        <item name="android:textColor">@color/text_tertiary</item>
+    </style>
+
+    <!-- ปุ่มเล็กสีดำ เช่น "อนุญาต" / "คัดลอก" -->
+    <style name="Btn.SmallDark">
+        <item name="android:layout_height">36dp</item>
+        <item name="android:paddingStart">14dp</item>
+        <item name="android:paddingEnd">14dp</item>
+        <item name="android:background">@drawable/bg_btn_dark</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:fontFamily">@font/plex_medium</item>
+    </style>
+
+    <!-- IconButton วงกลม 44 -->
+    <style name="IconBtn">
+        <item name="android:layout_width">44dp</item>
+        <item name="android:layout_height">44dp</item>
+        <item name="android:padding">12dp</item>
+        <item name="android:background">@drawable/bg_circle_white</item>
+        <item name="android:foreground">?attr/selectableItemBackgroundBorderless</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="tint">@color/text_primary</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <style name="IconBtn.Plain">
+        <item name="android:background">@android:color/transparent</item>
+    </style>
+
+    <style name="IconBtn.Canvas">
+        <item name="android:background">@drawable/bg_circle_canvas</item>
+    </style>
+
+    <!-- IconChip สี่เหลี่ยมมุมมน + ไอคอน -->
+    <style name="IconChip">
+        <item name="android:layout_width">44dp</item>
+        <item name="android:layout_height">44dp</item>
+        <item name="android:padding">11.5dp</item>
+        <item name="android:background">@drawable/bg_icon_chip_green</item>
+        <item name="android:scaleType">fitCenter</item>
+        <item name="tint">@color/run_green_dark</item>
+    </style>
+
+    <style name="IconChip.M">
+        <item name="android:layout_width">36dp</item>
+        <item name="android:layout_height">36dp</item>
+        <item name="android:padding">9dp</item>
+        <item name="android:background">@drawable/bg_icon_chip_green_s</item>
+    </style>
+
+    <style name="IconChip.Setting">
+        <item name="android:layout_width">34dp</item>
+        <item name="android:layout_height">34dp</item>
+        <item name="android:padding">8.5dp</item>
+        <item name="android:background">@drawable/bg_icon_chip_canvas_s</item>
+        <item name="tint">@color/text_primary</item>
+    </style>
+
+    <!-- ชิปตัวกรอง/ตัวเลือก (เลือกอยู่ = ดำ) -->
+    <style name="ChipToggle">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">34dp</item>
+        <item name="android:paddingStart">14dp</item>
+        <item name="android:paddingEnd">14dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:background">@drawable/bg_chip</item>
+        <item name="android:textColor">@color/chip_text</item>
+        <item name="android:fontFamily">@font/plex_medium</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <!-- Segmented control -->
+    <style name="Segment">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">match_parent</item>
+        <item name="android:layout_weight">1</item>
+        <item name="android:gravity">center</item>
+        <item name="android:background">@drawable/bg_segment</item>
+        <item name="android:textColor">@color/segment_text</item>
+        <item name="android:fontFamily">@font/plex_semibold</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:includeFontPadding">false</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+    </style>
+
+    <!-- Toggle 46×28 (วาดเองใน ToggleSwitch) -->
+    <style name="Toggle">
+        <item name="android:layout_width">46dp</item>
+        <item name="android:layout_height">28dp</item>
+    </style>
+
+    <!-- ช่องกรอก -->
+    <style name="Field">
+        <item name="android:layout_height">54dp</item>
+        <item name="android:background">@drawable/bg_field</item>
+        <item name="android:paddingStart">17dp</item>
+        <item name="android:paddingEnd">17dp</item>
+        <item name="android:fontFamily">@font/anuphan_semibold</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:textColorHint">@color/text_disabled</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <style name="FieldLabel" parent="Txt.Caption">
+        <item name="android:fontFamily">@font/plex_medium</item>
+        <item name="android:textColor">@color/text_secondary</item>
+        <item name="android:layout_marginBottom">6dp</item>
+    </style>
+
+    <!-- Pill ป้ายสถานะ -->
+    <style name="Pill" parent="Txt.LabelS">
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">28dp</item>
+        <item name="android:gravity">center_vertical</item>
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="android:drawablePadding">6dp</item>
+    </style>
+
+    <!-- เส้นคั่น -->
+    <style name="Divider">
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">1dp</item>
+        <item name="android:background">@color/divider</item>
+    </style>
+
+    <!-- Bottom navigation 4 แท็บ: หน้าหลัก · ประวัติ · สถิติ · ตั้งค่า -->
+    <style name="Widget.RunTrail.BottomNav" parent="Widget.Material3.BottomNavigationView">
+        <item name="backgroundTint">@color/bg_surface</item>
+        <item name="itemIconTint">@color/nav_icon</item>
+        <item name="itemTextColor">@color/nav_text</item>
+        <item name="itemIconSize">24dp</item>
+        <item name="labelVisibilityMode">labeled</item>
+        <item name="itemActiveIndicatorStyle">@style/Widget.RunTrail.NavIndicator</item>
+        <item name="itemTextAppearanceActive">@style/TextAppearance.RunTrail.NavActive</item>
+        <item name="itemTextAppearanceInactive">@style/TextAppearance.RunTrail.Nav</item>
+        <item name="itemTextAppearanceActiveBoldEnabled">false</item>
+        <item name="itemPaddingTop">10dp</item>
+        <item name="itemPaddingBottom">12dp</item>
+        <item name="itemRippleColor">@color/run_green_soft</item>
+        <item name="elevation">0dp</item>
+    </style>
+
+    <style name="Widget.RunTrail.NavIndicator" parent="Widget.Material3.BottomNavigationView.ActiveIndicator">
+        <item name="android:color">@color/run_green_soft</item>
+        <item name="android:width">60dp</item>
+        <item name="android:height">32dp</item>
+        <item name="marginHorizontal">4dp</item>
+    </style>
+
+    <style name="TextAppearance.RunTrail.Nav" parent="TextAppearance.Material3.LabelMedium">
+        <item name="android:fontFamily">@font/plex_medium</item>
+        <item name="fontFamily">@font/plex_medium</item>
+        <item name="android:textSize">12sp</item>
+    </style>
+
+    <style name="TextAppearance.RunTrail.NavActive" parent="TextAppearance.RunTrail.Nav">
+        <item name="android:fontFamily">@font/plex_semibold</item>
+        <item name="fontFamily">@font/plex_semibold</item>
+    </style>
+
+    <!-- SeekBar / Slider: track 6 · thumb วงกลมขาวขอบเขียว -->
+    <style name="Seek">
+        <item name="android:progressDrawable">@drawable/progress_light</item>
+        <item name="android:thumb">@drawable/seek_thumb</item>
+        <item name="android:splitTrack">false</item>
+        <item name="android:minHeight">6dp</item>
+        <item name="android:maxHeight">6dp</item>
+        <item name="android:paddingStart">11dp</item>
+        <item name="android:paddingEnd">11dp</item>
+        <item name="android:background">@null</item>
+    </style>
+</resources>

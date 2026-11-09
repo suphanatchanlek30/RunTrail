@@ -1,0 +1,155 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Text styles จาก Figma
+    - หัวข้อ/ตัวเลข: Anuphan  · เนื้อหา: IBM Plex Sans Thai
+    - lineHeight = ขนาดตัวอักษร × line-height ของ Figma
+    - letterSpacing ของ Android เป็นหน่วย em (px ÷ ขนาดตัวอักษร)
+-->
+<resources>
+
+    <style name="Txt">
+        <item name="android:fontFamily">@font/plex_regular</item>
+        <item name="android:textColor">@color/text_primary</item>
+        <item name="android:includeFontPadding">false</item>
+    </style>
+
+    <!-- ตัวเลขใหญ่สุด เช่น 12.4 / 4.62 -->
+    <style name="Txt.Display">
+        <item name="android:fontFamily">@font/anuphan_bold</item>
+        <item name="android:textSize">48sp</item>
+        <item name="android:lineHeight">67sp</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
+
+    <style name="Txt.DisplayM">
+        <item name="android:fontFamily">@font/anuphan_bold</item>
+        <item name="android:textSize">44sp</item>
+        <item name="android:lineHeight">62sp</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
+
+    <style name="Txt.DisplayS">
+        <item name="android:fontFamily">@font/anuphan_bold</item>
+        <item name="android:textSize">40sp</item>
+        <item name="android:lineHeight">58sp</item>
+        <item name="android:letterSpacing">-0.02</item>
+    </style>
+
+    <style name="Txt.Hero">
+        <item name="android:fontFamily">@font/anuphan_bold</item>
+        <item name="android:textSize">32sp</item>
+        <item name="android:lineHeight">44sp</item>
+        <item name="android:letterSpacing">-0.01</item>
+    </style>
+
+    <!-- Heading/H1 28 -->
+    <style name="Txt.H1">
+        <item name="android:fontFamily">@font/anuphan_semibold</item>
+        <item name="android:textSize">28sp</item>
+        <item name="android:lineHeight">39sp</item>
+        <item name="android:letterSpacing">-0.011</item>
+    </style>
+
+    <!-- Heading/H2 22 -->
+    <style name="Txt.H2">
+        <item name="android:fontFamily">@font/anuphan_semibold</item>
+        <item name="android:textSize">22sp</item>
+        <item name="android:lineHeight">31sp</item>
+        <item name="android:letterSpacing">-0.009</item>
+    </style>
+
+    <!-- Heading/H3 18 -->
+    <style name="Txt.H3">
+        <item name="android:fontFamily">@font/anuphan_semibold</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:lineHeight">26sp</item>
+    </style>
+
+    <!-- Number/L 24 (ไทล์สถิติ) -->
+    <style name="Txt.NumL">
+        <item name="android:fontFamily">@font/anuphan_bold</item>
+        <item name="android:textSize">24sp</item>
+        <item name="android:lineHeight">35sp</item>
+        <item name="android:letterSpacing">-0.01</item>
+    </style>
+
+    <!-- Number/M 18 -->
+    <style name="Txt.NumM">
+        <item name="android:fontFamily">@font/anuphan_bold</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:lineHeight">26sp</item>
+    </style>
+
+    <!-- Label/L 15 SemiBold (หัวการ์ด ปุ่ม) -->
+    <style name="Txt.LabelL">
+        <item name="android:fontFamily">@font/plex_semibold</item>
+        <item name="android:textSize">15sp</item>
+        <item name="android:lineHeight">22sp</item>
+    </style>
+
+    <!-- Body/L 16 -->
+    <style name="Txt.BodyL">
+        <item name="android:textSize">16sp</item>
+        <item name="android:lineHeight">26sp</item>
+        <item name="android:textColor">@color/text_secondary</item>
+    </style>
+
+    <!-- Body/M 15 -->
+    <style name="Txt.Body">
+        <item name="android:textSize">15sp</item>
+        <item name="android:lineHeight">22sp</item>
+    </style>
+
+    <!-- Label/M 14 Medium -->
+    <style name="Txt.LabelM">
+        <item name="android:fontFamily">@font/plex_medium</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:lineHeight">21sp</item>
+    </style>
+
+    <!-- Body/S 14 -->
+    <style name="Txt.BodyS">
+        <item name="android:textSize">14sp</item>
+        <item name="android:lineHeight">22sp</item>
+        <item name="android:textColor">@color/text_tertiary</item>
+    </style>
+
+    <!-- Caption 12 -->
+    <style name="Txt.Caption">
+        <item name="android:textSize">12sp</item>
+        <item name="android:lineHeight">18sp</item>
+        <item name="android:textColor">@color/text_tertiary</item>
+    </style>
+
+    <!-- Label/S 12 Medium -->
+    <style name="Txt.LabelS">
+        <item name="android:fontFamily">@font/plex_medium</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:lineHeight">18sp</item>
+        <item name="android:letterSpacing">0.008</item>
+    </style>
+
+    <!-- Overline 11 SemiBold -->
+    <style name="Txt.Overline">
+        <item name="android:fontFamily">@font/plex_semibold</item>
+        <item name="android:textSize">11sp</item>
+        <item name="android:lineHeight">17sp</item>
+        <item name="android:letterSpacing">0.055</item>
+        <item name="android:textColor">@color/text_tertiary</item>
+    </style>
+
+    <!-- หน่วยข้างตัวเลข -->
+    <style name="Txt.Unit">
+        <item name="android:fontFamily">@font/plex_medium</item>
+        <item name="android:textSize">12sp</item>
+        <item name="android:lineHeight">18sp</item>
+        <item name="android:textColor">@color/text_tertiary</item>
+    </style>
+
+    <style name="Txt.UnitL">
+        <item name="android:fontFamily">@font/plex_medium</item>
+        <item name="android:textSize">18sp</item>
+        <item name="android:lineHeight">26sp</item>
+        <item name="android:textColor">@color/text_tertiary</item>
+    </style>
+</resources>

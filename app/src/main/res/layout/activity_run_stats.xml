@@ -1,0 +1,225 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 10 · Splits & Charts -->
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_canvas"
+    tools:context=".ui.detail.RunStatsActivity">
+
+    <LinearLayout
+        android:id="@+id/content"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="24dp">
+
+        <!-- AppBar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:id="@+id/btnBack"
+                style="@style/IconBtn"
+                android:contentDescription="@string/action_back"
+                android:src="@drawable/ic_chevron_left" />
+
+            <TextView
+                style="@style/Txt.H3"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:text="@string/stats_title" />
+
+            <ImageView
+                android:id="@+id/btnMore"
+                style="@style/IconBtn"
+                android:contentDescription="@string/action_more"
+                android:src="@drawable/ic_more" />
+        </LinearLayout>
+
+        <!-- Segmented -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="46dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_segmented_track"
+            android:orientation="horizontal"
+            android:padding="4dp">
+
+            <TextView
+                android:id="@+id/segOverview"
+                style="@style/Segment"
+                android:text="@string/stats_tab_overview" />
+
+            <TextView
+                android:id="@+id/segSplits"
+                style="@style/Segment"
+                android:text="@string/stats_tab_splits" />
+
+            <TextView
+                android:id="@+id/segCharts"
+                style="@style/Segment"
+                android:text="@string/stats_tab_charts" />
+        </LinearLayout>
+
+        <!-- Chart card -->
+        <LinearLayout
+            android:id="@+id/cardChart"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:padding="18dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center_vertical">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tvChartTitle"
+                        style="@style/Txt.LabelL"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/stats_pace_chart" />
+
+                    <TextView
+                        android:id="@+id/tvChartDesc"
+                        style="@style/Txt.Caption"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        tools:text="เฉลี่ย 6:12 /กม. · ดีสุด 5:24" />
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/chipPace"
+                    style="@style/ChipToggle"
+                    android:layout_height="32dp"
+                    android:paddingStart="13dp"
+                    android:paddingEnd="13dp"
+                    android:text="@string/stats_chip_pace" />
+
+                <TextView
+                    android:id="@+id/chipElevation"
+                    style="@style/ChipToggle"
+                    android:layout_height="32dp"
+                    android:layout_marginStart="6dp"
+                    android:text="@string/stats_chip_elevation" />
+            </LinearLayout>
+
+            <com.example.runtrail.ui.widget.LineChartView
+                android:id="@+id/chart"
+                android:layout_width="match_parent"
+                android:layout_height="110dp"
+                android:layout_marginTop="12dp" />
+
+            <LinearLayout
+                android:id="@+id/axis"
+                android:layout_width="match_parent"
+                android:layout_height="18dp"
+                android:layout_marginTop="12dp"
+                android:orientation="horizontal" />
+        </LinearLayout>
+
+        <!-- Splits table -->
+        <LinearLayout
+            android:id="@+id/cardSplits"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_card"
+            android:orientation="vertical"
+            android:paddingStart="18dp"
+            android:paddingTop="14dp"
+            android:paddingEnd="18dp"
+            android:paddingBottom="14dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="27dp"
+                android:orientation="horizontal">
+
+                <TextView
+                    style="@style/Txt.Overline"
+                    android:layout_width="24dp"
+                    android:layout_height="wrap_content"
+                    android:text="@string/stats_col_km" />
+
+                <TextView
+                    style="@style/Txt.Overline"
+                    android:layout_width="44dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:text="@string/stats_col_pace" />
+
+                <Space
+                    android:layout_width="0dp"
+                    android:layout_height="0dp"
+                    android:layout_weight="1" />
+
+                <TextView
+                    style="@style/Txt.Overline"
+                    android:layout_width="36dp"
+                    android:layout_height="wrap_content"
+                    android:gravity="end"
+                    android:text="@string/stats_col_elev" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/splitRows"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical" />
+        </LinearLayout>
+
+        <!-- Conditions -->
+        <LinearLayout
+            android:id="@+id/cardConditions"
+            android:layout_width="match_parent"
+            android:layout_height="67dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_card"
+            android:gravity="center_vertical"
+            android:orientation="horizontal"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp">
+
+            <include
+                android:id="@+id/condTemp"
+                layout="@layout/view_condition"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+            <include
+                android:id="@+id/condHumidity"
+                layout="@layout/view_condition"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+
+            <include
+                android:id="@+id/condElevation"
+                layout="@layout/view_condition"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1" />
+        </LinearLayout>
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

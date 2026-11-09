@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Setting row 318×48 : IconChip 34 · ชื่อ · ค่า · › หรือ Toggle -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="48dp"
+    android:background="?attr/selectableItemBackground"
+    android:gravity="center_vertical"
+    android:orientation="horizontal">
+
+    <ImageView
+        android:id="@+id/ivIcon"
+        style="@style/IconChip.Setting"
+        android:importantForAccessibility="no"
+        tools:src="@drawable/ic_ruler" />
+
+    <TextView
+        android:id="@+id/tvTitle"
+        style="@style/Txt.LabelL"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="12dp"
+        android:layout_weight="1"
+        android:fontFamily="@font/plex_medium"
+        tools:text="หน่วยระยะทาง" />
+
+    <TextView
+        android:id="@+id/tvValue"
+        style="@style/Txt.LabelM"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="8dp"
+        android:fontFamily="@font/plex_regular"
+        android:textColor="@color/text_tertiary"
+        tools:text="กม." />
+
+    <ImageView
+        android:id="@+id/ivChevron"
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:layout_marginStart="12dp"
+        android:importantForAccessibility="no"
+        android:src="@drawable/ic_chevron_right"
+        app:tint="@color/text_disabled" />
+
+    <com.example.runtrail.ui.widget.ToggleSwitch
+        android:id="@+id/swToggle"
+        style="@style/Toggle"
+        android:visibility="gone" />
+</LinearLayout>

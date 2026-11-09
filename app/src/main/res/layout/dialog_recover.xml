@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 18 · Recover Unfinished Run — Dialog 342×486 -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:background="@drawable/bg_dialog"
+    android:gravity="center_horizontal"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <FrameLayout
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:background="@drawable/bg_circle_green_soft">
+
+        <ImageView
+            android:layout_width="28dp"
+            android:layout_height="28dp"
+            android:layout_gravity="center"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_refresh"
+            app:tint="@color/run_green_dark" />
+    </FrameLayout>
+
+    <TextView
+        style="@style/Txt.H2"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:text="@string/recover_title" />
+
+    <TextView
+        android:id="@+id/tvBody"
+        style="@style/Txt.BodyS"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:gravity="center"
+        android:textColor="@color/text_secondary"
+        tools:text="แอปถูกปิดระหว่างวิ่งเมื่อ 17:58 น. ข้อมูลล่าสุดถูกเก็บไว้แล้ว" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="75dp"
+        android:layout_marginTop="14dp"
+        android:background="@drawable/bg_tile"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp">
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:gravity="bottom">
+
+                <TextView
+                    android:id="@+id/tvDistance"
+                    style="@style/Txt.NumM"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="3.10" />
+
+                <TextView
+                    android:id="@+id/tvUnit"
+                    style="@style/Txt.Unit"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="4dp"
+                    android:layout_marginBottom="2dp"
+                    android:text="@string/unit_km" />
+            </LinearLayout>
+
+            <TextView
+                style="@style/Txt.Caption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/label_distance" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvTime"
+                style="@style/Txt.NumM"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="19:05" />
+
+            <TextView
+                style="@style/Txt.Caption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/label_time" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:gravity="center_horizontal"
+            android:orientation="vertical">
+
+            <TextView
+                android:id="@+id/tvPoints"
+                style="@style/Txt.NumM"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                tools:text="612" />
+
+            <TextView
+                style="@style/Txt.Caption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                android:text="@string/label_gps_points" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/btnResume"
+        style="@style/Btn.Primary"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginTop="14dp"
+        android:orientation="horizontal">
+
+        <ImageView
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/ic_play"
+            app:tint="@color/run_ink" />
+
+        <TextView
+            style="@style/Txt.LabelL"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="8dp"
+            android:text="@string/recover_resume"
+            android:textColor="@color/run_ink" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/btnSave"
+        style="@style/Btn.Soft"
+        android:layout_width="match_parent"
+        android:layout_height="52dp"
+        android:layout_marginTop="14dp"
+        android:text="@string/recover_save" />
+
+    <TextView
+        android:id="@+id/btnDiscard"
+        style="@style/Btn.Text"
+        android:layout_width="match_parent"
+        android:layout_marginTop="14dp"
+        android:background="@drawable/bg_btn_soft"
+        android:backgroundTint="@color/bg_surface"
+        android:text="@string/recover_discard"
+        android:textColor="@color/danger" />
+</LinearLayout>

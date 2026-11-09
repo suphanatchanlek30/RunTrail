@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- RunCard 350×92 : ภาพย่อเส้นทาง · ชื่อ · วันเวลา · ระยะ/เวลา/เพซ · ไอคอนสถานะซิงก์ -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/card"
+    android:layout_width="match_parent"
+    android:layout_height="92dp"
+    android:background="@drawable/bg_card"
+    android:foreground="?attr/selectableItemBackground"
+    android:gravity="center_vertical"
+    android:orientation="horizontal"
+    android:paddingStart="14dp"
+    android:paddingEnd="14dp">
+
+    <com.example.runtrail.ui.widget.MapRouteView
+        android:id="@+id/thumb"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:background="@drawable/bg_tile" />
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="14dp"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/tvTitle"
+            style="@style/Txt.LabelL"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:ellipsize="end"
+            android:maxLines="1"
+            tools:text="วิ่งเย็นริมสวน" />
+
+        <TextView
+            android:id="@+id/tvDate"
+            style="@style/Txt.Caption"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="3dp"
+            tools:text="ส. 8 พ.ย. · 17:42" />
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="18dp"
+            android:layout_marginTop="3dp"
+            android:gravity="center_vertical"
+            android:orientation="horizontal">
+
+            <ImageView
+                android:layout_width="13dp"
+                android:layout_height="13dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_pin"
+                app:tint="@color/text_tertiary" />
+
+            <TextView
+                android:id="@+id/tvDistance"
+                style="@style/Txt.LabelS"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:textColor="@color/text_secondary"
+                tools:text="4.3 กม." />
+
+            <ImageView
+                android:layout_width="13dp"
+                android:layout_height="13dp"
+                android:layout_marginStart="10dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_clock"
+                app:tint="@color/text_tertiary" />
+
+            <TextView
+                android:id="@+id/tvTime"
+                style="@style/Txt.LabelS"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:textColor="@color/text_secondary"
+                tools:text="27:05" />
+
+            <ImageView
+                android:layout_width="13dp"
+                android:layout_height="13dp"
+                android:layout_marginStart="10dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_gauge"
+                app:tint="@color/text_tertiary" />
+
+            <TextView
+                android:id="@+id/tvPace"
+                style="@style/Txt.LabelS"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="4dp"
+                android:textColor="@color/text_secondary"
+                tools:text="6:18" />
+        </LinearLayout>
+    </LinearLayout>
+
+    <ImageView
+        android:id="@+id/ivSync"
+        android:layout_width="20dp"
+        android:layout_height="20dp"
+        android:layout_marginStart="14dp"
+        android:src="@drawable/ic_cloud_check"
+        app:tint="@color/run_green_dark"
+        tools:ignore="ContentDescription" />
+</LinearLayout>

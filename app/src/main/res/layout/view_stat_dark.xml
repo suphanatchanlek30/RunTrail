@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Stat บนการ์ดดำ: ค่า + หน่วย / ป้ายกำกับ -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:gravity="bottom">
+
+        <TextView
+            android:id="@+id/tvValue"
+            style="@style/Txt.NumM"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:textColor="@color/white"
+            tools:text="1:18" />
+
+        <TextView
+            android:id="@+id/tvUnit"
+            style="@style/Txt.Unit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="4dp"
+            android:layout_marginBottom="2dp"
+            android:textColor="@color/text_on_dark_muted"
+            tools:text="ชม." />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/tvLabel"
+        style="@style/Txt.Caption"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="2dp"
+        android:textColor="@color/text_on_dark_muted"
+        tools:text="เวลารวม" />
+</LinearLayout>

@@ -1,0 +1,498 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 05 · Home (ผู้ใช้ใหม่) + 06 · Home -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/main"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_canvas"
+    tools:context=".ui.home.MainActivity">
+
+    <androidx.core.widget.NestedScrollView
+        android:id="@+id/scroll"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        app:layout_constraintBottom_toTopOf="@id/navContainer"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <LinearLayout
+            android:id="@+id/content"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="20dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="104dp">
+
+            <!-- Header -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="49dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    android:id="@+id/tvAvatar"
+                    style="@style/Txt.H3"
+                    android:layout_width="44dp"
+                    android:layout_height="44dp"
+                    android:background="@drawable/bg_circle_green_soft"
+                    android:gravity="center"
+                    android:textColor="@color/run_green_dark"
+                    tools:text="ศ" />
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:id="@+id/tvGreeting"
+                        style="@style/Txt.Caption"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        tools:text="สวัสดีตอนเย็น" />
+
+                    <TextView
+                        android:id="@+id/tvName"
+                        style="@style/Txt.H2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        tools:text="ศุภณัฐ" />
+                </LinearLayout>
+
+                <ImageView
+                    android:id="@+id/btnBell"
+                    style="@style/IconBtn"
+                    android:contentDescription="@string/perm_notify"
+                    android:src="@drawable/ic_bell" />
+            </LinearLayout>
+
+            <!-- ===== สถานะว่าง (ผู้ใช้ใหม่) ===== -->
+            <LinearLayout
+                android:id="@+id/groupEmpty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:background="@drawable/bg_card"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content">
+
+                        <TextView
+                            style="@style/Txt.LabelM"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/home_this_week"
+                            android:textColor="@color/text_secondary" />
+
+                        <TextView
+                            android:id="@+id/tvEmptyGoal"
+                            style="@style/Txt.LabelM"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/text_tertiary"
+                            tools:text="เป้า 20 กม." />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="12dp"
+                        android:gravity="bottom">
+
+                        <TextView
+                            style="@style/Txt.DisplayS"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:lineHeight="48sp"
+                            android:text="0.0"
+                            android:textSize="34sp" />
+
+                        <TextView
+                            android:id="@+id/tvEmptyUnit"
+                            style="@style/Txt.Body"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="6dp"
+                            android:layout_marginBottom="3dp"
+                            android:text="@string/unit_km"
+                            android:textColor="@color/text_tertiary" />
+                    </LinearLayout>
+
+                    <ProgressBar
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:layout_marginTop="12dp"
+                        android:max="100"
+                        android:progress="2"
+                        android:progressDrawable="@drawable/progress_light" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="18dp"
+                    android:gravity="center_horizontal"
+                    android:orientation="vertical"
+                    android:paddingStart="8dp"
+                    android:paddingTop="16dp"
+                    android:paddingEnd="8dp"
+                    android:paddingBottom="16dp">
+
+                    <FrameLayout
+                        android:layout_width="128dp"
+                        android:layout_height="128dp"
+                        android:background="@drawable/bg_circle_green_soft">
+
+                        <FrameLayout
+                            android:layout_width="76dp"
+                            android:layout_height="76dp"
+                            android:layout_gravity="center"
+                            android:background="@drawable/bg_circle_white">
+
+                            <ImageView
+                                android:layout_width="36dp"
+                                android:layout_height="36dp"
+                                android:layout_gravity="center"
+                                android:importantForAccessibility="no"
+                                android:src="@drawable/ic_activity"
+                                app:tint="@color/run_green_dark" />
+                        </FrameLayout>
+                    </FrameLayout>
+
+                    <TextView
+                        style="@style/Txt.H2"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:text="@string/home_empty_title" />
+
+                    <TextView
+                        style="@style/Txt.BodyS"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:gravity="center"
+                        android:text="@string/home_empty_body" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/btnFirstRun"
+                    style="@style/Btn.Primary"
+                    android:layout_width="match_parent"
+                    android:layout_marginTop="18dp"
+                    android:orientation="horizontal">
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_play"
+                        app:tint="@color/run_ink" />
+
+                    <TextView
+                        style="@style/Txt.LabelL"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="8dp"
+                        android:text="@string/home_first_run"
+                        android:textColor="@color/run_ink" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/cardSensorCheck"
+                    android:layout_width="match_parent"
+                    android:layout_height="68dp"
+                    android:layout_marginTop="18dp"
+                    android:background="@drawable/bg_card"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:gravity="center_vertical"
+                    android:paddingStart="14dp"
+                    android:paddingEnd="14dp">
+
+                    <ImageView
+                        android:layout_width="40dp"
+                        android:layout_height="40dp"
+                        android:background="@drawable/bg_icon_chip_green"
+                        android:importantForAccessibility="no"
+                        android:padding="10dp"
+                        android:src="@drawable/ic_cpu"
+                        app:tint="@color/run_green_dark" />
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="12dp"
+                        android:layout_weight="1"
+                        android:orientation="vertical">
+
+                        <TextView
+                            style="@style/Txt.LabelL"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/home_sensor_title" />
+
+                        <TextView
+                            style="@style/Txt.Caption"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/home_sensor_desc" />
+                    </LinearLayout>
+
+                    <ImageView
+                        android:layout_width="20dp"
+                        android:layout_height="20dp"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_chevron_right"
+                        app:tint="@color/text_tertiary" />
+                </LinearLayout>
+            </LinearLayout>
+
+            <!-- ===== มีข้อมูลแล้ว ===== -->
+            <LinearLayout
+                android:id="@+id/groupData"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical">
+
+                <!-- Weekly hero (การ์ดดำ) -->
+                <LinearLayout
+                    android:id="@+id/cardWeekly"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/bg_card_dark"
+                    android:foreground="?attr/selectableItemBackground"
+                    android:orientation="vertical"
+                    android:padding="20dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="24dp"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            style="@style/Txt.LabelM"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/home_week_distance"
+                            android:textColor="@color/text_on_dark_muted" />
+
+                        <TextView
+                            android:id="@+id/tvGoalPercent"
+                            style="@style/Txt.LabelS"
+                            android:layout_width="wrap_content"
+                            android:layout_height="24dp"
+                            android:background="@drawable/bg_pill_ink2"
+                            android:gravity="center"
+                            android:paddingStart="10dp"
+                            android:paddingEnd="10dp"
+                            android:textColor="@color/run_lime"
+                            tools:text="62% ของเป้า" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:gravity="bottom">
+
+                        <TextView
+                            android:id="@+id/tvWeekKm"
+                            style="@style/Txt.Display"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="@color/white"
+                            tools:text="12.4" />
+
+                        <TextView
+                            android:id="@+id/tvWeekGoal"
+                            style="@style/Txt.UnitL"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:layout_marginBottom="6dp"
+                            android:textColor="@color/text_on_dark_muted"
+                            tools:text="/ 20 กม." />
+                    </LinearLayout>
+
+                    <ProgressBar
+                        android:id="@+id/progressWeek"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="8dp"
+                        android:layout_marginTop="14dp"
+                        android:max="1000"
+                        android:progressDrawable="@drawable/progress_hero"
+                        tools:progress="620" />
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="14dp"
+                        android:orientation="horizontal">
+
+                        <include
+                            android:id="@+id/statRuns"
+                            layout="@layout/view_stat_dark"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1" />
+
+                        <include
+                            android:id="@+id/statTime"
+                            layout="@layout/view_stat_dark"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1" />
+
+                        <include
+                            android:id="@+id/statKcal"
+                            layout="@layout/view_stat_dark"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="8dp"
+                            android:layout_weight="1" />
+                    </LinearLayout>
+                </LinearLayout>
+
+                <!-- กิจกรรม 7 วัน -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:background="@drawable/bg_card"
+                    android:orientation="vertical"
+                    android:padding="18dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:gravity="center_vertical">
+
+                        <TextView
+                            style="@style/Txt.LabelL"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/home_7_days" />
+
+                        <TextView
+                            android:id="@+id/tvWeekRange"
+                            style="@style/Txt.Caption"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            tools:text="3 – 9 พ.ย." />
+                    </LinearLayout>
+
+                    <com.example.runtrail.ui.widget.BarChartView
+                        android:id="@+id/chartWeek"
+                        android:layout_width="match_parent"
+                        android:layout_height="96dp"
+                        android:layout_marginTop="14dp" />
+                </LinearLayout>
+
+                <!-- การวิ่งล่าสุด -->
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="26dp"
+                    android:layout_marginTop="16dp"
+                    android:gravity="center_vertical">
+
+                    <TextView
+                        style="@style/Txt.H3"
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="@string/home_recent" />
+
+                    <TextView
+                        android:id="@+id/btnSeeAll"
+                        style="@style/Txt.LabelM"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:background="?attr/selectableItemBackgroundBorderless"
+                        android:text="@string/home_see_all"
+                        android:textColor="@color/run_green_dark" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:id="@+id/recentList"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:orientation="vertical" />
+            </LinearLayout>
+        </LinearLayout>
+    </androidx.core.widget.NestedScrollView>
+
+    <!-- FAB / เริ่มวิ่ง -->
+    <LinearLayout
+        android:id="@+id/fabStart"
+        android:layout_width="wrap_content"
+        android:layout_height="60dp"
+        android:layout_marginBottom="24dp"
+        android:background="@drawable/bg_pill_ink"
+        android:elevation="8dp"
+        android:foreground="?attr/selectableItemBackgroundBorderless"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingStart="8dp"
+        android:paddingEnd="22dp"
+        app:layout_constraintBottom_toTopOf="@id/navContainer"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent">
+
+        <FrameLayout
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:background="@drawable/bg_circle_green">
+
+            <ImageView
+                android:layout_width="20dp"
+                android:layout_height="20dp"
+                android:layout_gravity="center"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_play"
+                app:tint="@color/run_ink" />
+        </FrameLayout>
+
+        <TextView
+            style="@style/Txt.H3"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="12dp"
+            android:text="@string/action_start_run"
+            android:textColor="@color/white" />
+    </LinearLayout>
+
+    <include
+        android:id="@+id/navContainer"
+        layout="@layout/view_bottom_nav"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
+</androidx.constraintlayout.widget.ConstraintLayout>

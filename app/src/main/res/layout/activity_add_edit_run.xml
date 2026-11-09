@@ -1,0 +1,344 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 12 · Add / Edit Run — หน้าเดียวรองรับทั้งสร้าง (กรอกย้อนหลัง) และแก้ไข -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_canvas"
+    android:fillViewport="true"
+    tools:context=".ui.edit.AddEditRunActivity">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingStart="20dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="20dp"
+        android:paddingBottom="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="44dp"
+            android:gravity="center_vertical">
+
+            <ImageView
+                android:id="@+id/btnClose"
+                style="@style/IconBtn"
+                android:contentDescription="@string/action_close"
+                android:src="@drawable/ic_x" />
+
+            <TextView
+                android:id="@+id/tvTitle"
+                style="@style/Txt.H3"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                tools:text="แก้ไขการวิ่ง" />
+
+            <TextView
+                android:id="@+id/btnSaveTop"
+                style="@style/Txt.LabelL"
+                android:layout_width="wrap_content"
+                android:layout_height="44dp"
+                android:background="?attr/selectableItemBackgroundBorderless"
+                android:gravity="center"
+                android:text="@string/action_save"
+                android:textColor="@color/run_green_dark" />
+        </LinearLayout>
+
+        <!-- Photo preview -->
+        <FrameLayout
+            android:id="@+id/photoPreview"
+            android:layout_width="match_parent"
+            android:layout_height="196dp"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_card">
+
+            <com.example.runtrail.ui.widget.MapRouteView
+                android:id="@+id/map"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent" />
+
+            <ImageView
+                android:id="@+id/ivPhoto"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:importantForAccessibility="no"
+                android:scaleType="centerCrop"
+                android:visibility="gone" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:gravity="center_horizontal"
+                android:orientation="vertical">
+
+                <FrameLayout
+                    android:id="@+id/photoChip"
+                    android:layout_width="56dp"
+                    android:layout_height="56dp"
+                    android:background="@drawable/bg_icon_chip_white"
+                    android:elevation="2dp">
+
+                    <ImageView
+                        android:layout_width="24dp"
+                        android:layout_height="24dp"
+                        android:layout_gravity="center"
+                        android:importantForAccessibility="no"
+                        android:src="@drawable/ic_image"
+                        app:tint="@color/text_primary" />
+                </FrameLayout>
+
+                <TextView
+                    android:id="@+id/tvPhotoStatus"
+                    style="@style/Txt.LabelS"
+                    android:layout_width="wrap_content"
+                    android:layout_height="30dp"
+                    android:layout_marginTop="8dp"
+                    android:background="@drawable/bg_pill_ink"
+                    android:drawablePadding="6dp"
+                    android:elevation="2dp"
+                    android:gravity="center_vertical"
+                    android:paddingStart="12dp"
+                    android:paddingEnd="12dp"
+                    android:textColor="@color/white"
+                    tools:text="ปรับทิศ EXIF · ย่อ 80% แล้ว" />
+            </LinearLayout>
+        </FrameLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal">
+
+            <LinearLayout
+                android:id="@+id/btnCamera"
+                style="@style/Btn.Outline"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_camera"
+                    app:tint="@color/text_primary" />
+
+                <TextView
+                    style="@style/Txt.LabelL"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="@string/edit_camera" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/btnGallery"
+                style="@style/Btn.Outline"
+                android:layout_width="0dp"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:orientation="horizontal">
+
+                <ImageView
+                    android:layout_width="20dp"
+                    android:layout_height="20dp"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_image"
+                    app:tint="@color/text_primary" />
+
+                <TextView
+                    style="@style/Txt.LabelL"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:text="@string/edit_gallery" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- ชื่อการวิ่ง -->
+        <TextView
+            style="@style/FieldLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/edit_name" />
+
+        <EditText
+            android:id="@+id/etName"
+            style="@style/Field"
+            android:layout_width="match_parent"
+            android:fontFamily="@font/plex_medium"
+            android:hint="@string/edit_name_hint"
+            android:importantForAutofill="no"
+            android:inputType="textCapSentences"
+            android:maxLength="60"
+            android:textSize="16sp" />
+
+        <!-- โน้ต -->
+        <TextView
+            style="@style/FieldLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/edit_note" />
+
+        <EditText
+            android:id="@+id/etNote"
+            style="@style/Field"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:fontFamily="@font/plex_regular"
+            android:gravity="top|start"
+            android:hint="@string/edit_note_hint"
+            android:importantForAutofill="no"
+            android:inputType="textMultiLine|textCapSentences"
+            android:lineHeight="22sp"
+            android:maxLength="300"
+            android:minHeight="84dp"
+            android:paddingTop="15dp"
+            android:paddingBottom="15dp"
+            android:textSize="15sp" />
+
+        <!-- ระยะ / เวลา (เฉพาะโหมดเพิ่มย้อนหลัง) -->
+        <LinearLayout
+            android:id="@+id/groupManual"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:orientation="horizontal"
+            android:visibility="gone">
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/tvDistanceLabel"
+                    style="@style/FieldLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/edit_distance" />
+
+                <EditText
+                    android:id="@+id/etDistance"
+                    style="@style/Field"
+                    android:layout_width="match_parent"
+                    android:hint="5.00"
+                    android:importantForAutofill="no"
+                    android:inputType="numberDecimal"
+                    android:maxLength="6" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="12dp"
+                android:layout_weight="1"
+                android:orientation="vertical">
+
+                <TextView
+                    style="@style/FieldLabel"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/edit_duration" />
+
+                <EditText
+                    android:id="@+id/etDuration"
+                    style="@style/Field"
+                    android:layout_width="match_parent"
+                    android:hint="30"
+                    android:importantForAutofill="no"
+                    android:inputType="number"
+                    android:maxLength="4" />
+            </LinearLayout>
+        </LinearLayout>
+
+        <!-- วันและเวลาเริ่ม -->
+        <TextView
+            style="@style/FieldLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="@string/edit_datetime" />
+
+        <LinearLayout
+            android:id="@+id/fieldDate"
+            android:layout_width="match_parent"
+            android:layout_height="54dp"
+            android:background="@drawable/bg_field"
+            android:foreground="?attr/selectableItemBackground"
+            android:gravity="center_vertical"
+            android:paddingStart="17dp"
+            android:paddingEnd="17dp">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_calendar"
+                app:tint="@color/text_tertiary" />
+
+            <TextView
+                android:id="@+id/tvDate"
+                style="@style/Txt.Body"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:fontFamily="@font/plex_medium"
+                tools:text="อา. 9 พ.ย. 2026 · 17:42" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/rowLocked"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:background="@drawable/bg_tile"
+            android:gravity="center_vertical"
+            android:minHeight="42dp"
+            android:paddingStart="14dp"
+            android:paddingTop="10dp"
+            android:paddingEnd="14dp"
+            android:paddingBottom="10dp">
+
+            <ImageView
+                android:layout_width="18dp"
+                android:layout_height="18dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_lock"
+                app:tint="@color/text_tertiary" />
+
+            <TextView
+                style="@style/Txt.Caption"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="10dp"
+                android:layout_weight="1"
+                android:text="@string/edit_locked_note" />
+        </LinearLayout>
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:minHeight="16dp" />
+
+        <TextView
+            android:id="@+id/btnSave"
+            style="@style/Btn.Primary"
+            android:layout_width="match_parent"
+            android:layout_marginTop="16dp"
+            android:text="@string/edit_save_changes" />
+    </LinearLayout>
+</ScrollView>

@@ -1,0 +1,130 @@
+package com.example.runtrail.ui.history
+
+import android.content.Intent
+import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
+import android.view.View
+import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.PopupMenu
+import androidx.recyclerview.widget.LinearLayoutManager
+import com.example.runtrail.R
+import com.example.runtrail.data.PrefsHelper
+import com.example.runtrail.data.RunRepository
+import com.example.runtrail.data.RunRepository.Filter
+import com.example.runtrail.data.RunRepository.Sort
+import com.example.runtrail.databinding.ActivityHistoryBinding
+import com.example.runtrail.ui.common.BottomNav
+import com.example.runtrail.ui.common.Dialogs
+import com.example.runtrail.ui.common.applySystemBarsPadding
+import com.example.runtrail.ui.common.setupEdgeToEdge
+import com.example.runtrail.ui.common.toast
+import com.example.runtrail.ui.detail.RunDetailActivity
+import com.example.runtrail.ui.edit.AddEditRunActivity
+
+/**
+ * 15 · History — RecyclerView + RunAdapter, ค้นหาชื่อ/โน้ต, กรอง, เรียง
+ * กดค้างที่การ์ด → 19 · ยืนยันการลบ
+ */
+class HistoryActivity : AppCompatActivity() {
+
+    private lateinit var binding: ActivityHistoryBinding
+    private lateinit var adapter: RunAdapter
+    private var filter = Filter.ALL
+    private var sort = Sort.NEWEST
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        setupEdgeToEdge()
+        binding = ActivityHistoryBinding.inflate(layoutInflater)
+        setContentView(binding.root)
+        binding.header.applySystemBarsPadding(top = true)
+
+        filter = savedInstanceState?.getString(KEY_FILTER)?.let { Filter.valueOf(it) } ?: Filter.ALL
+        sort = savedInstanceState?.getString(KEY_SORT)?.let { Sort.valueOf(it) } ?: Sort.NEWEST
+
+        BottomNav.setup(this, binding.navContainer.bottomNav, R.id.nav_history)
+
+        adapter = RunAdapter(
+            onClick = { run ->
+                startActivity(Intent(this, RunDetailActivity::class.java).putExtra(RunDetailActivity.EXTRA_RUN_ID, run.id))
+            },
+            onLongClick = { run ->
+                Dialogs.confirmDelete(this, run) { alsoServer ->
+                    RunRepository.delete(run.id)
+                    toast(getString(if (alsoServer) R.string.toast_deleted_both else R.string.toast_deleted))
+                    load()
+                }
+            },
+        )
+        binding.recycler.layoutManager = LinearLayoutManager(this)
+        binding.recycler.adapter = adapter
+
+        binding.etSearch.addTextChangedListener(object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) {
+                binding.btnClearSearch.visibility = if (s.isNullOrEmpty()) View.GONE else View.VISIBLE
+                load()
+            }
+        })
+        binding.btnClearSearch.setOnClickListener { binding.etSearch.setText("") }
+
+        binding.chipAll.setOnClickListener { filter = Filter.ALL; load() }
+        binding.chipWeek.setOnClickListener { filter = Filter.THIS_WEEK; load() }
+        binding.chipMonth.setOnClickListener { filter = Filter.THIS_MONTH; load() }
+        binding.chip5k.setOnClickListener { filter = Filter.OVER_5K; load() }
+        binding.btnFilter.setOnClickListener { showSortMenu(it) }
+    }
+
+    override fun onResume() {
+        super.onResume()
+        binding.navContainer.bottomNav.selectedItemId = R.id.nav_history
+        load()
+    }
+
+    private fun load() {
+        binding.chipAll.isSelected = filter == Filter.ALL
+        binding.chipWeek.isSelected = filter == Filter.THIS_WEEK
+        binding.chipMonth.isSelected = filter == Filter.THIS_MONTH
+        binding.chip5k.isSelected = filter == Filter.OVER_5K
+
+        val list = RunRepository.query(binding.etSearch.text.toString(), filter, sort)
+        adapter.miles = PrefsHelper(this).useMiles
+        adapter.submit(list, groupByMonth = sort == Sort.NEWEST || sort == Sort.OLDEST)
+        binding.emptyView.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
+    }
+
+    private fun showSortMenu(anchor: View) {
+        PopupMenu(this, anchor).apply {
+            menu.add(0, 1, 0, R.string.sort_newest).isChecked = sort == Sort.NEWEST
+            menu.add(0, 2, 1, R.string.sort_oldest).isChecked = sort == Sort.OLDEST
+            menu.add(0, 3, 2, R.string.sort_longest).isChecked = sort == Sort.LONGEST
+            menu.add(0, 4, 3, R.string.sort_fastest).isChecked = sort == Sort.FASTEST
+            menu.setGroupCheckable(0, true, true)
+            menu.add(1, 5, 4, R.string.history_add_manual)
+            setOnMenuItemClickListener {
+                when (it.itemId) {
+                    1 -> sort = Sort.NEWEST
+                    2 -> sort = Sort.OLDEST
+                    3 -> sort = Sort.LONGEST
+                    4 -> sort = Sort.FASTEST
+                    5 -> { startActivity(Intent(this@HistoryActivity, AddEditRunActivity::class.java)); return@setOnMenuItemClickListener true }
+                }
+                load()
+                true
+            }
+        }.show()
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putString(KEY_FILTER, filter.name)
+        outState.putString(KEY_SORT, sort.name)
+    }
+
+    companion object {
+        private const val KEY_FILTER = "filter"
+        private const val KEY_SORT = "sort"
+    }
+}
