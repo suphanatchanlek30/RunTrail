@@ -1,0 +1,127 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{.Run.Title}} · {{km .Run.DistanceM}} กม. · RunTrail</title>
+<meta name="description" content="{{.Run.RunnerName}} วิ่ง {{km .Run.DistanceM}} กม. ใน {{duration .Run.MovingTimeS}}{{if .Run.PaceSPerKm}} เพซ {{pace (deref .Run.PaceSPerKm)}}/กม.{{end}}">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="RunTrail">
+<meta property="og:title" content="{{.Run.Title}} · {{km .Run.DistanceM}} กม.">
+<meta property="og:description" content="{{.Run.RunnerName}} วิ่ง {{km .Run.DistanceM}} กม. ใน {{duration .Run.MovingTimeS}}{{if .Run.PaceSPerKm}} เพซ {{pace (deref .Run.PaceSPerKm)}}/กม.{{end}}">
+<meta property="og:url" content="{{.URL}}">
+{{if .Run.PhotoURL}}<meta property="og:image" content="{{.Run.PhotoURL}}">{{end}}
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anuphan:wght@500;700&family=IBM+Plex+Sans+Thai:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+<style>
+  :root { --green:#00D47A; --lime:#A3F51F; --ink:#0F1412; --canvas:#F5F7FA; --gray:#667085; --line:#E4E7EC; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--canvas); color:var(--ink); font-family:"IBM Plex Sans Thai",system-ui,sans-serif; }
+  .wrap { max-width:560px; margin:0 auto; padding:16px 16px 40px; }
+  header { display:flex; align-items:center; gap:10px; margin-bottom:14px; }
+  .logo { width:32px; height:32px; border-radius:10px; background:var(--ink); color:var(--lime); display:grid; place-items:center; font-family:Anuphan; font-weight:700; }
+  .brand { font-family:Anuphan; font-weight:700; font-size:18px; }
+  .avatar { width:44px; height:44px; border-radius:50%; object-fit:cover; background:var(--line); }
+  h1 { font-family:Anuphan; font-size:24px; margin:4px 0 2px; }
+  .meta { color:var(--gray); font-size:14px; }
+  #map { height:340px; border-radius:20px; margin:16px 0; background:#e9edf2; overflow:hidden; }
+  .chip { display:inline-block; font-size:12px; padding:4px 10px; border-radius:99px; background:#fff; color:var(--gray); border:1px solid var(--line); margin:0 6px 6px 0; }
+  .chip.ok { color:#067a47; border-color:#bdeed6; background:#e9fbf2; }
+  .hero { background:var(--ink); color:#fff; border-radius:20px; padding:18px; display:grid; grid-template-columns:repeat(3,1fr); gap:12px; }
+  .hero .v { font-family:Anuphan; font-weight:700; font-size:24px; }
+  .hero .l { color:#9aa4b2; font-size:12px; }
+  .hero .big { grid-column:1/-1; }
+  .hero .big .v { font-size:44px; color:var(--lime); line-height:1; }
+  .card { background:#fff; border-radius:20px; padding:16px; margin-top:12px; }
+  .card h2 { font-family:Anuphan; font-size:16px; margin:0 0 10px; }
+  .split { display:grid; grid-template-columns:44px 1fr 56px; align-items:center; gap:10px; font-size:14px; padding:6px 0; }
+  .bar { height:8px; border-radius:99px; background:var(--green); }
+  .photo { width:100%; border-radius:16px; display:block; }
+  .legend { display:flex; gap:12px; font-size:12px; color:var(--gray); flex-wrap:wrap; }
+  .legend i { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:4px; vertical-align:-1px; }
+  footer { text-align:center; color:var(--gray); font-size:12px; margin-top:24px; }
+  .empty { display:grid; place-items:center; height:100%; color:var(--gray); font-size:14px; padding:20px; text-align:center; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header><div class="logo">R</div><div class="brand">RunTrail</div></header>
+
+  <div style="display:flex;gap:12px;align-items:center">
+    {{if .Run.RunnerAvatar}}<img class="avatar" src="{{.Run.RunnerAvatar}}" alt="">{{end}}
+    <div>
+      <h1>{{.Run.Title}}</h1>
+      <div class="meta">{{.Run.RunnerName}} · {{.Date}}</div>
+    </div>
+  </div>
+
+  <div id="map">{{if not .Run.Segments}}<div class="empty">{{if eq .Run.Source "manual"}}การวิ่งนี้บันทึกเอง ไม่มีเส้นทาง GPS{{else}}เส้นทางสั้นเกินไปจะแสดงได้หลังซ่อนจุดเริ่มและจุดจบ{{end}}</div>{{end}}</div>
+  <div>
+    {{if .Run.HideEnds}}<span class="chip">◌ ซ่อนจุดเริ่ม/จบ 200 ม.</span>{{end}}
+    {{if .Run.Verified}}<span class="chip ok">✓ ตรวจสอบเส้นทาง GPS แล้ว</span>{{end}}
+  </div>
+  <div class="legend" style="margin-top:4px">
+    <span><i style="background:#0EDA62"></i>เร็ว</span><span><i style="background:#A3E635"></i>คงที่</span>
+    <span><i style="background:#F5B83D"></i>ปานกลาง</span><span><i style="background:#F0603F"></i>ช้า</span>
+  </div>
+
+  <div class="hero" style="margin-top:14px">
+    <div class="big"><div class="v">{{km .Run.DistanceM}}</div><div class="l">กิโลเมตร</div></div>
+    <div><div class="v">{{duration .Run.MovingTimeS}}</div><div class="l">เวลา</div></div>
+    <div><div class="v">{{if .Run.PaceSPerKm}}{{pace (deref .Run.PaceSPerKm)}}{{else}}--:--{{end}}</div><div class="l">เพซ /กม.</div></div>
+    {{if .Run.Calories}}<div><div class="v">{{kcal (derefF .Run.Calories)}}</div><div class="l">kcal</div></div>
+    {{else if .Run.ElevationGainM}}<div><div class="v">{{deref .Run.ElevationGainM}} ม.</div><div class="l">ขึ้นสะสม</div></div>{{end}}
+  </div>
+
+  {{if .Run.PhotoURL}}<div class="card"><img class="photo" src="{{.Run.PhotoURL}}" alt="รูปจากการวิ่ง"></div>{{end}}
+
+  {{if .Run.Splits}}
+  <div class="card">
+    <h2>Splits รายกิโลเมตร</h2>
+    <div id="splits"></div>
+  </div>
+  {{end}}
+
+  <footer>สร้างด้วย RunTrail · ข้อมูลแผนที่ © OpenStreetMap contributors © CARTO</footer>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+  const run = {{.Run}};
+  // Same pace scale as the app (PaceColor.kt): < 5:50 fast · ≤ 6:15 steady · ≤ 6:40 moderate · slower
+  const color = p => p < 350 ? "#0EDA62" : p <= 375 ? "#A3E635" : p <= 400 ? "#F5B83D" : "#F0603F";
+
+  if (run.segments.length && window.L) {
+    const map = L.map("map", { zoomControl: false, attributionControl: true });
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+      subdomains: "abcd", maxZoom: 20, attribution: "© OpenStreetMap © CARTO"
+    }).addTo(map);
+    const all = [];
+    for (const seg of run.segments) {
+      L.polyline(seg.map(p => [p[0], p[1]]), { color: "#fff", weight: 9, opacity: 1 }).addTo(map);
+      for (let i = 1; i < seg.length; i++) {
+        L.polyline([[seg[i-1][0], seg[i-1][1]], [seg[i][0], seg[i][1]]],
+          { color: color(seg[i][2]), weight: 5, lineCap: "round" }).addTo(map);
+      }
+      seg.forEach(p => all.push([p[0], p[1]]));
+    }
+    map.fitBounds(L.latLngBounds(all), { padding: [24, 24] });
+  }
+
+  const box = document.getElementById("splits");
+  if (box && run.splits.length) {
+    const fastest = Math.min(...run.splits.map(s => s.pace_s));
+    const slowest = Math.max(...run.splits.map(s => s.pace_s));
+    const fmt = s => Math.floor(s / 60) + ":" + String(s % 60).padStart(2, "0");
+    for (const s of run.splits) {
+      const w = slowest === fastest ? 100 : 55 + 45 * (slowest - s.pace_s) / (slowest - fastest);
+      const row = document.createElement("div");
+      row.className = "split";
+      row.innerHTML = `<b>กม. ${s.km}</b><div class="bar" style="width:${w}%;background:${color(s.pace_s)}"></div><span>${fmt(s.pace_s)}</span>`;
+      box.appendChild(row);
+    }
+  }
+</script>
+</body>
+</html>
