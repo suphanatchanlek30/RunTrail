@@ -172,7 +172,7 @@ class RunStatsActivity : AppCompatActivity() {
         // อุณหภูมิมาจากเซนเซอร์ในเครื่อง (ส่วนใหญ่ไม่มี) จึงแสดง "--" แทนการเดาค่า · ไม่มีเซนเซอร์ความชื้น
         cond(binding.condTemp, R.drawable.ic_thermo, run.tempC?.let { "$it°C" } ?: "--", R.string.stats_temp)
         cond(binding.condHumidity, R.drawable.ic_activity, run.track.size.toString(), R.string.stats_gps_points)
-        cond(binding.condElevation, R.drawable.ic_mountain, "+${run.elevationGainM} ม.", R.string.stats_chip_elevation)
+        cond(binding.condElevation, R.drawable.ic_mountain, "+${run.elevationGainM} ${getString(R.string.unit_m)}", R.string.stats_chip_elevation)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

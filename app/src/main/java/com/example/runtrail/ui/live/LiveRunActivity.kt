@@ -147,11 +147,17 @@ class LiveRunActivity : AppCompatActivity() {
         }
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            private var lastBackAt = 0L
             override fun handleOnBackPressed() {
                 val s = service
                 when {
                     locked -> toast(getString(R.string.live_unlock_hint))
                     s != null && !s.state.paused -> s.pause()
+                    // หยุดชั่วคราวอยู่ → ต้องกด Back ซ้ำภายใน 2 วินาทีจึงออกจากหน้าวิ่ง (CS364 เกณฑ์ 4.2)
+                    android.os.SystemClock.elapsedRealtime() - lastBackAt > com.example.runtrail.ui.common.EXIT_WINDOW_MS -> {
+                        lastBackAt = android.os.SystemClock.elapsedRealtime()
+                        toast(getString(R.string.live_back_again))
+                    }
                     else -> {
                         if (s != null) toast(getString(R.string.live_still_recording))
                         finish()

@@ -1,0 +1,510 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English UI strings (CS364 criterion 3.3) — the default values/strings.xml is Thai -->
+<resources>
+    <string name="app_name">RunTrail</string>
+
+    <!-- ===== General ===== -->
+    <string name="action_back">Back</string>
+    <string name="action_next">Next</string>
+    <string name="action_skip">Skip</string>
+    <string name="action_allow">Allow</string>
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_share">Share</string>
+    <string name="action_replay">Replay</string>
+    <string name="action_more">More</string>
+    <string name="action_close">Close</string>
+    <string name="action_copy">Copy</string>
+    <string name="action_clear">Clear</string>
+    <string name="action_refresh">Reload</string>
+    <string name="action_ok">Got it</string>
+    <string name="action_start_run">Start run</string>
+    <string name="hold_to_finish">Hold to finish</string>
+
+    <string name="nav_home">Home</string>
+    <string name="nav_history">History</string>
+    <string name="nav_leaderboard">Ranks</string>
+    <string name="nav_records">Records</string>
+    <string name="nav_settings">Settings</string>
+
+    <string name="unit_km">km</string>
+    <string name="unit_km_full">Kilometers (km)</string>
+    <string name="unit_mile">mi</string>
+    <string name="unit_mile_full">Miles (mi)</string>
+    <string name="unit_per_km">/km</string>
+    <string name="unit_kg">kg</string>
+    <string name="unit_cm">cm</string>
+    <string name="unit_year">yrs</string>
+    <string name="unit_m">m</string>
+    <string name="unit_kcal">kcal</string>
+    <string name="unit_spm">spm</string>
+    <string name="unit_times">runs</string>
+    <string name="unit_hours">hr</string>
+
+    <string name="label_distance">Distance</string>
+    <string name="label_time">Time</string>
+    <string name="label_moving_time">Moving time</string>
+    <string name="label_pace">Pace</string>
+    <string name="label_avg_pace">Avg pace</string>
+    <string name="label_current_pace">Current pace</string>
+    <string name="label_calories">Calories</string>
+    <string name="label_cadence">Cadence</string>
+    <string name="label_elevation_gain">Elevation gain</string>
+    <string name="label_runs">Runs</string>
+    <string name="label_total_time">Total time</string>
+    <string name="label_gps_points">GPS points</string>
+
+    <string name="sync_synced">Synced</string>
+    <string name="sync_pending">Pending sync</string>
+    <string name="sync_failed">Sync failed</string>
+
+    <string name="toast_saved">Saved</string>
+    <string name="toast_added">Run added</string>
+    <string name="toast_deleted">Run deleted</string>
+    <string name="toast_deleted_both">Deleted from device and server</string>
+    <string name="toast_link_copied">Link copied</string>
+    <string name="toast_removed_server">Removed from server. Your local data is kept</string>
+
+    <string name="title_morning_run">Morning Run</string>
+    <string name="title_afternoon_run">Afternoon Run</string>
+    <string name="title_evening_run">Evening Run</string>
+    <string name="title_night_run">Night Run</string>
+
+    <!-- ===== 01 Welcome ===== -->
+    <string name="welcome_gps">GPS ±4 m</string>
+    <string name="welcome_title_1">Run with more fun\nSee every step on the map</string>
+    <string name="welcome_body_1">Record route, pace, calories and elevation with GPS. Data stays on your device and works without internet.</string>
+    <string name="welcome_title_2">Know instantly where\nyou were fast or slow</string>
+    <string name="welcome_body_2">Pace-colored routes, per-km splits, elevation charts and a Replay of every run.</string>
+    <string name="welcome_title_3">Share your route\nwith friends on the web</string>
+    <string name="welcome_body_3">Sync to your own server when you share. Friends open the link to see the map and stats without installing the app.</string>
+    <string name="welcome_cta">Get started</string>
+
+    <!-- ===== 02 Permissions ===== -->
+    <string name="step_1_of_2">Step 1 of 2</string>
+    <string name="step_2_of_2">Step 2 of 2</string>
+    <string name="perm_title">A few permissions before you run</string>
+    <string name="perm_body">RunTrail uses these 3 permissions to record your runs accurately. You can change them any time in Settings.</string>
+    <string name="perm_location">Precise location (GPS)</string>
+    <string name="perm_required">Required</string>
+    <string name="perm_location_desc">Draw your route and compute distance and pace while running</string>
+    <string name="perm_activity">Physical activity</string>
+    <string name="perm_activity_desc">Count steps with the Step Counter to compute cadence</string>
+    <string name="perm_notify">Notifications</string>
+    <string name="perm_notify_desc">Announce pace every 1 km and show run status on the lock screen</string>
+    <string name="perm_privacy">Location data is always stored on your device first and uploaded to your account when you sign in · Share links can hide start/end points</string>
+    <string name="perm_location_denied">Location permission is needed to record routes (tap \"Skip\" to continue)</string>
+
+    <!-- ===== 03 Profile & Goal ===== -->
+    <string name="profile_title">About you</string>
+    <string name="profile_edit_title">Edit profile</string>
+    <string name="profile_body">Your name is used for greetings and on shared web pages. Weight is used to compute calories (MET × weight × time).</string>
+    <string name="field_first_name">First name</string>
+    <string name="field_first_name_hint">e.g. Alex</string>
+    <string name="field_last_name">Last name</string>
+    <string name="field_last_name_hint">e.g. Smith</string>
+    <string name="error_first_name">Please enter your first name</string>
+    <string name="field_weight">Weight</string>
+    <string name="field_height">Height</string>
+    <string name="field_age">Age</string>
+    <string name="goal_unit">km / week</string>
+    <string name="goal_10">10 km</string>
+    <string name="goal_15">15 km</string>
+    <string name="goal_20">20 km</string>
+    <string name="goal_30">30 km</string>
+    <string name="profile_cta">Start using RunTrail</string>
+    <string name="error_weight">Enter a weight of 25–250 kg</string>
+    <string name="error_height">Enter a height of 100–250 cm</string>
+    <string name="error_age">Enter an age of 8–100</string>
+
+    <!-- ===== 04 Sensor Check ===== -->
+    <string name="sensor_title">Sensor check</string>
+    <string name="sensor_ready">Ready to run</string>
+    <string name="sensor_not_ready">Not ready to record routes</string>
+    <string name="sensor_summary">Found %1$d of %2$d sensors. Missing features use fallback values</string>
+    <string name="sensor_group_motion">Location and motion</string>
+    <string name="sensor_group_env">Environment</string>
+    <string name="sensor_status_ready">Ready</string>
+    <string name="sensor_status_off">Off</string>
+    <string name="sensor_status_need_permission">Needs permission</string>
+    <string name="sensor_status_fallback">Fallback</string>
+    <string name="sensor_gps_on">On</string>
+    <string name="sensor_gps_off">GPS off</string>
+    <string name="sensor_gps_no_permission">Not allowed</string>
+    <string name="sensor_steps">%s steps</string>
+    <string name="sensor_low_accuracy">Low accuracy</string>
+    <string name="sensor_calibrate">Calibrate</string>
+    <string name="sensor_calibrate_title">Calibrate compass</string>
+    <string name="sensor_calibrate_body">Hold your phone and move it in a figure 8 in the air 3–4 times, away from metal and magnets. Accuracy improves automatically.</string>
+
+    <!-- ===== 05 / 06 Home ===== -->
+    <string name="home_this_week">This week</string>
+    <string name="home_goal_short">Goal %1$d %2$s</string>
+    <string name="home_empty_title">No runs yet</string>
+    <string name="home_empty_body">Start your first run. The app records route, pace and calories automatically.</string>
+    <string name="home_first_run">Start first run</string>
+    <string name="home_sensor_title">Check sensors before running</string>
+    <string name="home_sensor_desc">See what your device supports</string>
+    <string name="home_week_distance">Distance this week</string>
+    <string name="home_goal_percent">%d%% of goal</string>
+    <string name="home_goal_of">/ %1$d %2$s</string>
+    <string name="home_7_days">Last 7 days</string>
+    <string name="home_recent">Recent runs</string>
+    <string name="home_see_all">See all</string>
+    <string name="home_bell_pending">%d runs waiting to sync to the server</string>
+    <string name="home_bell_none">No new notifications</string>
+
+    <!-- ===== 07 / 08 Live Run ===== -->
+    <string name="live_gps_good">GPS good · ±%d m</string>
+    <string name="live_gps_fair">GPS fair · ±%d m</string>
+    <string name="live_gps_weak">GPS weak · ±%d m</string>
+    <string name="live_gps_searching">Searching for GPS…</string>
+    <string name="live_gps_off">GPS is off · tap to enable</string>
+    <string name="live_gps_no_permission">Location not allowed · tap</string>
+    <string name="live_locate">Back to current location</string>
+    <string name="live_compass">Compass</string>
+    <string name="live_no_compass">No compass</string>
+    <string name="live_layers">Change map style</string>
+    <string name="live_running">Running</string>
+    <string name="live_faster">%1$d s/km faster than target · target %2$s</string>
+    <string name="live_slower">%1$d s/km slower than target · target %2$s</string>
+    <string name="live_target">Target pace %s /km</string>
+    <string name="live_elevation">+%d m</string>
+    <string name="live_temp">%d°C</string>
+    <string name="live_battery">%d%%</string>
+    <string name="live_lock">Lock buttons</string>
+    <string name="live_pause">Pause</string>
+    <string name="live_camera">Take photo</string>
+    <string name="live_resume">Resume</string>
+    <string name="live_locked">Buttons locked to prevent accidental taps</string>
+    <string name="live_unlock_hint">Long-press the lock button to unlock</string>
+    <string name="live_unlocked">Unlocked</string>
+    <string name="live_photo_saved">Photo attached to this run</string>
+    <string name="live_paused_title">Paused</string>
+    <string name="live_paused_chip">Paused</string>
+    <string name="live_auto_paused">Auto-paused</string>
+    <string name="live_paused_auto_reason">Speed dropped below 0.5 m/s, so the timer paused automatically</string>
+    <string name="live_paused_manual_reason">Timer paused. Tap Resume when you\'re ready</string>
+    <string name="live_paused_info">Data is saved continuously and can be recovered if the app is closed</string>
+
+    <!-- ===== 09 Run Summary ===== -->
+    <string name="detail_saved">Run saved</string>
+    <string name="detail_photo_title">Run photo</string>
+    <string name="detail_photo_has">1 photo · tap to change</string>
+    <string name="detail_photo_none">No photo yet · tap to add</string>
+    <string name="detail_menu_stats">Splits and charts</string>
+
+    <!-- ===== 10 Splits & Charts ===== -->
+    <string name="stats_title">Run details</string>
+    <string name="stats_tab_overview">Overview</string>
+    <string name="stats_tab_splits">Splits</string>
+    <string name="stats_tab_charts">Charts</string>
+    <string name="stats_pace_chart">Pace along the route</string>
+    <string name="stats_elev_chart">Elevation along the route</string>
+    <string name="stats_pace_desc">Avg %1$s %2$s · best %3$s</string>
+    <string name="stats_elev_desc">Total gain +%1$d m · max %2$d m</string>
+    <string name="stats_chip_pace">Pace</string>
+    <string name="stats_chip_elevation">Elevation</string>
+    <string name="stats_col_km">km</string>
+    <string name="stats_col_pace">Pace</string>
+    <string name="stats_col_elev">Elev</string>
+    <string name="stats_fastest">Fastest</string>
+    <string name="stats_slowest">Slowest</string>
+    <string name="stats_temp">Temperature</string>
+    <string name="stats_humidity">Humidity</string>
+    <string name="stats_gps_points">GPS points</string>
+
+    <!-- ===== 11 Replay ===== -->
+    <string name="replay_title">Replay · %s</string>
+    <string name="replay_segment">%1$s · km %2$d</string>
+    <string name="replay_segment_pace">Pace %1$s %2$s</string>
+    <string name="replay_distance_here">Distance here</string>
+    <string name="replay_play">Play</string>
+    <string name="replay_pause">Pause</string>
+    <string name="replay_back" formatted="false">Back 10%</string>
+    <string name="replay_forward" formatted="false">Skip 10%</string>
+
+    <!-- ===== 12 Add / Edit ===== -->
+    <string name="edit_title_edit">Edit run</string>
+    <string name="edit_title_add">Add past run</string>
+    <string name="edit_camera">Camera</string>
+    <string name="edit_gallery">Gallery</string>
+    <string name="edit_name">Run name</string>
+    <string name="edit_name_hint">e.g. Evening park run</string>
+    <string name="edit_note">Note</string>
+    <string name="edit_note_hint">How you felt, the route or the weather</string>
+    <string name="edit_distance">Distance</string>
+    <string name="edit_distance_unit">Distance (%s)</string>
+    <string name="edit_duration">Time (minutes)</string>
+    <string name="edit_datetime">Start date and time</string>
+    <string name="edit_locked_note">Distance, time and route were recorded by GPS and can\'t be edited</string>
+    <string name="edit_save_changes">Save changes</string>
+    <string name="edit_save_new">Add run</string>
+    <string name="edit_photo_processed" formatted="false">EXIF rotated · scaled to 80%</string>
+    <string name="edit_photo_current">Current photo · tap to change</string>
+    <string name="edit_photo_empty">Add a photo from your run</string>
+    <string name="edit_photo_error">Can\'t open this photo. Try another one</string>
+    <string name="edit_name_error">Please name your run</string>
+    <string name="edit_distance_error">Enter a distance of 0.1–100</string>
+    <string name="edit_duration_error">Enter time in minutes (1–1440)</string>
+    <string name="edit_future_error">You can\'t pick a time in the future</string>
+    <string name="edit_discard_title">Discard changes?</string>
+    <string name="edit_discard_body">Your edits haven\'t been saved</string>
+    <string name="edit_keep_editing">Keep editing</string>
+    <string name="edit_discard">Discard</string>
+
+    <!-- ===== 13 Share & Sync ===== -->
+    <string name="share_title">Share run</string>
+    <string name="share_synced_title">Synced to server</string>
+    <string name="share_synced_desc">%1$s · share code %2$s</string>
+    <string name="share_pending_title">Not synced yet</string>
+    <string name="share_failed_title">Sync failed</string>
+    <string name="share_pending_desc">Upload to create a share link</string>
+    <string name="share_sync_now">Sync now</string>
+    <string name="share_no_link">No link yet</string>
+    <string name="share_need_sync">Sync to the server first to create a link</string>
+    <string name="share_privacy">Link privacy</string>
+    <string name="share_hide_ends">Hide first and last 200 m</string>
+    <string name="share_hide_ends_desc">Don\'t reveal your home or hotel</string>
+    <string name="share_show_photo">Show run photo</string>
+    <string name="share_show_photo_desc">The photo is resized and stored on the server</string>
+    <string name="share_show_kcal">Show calories</string>
+    <string name="share_show_kcal_desc">Computed from your weight</string>
+    <string name="share_copy_link">Copy link</string>
+    <string name="share_other_apps">Other apps</string>
+    <string name="share_qr">QR Code</string>
+    <string name="share_open_web">Open web</string>
+    <string name="share_remove_server">Remove share link (run is kept)</string>
+    <string name="share_remove_title">Remove share link?</string>
+    <string name="share_remove_body">People with the link can no longer open it. The run stays on your device and the server.</string>
+    <string name="share_message">%1$s · %2$s km — see my run route on RunTrail %3$s</string>
+
+    <!-- ===== 15 History ===== -->
+    <string name="history_title">Run history</string>
+    <string name="history_sort">Sort and filter</string>
+    <string name="history_search_hint">Search name or note</string>
+    <string name="filter_all">All</string>
+    <string name="filter_week">This week</string>
+    <string name="filter_month">This month</string>
+    <string name="filter_5k">&gt; 5 km</string>
+    <string name="history_month_summary">%1$d runs · %2$s %3$s · %4$s hr</string>
+    <string name="history_pending">%d pending</string>
+    <string name="history_empty">No runs found</string>
+    <string name="history_empty_desc">Try a different search or filter</string>
+    <string name="history_add_manual">+ Add past run</string>
+    <string name="sort_newest">Newest first</string>
+    <string name="sort_oldest">Oldest first</string>
+    <string name="sort_longest">Longest distance</string>
+    <string name="sort_fastest">Fastest pace</string>
+
+    <!-- ===== 16 Personal Records ===== -->
+    <string name="records_title">Personal records</string>
+    <string name="records_total_distance">Total distance</string>
+    <string name="records_new">New</string>
+    <string name="records_none">No data yet</string>
+    <string name="records_monthly">Monthly distance</string>
+    <string name="records_6_months">6 months</string>
+    <string name="records_share_head">My running stats on RunTrail: %1$s km total over %2$d runs</string>
+
+    <!-- ===== 17 Settings ===== -->
+    <string name="settings_body">%1$d kg · %2$d cm · %3$d yrs</string>
+    <string name="settings_group_run">Running</string>
+    <string name="settings_group_data">Data and sync</string>
+    <string name="settings_group_system">System</string>
+    <string name="setting_unit">Distance unit</string>
+    <string name="setting_weekly_goal">Weekly goal</string>
+    <string name="setting_target_pace">Target pace</string>
+    <string name="setting_auto_pause">Auto-pause</string>
+    <string name="setting_km_alert">Alert every 1 km</string>
+    <string name="setting_server">Server</string>
+    <string name="sheet_unit_sub">Used for distance and pace on every screen</string>
+    <string name="sheet_unit_km_hint">Used in Thailand and most countries</string>
+    <string name="sheet_unit_mile_hint">Common in the US and UK</string>
+    <string name="sheet_goal_sub">How far you want to run in 7 days</string>
+    <string name="sheet_pace_sub">Compared with your pace while running (min/km)</string>
+    <string name="pace_level_fast">Fast</string>
+    <string name="pace_level_steady">Moderate</string>
+    <string name="pace_level_easy">Easy</string>
+    <string name="setting_server_desc">Backend address, e.g. http://10.0.2.2:8080 (emulator) or http://your-computer-IP:8080 (real phone)</string>
+    <string name="setting_server_hint">http://10.0.2.2:8080</string>
+    <string name="setting_server_invalid">Must start with http:// or https://, e.g. http://10.0.2.2:8080</string>
+    <string name="setting_sensors">Sensor check</string>
+    <string name="setting_recreate">Test screen state restore</string>
+    <string name="setting_recreate_value">Created %d times</string>
+
+    <!-- ===== 18 Recover ===== -->
+    <string name="recover_title">Unfinished run found</string>
+    <string name="recover_body">The app was closed during a run at %s. The latest data was saved. What would you like to do?</string>
+    <string name="recover_resume">Recover and continue</string>
+    <string name="recover_save">Save what\'s recorded</string>
+    <string name="recover_discard">Discard this run</string>
+    <string name="recover_discarded">Unfinished run discarded</string>
+    <string name="recover_saved_title">Recovered run</string>
+
+    <!-- ===== 19 Delete ===== -->
+    <string name="delete_title">Delete this run?</string>
+    <string name="delete_body">“%1$s · %2$s km” will be permanently deleted from this device, including its route and photos</string>
+    <string name="delete_server">Also delete from server</string>
+    <string name="delete_server_desc">This run is synced. Its share link will stop working</string>
+
+    <!-- ===== Backend / account / sync / leaderboard ===== -->
+    <string name="channel_run">Recording run</string>
+    <string name="channel_km">Alert every 1 km</string>
+    <string name="notify_run_title">Running</string>
+    <string name="notify_run_paused">Paused</string>
+    <string name="notify_run_starting">Searching for GPS…</string>
+    <string name="notify_run_text">%1$s %2$s · %3$s</string>
+    <string name="notify_km_title">%d km done</string>
+    <string name="notify_km_text">This km pace %1$s /km · total time %2$s</string>
+    <string name="live_still_recording">Still recording your run. Come back from the notification</string>
+    <string name="live_no_camera">No camera app found</string>
+    <string name="edit_date_locked">GPS-recorded runs can\'t change their date and time</string>
+    <string name="web_load_failed">Can\'t open the web page. Check your internet</string>
+    <string name="home_bell_guest">%d runs not uploaded yet — sign in to sync</string>
+
+    <string name="auth_login">Sign in</string>
+    <string name="auth_login_title">Sign in</string>
+    <string name="auth_login_body">Sync runs across devices, create share links and compete on the global leaderboard · Sign in once and keep working offline</string>
+    <string name="auth_email">Email</string>
+    <string name="auth_email_hint">you@example.com</string>
+    <string name="auth_password">Password</string>
+    <string name="auth_password_hint">Password</string>
+    <string name="auth_password_new_hint">At least 8 characters</string>
+    <string name="auth_password_confirm">Confirm password</string>
+    <string name="auth_password_confirm_hint">Type the password again</string>
+    <string name="auth_no_account">No account? Sign up</string>
+    <string name="auth_guest">Use offline first</string>
+    <string name="auth_guest_desc">Run and record everything. Runs upload when you sign in later</string>
+    <string name="auth_server">Server: %s (tap to change)</string>
+    <string name="auth_email_invalid">Invalid email format</string>
+    <string name="auth_email_taken">This email already has an account</string>
+    <string name="auth_password_required">Please enter a password</string>
+    <string name="auth_password_short">Password must be at least 8 characters</string>
+    <string name="auth_password_mismatch">Passwords don\'t match</string>
+    <string name="auth_name_required">Please enter a display name</string>
+    <string name="auth_welcome">Welcome %s</string>
+    <string name="auth_register">Sign up</string>
+    <string name="auth_register_title">Create account</string>
+    <string name="auth_register_body">Runs already saved on this device will be uploaded to your new account automatically</string>
+    <string name="auth_display_name">Leaderboard display name</string>
+    <string name="auth_display_name_hint">e.g. Ploy</string>
+    <string name="auth_country">Country</string>
+    <string name="auth_country_desc">Used for country rankings</string>
+    <string name="auth_registered">Account created</string>
+    <string name="auth_register_privacy">Passwords are hashed with argon2id · Shared routes can hide start/end points</string>
+    <string name="session_expired">Session expired. Sign in again to sync (your local data is kept)</string>
+
+    <string name="share_login_title">Not signed in</string>
+    <string name="share_login_desc">Sign in to upload and create a share link</string>
+    <string name="share_create_link">Create link</string>
+    <string name="share_no_link_title">Synced, no link yet</string>
+    <string name="share_remove_confirm">Remove link</string>
+    <string name="share_run_missing">Run not found</string>
+
+    <string name="setting_account">Account</string>
+    <string name="setting_account_guest">Not signed in</string>
+    <string name="setting_sync">Sync data</string>
+    <string name="setting_sync_login">Sign in to sync</string>
+    <string name="setting_sync_pending">%d waiting to upload</string>
+    <string name="setting_sync_done">Last %s</string>
+    <string name="setting_sync_never">Never synced</string>
+    <string name="setting_sync_started">Sync started (runs when online)</string>
+    <string name="setting_leaderboard">Show my name on the leaderboard</string>
+    <string name="setting_password">Change password</string>
+    <string name="setting_password_old">Current password</string>
+    <string name="setting_password_new">New password (at least 8 characters)</string>
+    <string name="setting_password_changed">Password changed. Other devices were signed out</string>
+    <string name="setting_logout">Sign out</string>
+    <string name="setting_logout_title">Sign out?</string>
+    <string name="setting_logout_body">Data on this device will be cleared. Synced runs stay on the server — sign in again to get them back.</string>
+    <string name="setting_logout_pending">%d items haven\'t been uploaded and will be lost if you sign out now (better to go online and wait for sync first)</string>
+    <string name="setting_logged_out">Signed out</string>
+    <string name="setting_delete_account">Delete account</string>
+    <string name="setting_delete_title">Delete account permanently?</string>
+    <string name="setting_delete_body">All runs, photos and share links on the server will be deleted. This can\'t be undone.</string>
+    <string name="setting_deleted">Account deleted</string>
+    <string name="settings_name_empty">No name set</string>
+
+    <string name="lb_title">Global ranks</string>
+    <string name="lb_refresh">Refresh</string>
+    <string name="lb_week">This week</string>
+    <string name="lb_month">This month</string>
+    <string name="lb_all">All time</string>
+    <string name="lb_metric_distance">Total distance</string>
+    <string name="lb_metric_5k">Fastest 5 km</string>
+    <string name="lb_metric_10k">Fastest 10 km</string>
+    <string name="lb_scope_global">Global</string>
+    <string name="lb_scope_country">My country</string>
+    <string name="lb_reset_week">Resets every Monday 07:00</string>
+    <string name="lb_reset_month">Resets on the 1st of each month</string>
+    <string name="lb_reset_all">All time</string>
+    <string name="lb_updated">Updated %s</string>
+    <string name="lb_updated_offline">Offline · data from %s</string>
+    <string name="lb_offline">You\'re offline. Showing the last saved ranks</string>
+    <string name="lb_login_needed">Sign in to compete with runners worldwide</string>
+    <string name="lb_retry">Retry</string>
+    <string name="lb_empty">Nobody here yet for this period. Go run and be the first!</string>
+    <string name="lb_my_rank">My rank</string>
+    <string name="lb_rank">#%d</string>
+    <string name="lb_you">%s (you)</string>
+    <string name="lb_me_none">No counted GPS runs in this period yet</string>
+    <string name="lb_me_hidden">You hid your name from the leaderboard (turn it on in Settings)</string>
+    <string name="lb_me_first">You\'re in 1st place!</string>
+    <string name="lb_me_total">Out of %d runners</string>
+    <string name="lb_me_behind_distance">%s behind the next rank</string>
+    <string name="lb_me_behind_time">%s slower than the next rank</string>
+    <string name="share_image_action">Share image</string>
+    <string name="share_image_title">Share image</string>
+    <string name="share_image_background">Background</string>
+    <string name="share_image_bg_photo">Run photo</string>
+    <string name="share_image_bg_pick">Pick photo…</string>
+    <string name="share_image_bg_route">Route</string>
+    <string name="share_image_size">Size</string>
+    <string name="share_image_story">9:16 Story</string>
+    <string name="share_image_square">1:1 Post</string>
+    <string name="share_image_save">Save to device</string>
+    <string name="share_image_share">Share to other apps</string>
+    <string name="share_image_saved">Saved to gallery (Pictures/RunTrail)</string>
+    <string name="share_image_save_denied">File access is needed to save the image</string>
+    <string name="share_image_failed">Couldn\'t create the image. Please try again</string>
+    <string name="share_image_pace">Pace %s</string>
+    <string name="channel_updates">Records, ranks and share links</string>
+    <string name="notif_title">Notifications</string>
+    <string name="notif_empty">No notifications yet. Go run and sync — record and rank news will show up here</string>
+    <string name="notif_login">Sign in to get notified about new records, ranks and share links</string>
+    <string name="notif_offline">You\'re offline. Showing the last saved notifications</string>
+    <string name="notif_downloading">Downloading this run…</string>
+    <string name="notif_run_gone">This run has been deleted</string>
+    <string name="setting_updates">Record and rank alerts</string>
+    <string name="runner_title">Runner info</string>
+    <string name="runner_since">Member since %s</string>
+    <string name="runner_week">This week</string>
+    <string name="runner_month">This month</string>
+    <string name="runner_total">All time</string>
+    <string name="runner_runs">GPS runs</string>
+    <string name="runner_best5k">Fastest 5 km</string>
+    <string name="runner_best10k">Fastest 10 km</string>
+    <string name="local_network_denied">Local network permission not granted, so the Wi-Fi server can\'t be reached (enable it in app settings)</string>
+    <string name="detail_lb_counted">Counted on the global leaderboard</string>
+    <string name="detail_lb_not_counted">Not counted: %s</string>
+
+    <!-- ===== CS364: Back / discard confirm / theme / language ===== -->
+    <string name="back_again_to_exit">Press Back again to exit</string>
+    <string name="recover_discard_confirm_title">Discard unfinished run?</string>
+    <string name="recover_discard_confirm_body">The recorded route, time and distance of this run will be deleted permanently</string>
+    <string name="settings_group_display">Display</string>
+    <string name="setting_theme">Theme</string>
+    <string name="setting_language">Language</string>
+    <string name="sheet_theme_sub">Choose light (Day) or dark (Night) mode</string>
+    <string name="sheet_language_sub">All app text changes immediately</string>
+    <string name="theme_system">System default</string>
+    <string name="theme_day">Day</string>
+    <string name="theme_night">Night</string>
+    <string name="language_system">Device language</string>
+    <string name="language_th">ไทย</string>
+    <string name="language_en">English</string>
+    <string name="live_back_again">Press Back again to leave the run screen (recording continues)</string>
+    <string name="sheet_goal_per_week">%s/week</string>
+</resources>

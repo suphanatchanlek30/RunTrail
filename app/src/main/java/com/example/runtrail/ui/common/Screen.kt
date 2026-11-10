@@ -19,9 +19,11 @@ import androidx.core.view.updatePadding
  */
 fun AppCompatActivity.setupEdgeToEdge(lightStatusBar: Boolean = true) {
     enableEdgeToEdge()
+    // ธีมกลางคืนพื้นหลังเข้ม → ไอคอนแถบระบบต้องเป็นสีสว่าง
+    val lightBars = resources.getBoolean(com.example.runtrail.R.bool.light_system_bars)
     WindowCompat.getInsetsController(window, window.decorView).apply {
-        isAppearanceLightStatusBars = lightStatusBar
-        isAppearanceLightNavigationBars = true
+        isAppearanceLightStatusBars = lightStatusBar && lightBars
+        isAppearanceLightNavigationBars = lightBars
     }
 }
 

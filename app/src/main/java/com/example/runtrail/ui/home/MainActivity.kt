@@ -15,6 +15,7 @@ import com.example.runtrail.databinding.ViewStatDarkBinding
 import com.example.runtrail.domain.Fmt
 import com.example.runtrail.domain.RunCalculator
 import com.example.runtrail.ui.common.BottomNav
+import com.example.runtrail.ui.common.Sheets
 import com.example.runtrail.ui.common.Dialogs
 import com.example.runtrail.ui.common.RunCardBinder
 import com.example.runtrail.ui.common.applySystemBarsPadding
@@ -187,9 +188,18 @@ class MainActivity : AppCompatActivity() {
                 startActivity(Intent(this, RunDetailActivity::class.java).putExtra(RunDetailActivity.EXTRA_RUN_ID, draft.id))
             },
             onDiscard = {
-                recoverShown = false
-                RunRepository.discardDraft(draft.id)
-                toast(getString(R.string.recover_discarded))
+                // CS364 เกณฑ์ 4.3: การทิ้ง (ลบ) การวิ่งที่ค้าง ต้องยืนยันก่อนทุกครั้ง · ยกเลิก → กลับไปหน้าต่างกู้คืนเดิม
+                Sheets.confirm(
+                    this, R.drawable.ic_trash, getString(R.string.recover_discard_confirm_title),
+                    getString(R.string.recover_discard_confirm_body),
+                    confirmText = getString(R.string.recover_discard), cancelText = getString(R.string.action_cancel),
+                    tone = Sheets.Tone.DANGER,
+                    onCancel = { recoverShown = false; checkUnfinishedRun() },
+                ) {
+                    recoverShown = false
+                    RunRepository.discardDraft(draft.id)
+                    toast(getString(R.string.recover_discarded))
+                }
             },
         )
     }

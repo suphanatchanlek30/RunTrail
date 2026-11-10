@@ -388,7 +388,7 @@ object RunRepository {
 
     /** ตัวย่อวันของ 7 วันล่าสุด เช่น อ พ พฤ ศ ส อา จ */
     fun weekDayLetters(now: Long = System.currentTimeMillis()): List<String> {
-        val letters = arrayOf("อา", "จ", "อ", "พ", "พฤ", "ศ", "ส")
+        val letters = com.example.runtrail.domain.Fmt.DAY_LETTERS
         val start = startOfWeek(now)
         return List(7) { i ->
             val c = Calendar.getInstance().apply { timeInMillis = start + i * DAY_MS }

@@ -24,6 +24,14 @@ class App : Application() {
     override fun onCreate() {
         super.onCreate()
         services = Services(this)
+        // ใช้ธีมที่ผู้ใช้เลือกไว้ (ระบบ / กลางวัน / กลางคืน) ก่อนเปิดหน้าจอแรก
+        androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(services.prefs.themeMode)
+        // ภาษาของข้อความที่สร้างในโค้ด (Fmt, PaceColor, ข้อความ error) ให้ตรงกับภาษาที่เลือก
+        com.example.runtrail.domain.Lang.english = { englishUi }
+        refreshLanguage()
+        registerActivityLifecycleCallbacks(object : SimpleActivityCallbacks() {
+            override fun onActivityCreated(activity: android.app.Activity, savedInstanceState: android.os.Bundle?) = refreshLanguage()
+        })
         RunRepository.init(this)
         RunRepository.currentUser = { services.prefs.accountUserId }
         RunTrackingService.createChannels(this)
@@ -34,6 +42,21 @@ class App : Application() {
             SyncManager.schedulePeriodic(this)
             if (services.sessions.get() != null) SyncManager.requestSync(this)
         }
+    }
+
+    override fun onConfigurationChanged(newConfig: android.content.res.Configuration) {
+        super.onConfigurationChanged(newConfig)
+        refreshLanguage()
+    }
+
+    @Volatile private var englishUi = false
+
+    /** อ่านภาษาที่ผู้ใช้เลือก (ถ้าไม่ได้เลือก = ภาษาของเครื่อง) แล้วเก็บไว้ ไม่ต้องถามระบบทุกครั้งที่จัดรูปแบบข้อความ */
+    fun refreshLanguage() {
+        val app = androidx.appcompat.app.AppCompatDelegate.getApplicationLocales()
+        val locale = if (!app.isEmpty) app[0]
+        else androidx.core.os.ConfigurationCompat.getLocales(android.content.res.Resources.getSystem().configuration)[0]
+        englishUi = locale?.language == "en"
     }
 
     /** ระหว่าง instrumented test ไม่ตั้งงานซิงก์เอง (test เรียก SyncEngine ตรง ๆ) */
@@ -70,4 +93,15 @@ class Services(val context: Context) {
 
     val deviceName: String
         get() = (Settings.Global.getString(context.contentResolver, Settings.Global.DEVICE_NAME) ?: Build.MODEL).take(100)
+}
+
+/** ActivityLifecycleCallbacks ที่ไม่ต้อง override ทุกเมธอด */
+open class SimpleActivityCallbacks : Application.ActivityLifecycleCallbacks {
+    override fun onActivityCreated(activity: android.app.Activity, savedInstanceState: android.os.Bundle?) {}
+    override fun onActivityStarted(activity: android.app.Activity) {}
+    override fun onActivityResumed(activity: android.app.Activity) {}
+    override fun onActivityPaused(activity: android.app.Activity) {}
+    override fun onActivityStopped(activity: android.app.Activity) {}
+    override fun onActivitySaveInstanceState(activity: android.app.Activity, outState: android.os.Bundle) {}
+    override fun onActivityDestroyed(activity: android.app.Activity) {}
 }

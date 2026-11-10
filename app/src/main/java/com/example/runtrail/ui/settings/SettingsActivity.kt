@@ -4,6 +4,8 @@ import android.content.Intent
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatDelegate
+import androidx.core.os.LocaleListCompat
 import com.example.runtrail.R
 import com.example.runtrail.App
 import com.example.runtrail.data.Accounts
@@ -53,6 +55,8 @@ class SettingsActivity : AppCompatActivity() {
         setupRow(binding.rowPace, R.drawable.ic_gauge, R.string.setting_target_pace)
         setupRow(binding.rowAutoPause, R.drawable.ic_pause, R.string.setting_auto_pause, toggle = true)
         setupRow(binding.rowKmAlert, R.drawable.ic_bell, R.string.setting_km_alert, toggle = true)
+        setupRow(binding.rowTheme, R.drawable.ic_sun, R.string.setting_theme)
+        setupRow(binding.rowLanguage, R.drawable.ic_globe, R.string.setting_language)
         setupRow(binding.rowAccount, R.drawable.ic_shield, R.string.setting_account)
         setupRow(binding.rowSync, R.drawable.ic_cloud_up, R.string.setting_sync)
         setupRow(binding.rowLeaderboard, R.drawable.ic_globe, R.string.setting_leaderboard, toggle = true)
@@ -70,6 +74,8 @@ class SettingsActivity : AppCompatActivity() {
         }
         binding.rowUnit.root.setOnClickListener { chooseUnit() }
         binding.rowGoal.root.setOnClickListener { chooseGoal() }
+        binding.rowTheme.root.setOnClickListener { chooseTheme() }
+        binding.rowLanguage.root.setOnClickListener { chooseLanguage() }
         binding.rowPace.root.setOnClickListener { choosePace() }
         binding.rowAutoPause.root.setOnClickListener { binding.rowAutoPause.swToggle.toggle() }
         binding.rowKmAlert.root.setOnClickListener { binding.rowKmAlert.swToggle.toggle() }
@@ -122,6 +128,8 @@ class SettingsActivity : AppCompatActivity() {
         binding.rowUnit.tvValue.text = Fmt.unit(miles)
         binding.rowGoal.tvValue.text = "${prefs.weeklyGoalKm} ${Fmt.unit(miles)}"
         binding.rowPace.tvValue.text = Fmt.pace(prefs.targetPaceSec)
+        binding.rowTheme.tvValue.text = getString(THEME_LABELS[THEME_MODES.indexOf(prefs.themeMode).coerceAtLeast(0)])
+        binding.rowLanguage.tvValue.text = getString(LANGUAGE_LABELS[currentLanguageIndex()])
         binding.rowAutoPause.swToggle.isChecked = prefs.autoPause
         binding.rowKmAlert.swToggle.isChecked = prefs.kmAlert
         binding.rowServer.tvValue.text = prefs.apiUrl.removePrefix("http://").removePrefix("https://")
@@ -158,12 +166,41 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
+    /** ธีม: ตามระบบ / กลางวัน / กลางคืน — AppCompatDelegate จะ recreate ทุกหน้าที่เปิดอยู่ให้เปลี่ยนสีทันที */
+    private fun chooseTheme() {
+        Sheets.choose(
+            this, R.drawable.ic_sun, getString(R.string.setting_theme), getString(R.string.sheet_theme_sub),
+            THEME_LABELS.map { Sheets.Option(getString(it)) },
+            selected = THEME_MODES.indexOf(prefs.themeMode).coerceAtLeast(0),
+        ) { which ->
+            prefs.themeMode = THEME_MODES[which]
+            AppCompatDelegate.setDefaultNightMode(THEME_MODES[which])
+        }
+    }
+
+    /** ภาษา: ตามระบบ / ไทย / English — เก็บด้วย per-app language (autoStoreLocales) แล้วทุกหน้าเปลี่ยนภาษาทันที */
+    private fun chooseLanguage() {
+        Sheets.choose(
+            this, R.drawable.ic_globe, getString(R.string.setting_language), getString(R.string.sheet_language_sub),
+            LANGUAGE_LABELS.map { Sheets.Option(getString(it)) },
+            selected = currentLanguageIndex(),
+        ) { which ->
+            AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(LANGUAGE_TAGS[which]))
+            (application as App).refreshLanguage()
+        }
+    }
+
+    private fun currentLanguageIndex(): Int {
+        val tag = AppCompatDelegate.getApplicationLocales().toLanguageTags()
+        return LANGUAGE_TAGS.indexOfFirst { it.isNotEmpty() && tag.startsWith(it) }.takeIf { it >= 0 } ?: 0
+    }
+
     private fun chooseGoal() {
         val values = (5..50 step 5).toList()
         val unit = Fmt.unit(prefs.useMiles)
         Sheets.choose(
             this, R.drawable.ic_target, getString(R.string.setting_weekly_goal), getString(R.string.sheet_goal_sub),
-            values.map { Sheets.Option(it.toString(), "$unit/สัปดาห์") },
+            values.map { Sheets.Option(it.toString(), getString(R.string.sheet_goal_per_week, unit)) },
             selected = values.indexOf(prefs.weeklyGoalKm).coerceAtLeast(0),
             columns = 3,
         ) { which ->
@@ -260,5 +297,14 @@ class SettingsActivity : AppCompatActivity() {
 
     companion object {
         private const val KEY_CREATED = "created_count"
+
+        private val THEME_MODES = intArrayOf(
+            AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM, AppCompatDelegate.MODE_NIGHT_NO, AppCompatDelegate.MODE_NIGHT_YES,
+        ).toList()
+        private val THEME_LABELS = listOf(R.string.theme_system, R.string.theme_day, R.string.theme_night)
+
+        /** "" = ตามภาษาของเครื่อง */
+        private val LANGUAGE_TAGS = listOf("", "th", "en")
+        private val LANGUAGE_LABELS = listOf(R.string.language_system, R.string.language_th, R.string.language_en)
     }
 }

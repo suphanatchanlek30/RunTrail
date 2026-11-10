@@ -5,6 +5,7 @@ import android.content.pm.PackageManager
 import android.hardware.Sensor
 import android.hardware.SensorManager
 import com.example.runtrail.R
+import com.example.runtrail.domain.Lang
 
 /**
  * รายการเซนเซอร์ที่แอปใช้ และตรวจว่าเครื่องมีหรือไม่ (getDefaultSensor() != null) — MA12
@@ -24,15 +25,15 @@ object SensorHelper {
 
     const val GPS = "gps"
 
-    val specs = listOf(
+    val specs: List<Spec> get() = listOf(
         Spec(GPS, "GPS", Group.MOTION, R.drawable.ic_nav, null, "Location"),
         Spec("step", "Step Counter", Group.MOTION, R.drawable.ic_activity, Sensor.TYPE_STEP_COUNTER, ""),
-        Spec("accel", "Accelerometer", Group.MOTION, R.drawable.ic_zap, Sensor.TYPE_ACCELEROMETER, "เขย่า · เข็มทิศ"),
+        Spec("accel", "Accelerometer", Group.MOTION, R.drawable.ic_zap, Sensor.TYPE_ACCELEROMETER, Lang.t("เขย่า · เข็มทิศ", "Shake · Compass")),
         Spec("linear", "Linear Acceleration", Group.MOTION, R.drawable.ic_zap, Sensor.TYPE_LINEAR_ACCELERATION, ""),
-        Spec("magnet", "Magnetometer", Group.MOTION, R.drawable.ic_magnet, Sensor.TYPE_MAGNETIC_FIELD, "เข็มทิศ"),
-        Spec("baro", "Barometer", Group.ENVIRONMENT, R.drawable.ic_mountain, Sensor.TYPE_PRESSURE, "ความสูง"),
-        Spec("light", "Light", Group.ENVIRONMENT, R.drawable.ic_sun, Sensor.TYPE_LIGHT, "โหมดกลางคืน"),
-        Spec("temp", "Ambient Temp", Group.ENVIRONMENT, R.drawable.ic_thermo, Sensor.TYPE_AMBIENT_TEMPERATURE, "อุณหภูมิ"),
+        Spec("magnet", "Magnetometer", Group.MOTION, R.drawable.ic_magnet, Sensor.TYPE_MAGNETIC_FIELD, Lang.t("เข็มทิศ", "Compass")),
+        Spec("baro", "Barometer", Group.ENVIRONMENT, R.drawable.ic_mountain, Sensor.TYPE_PRESSURE, Lang.t("ความสูง", "Altitude")),
+        Spec("light", "Light", Group.ENVIRONMENT, R.drawable.ic_sun, Sensor.TYPE_LIGHT, Lang.t("โหมดกลางคืน", "Night mode")),
+        Spec("temp", "Ambient Temp", Group.ENVIRONMENT, R.drawable.ic_thermo, Sensor.TYPE_AMBIENT_TEMPERATURE, Lang.t("อุณหภูมิ", "Temperature")),
     )
 
     fun sensor(context: Context, spec: Spec): Sensor? {
@@ -50,7 +51,7 @@ object SensorHelper {
     /** ชนิด: Hardware / Software (เซนเซอร์ที่คำนวณจากตัวอื่น) */
     fun kind(context: Context, spec: Spec): String {
         if (spec.sensorType == null) return "Location · Hardware"
-        val s = sensor(context, spec) ?: return "ไม่มีในเครื่องนี้"
+        val s = sensor(context, spec) ?: return Lang.t("ไม่มีในเครื่องนี้", "Not on this device")
         val software = spec.sensorType == Sensor.TYPE_LINEAR_ACCELERATION ||
             s.name.contains("virtual", true) || s.name.contains("fusion", true)
         val base = if (software) "Software" else "Hardware"

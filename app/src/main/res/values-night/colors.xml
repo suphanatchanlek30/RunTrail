@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Night theme (CS364 เกณฑ์ 3.4) — override เฉพาะสีเชิงความหมาย (พื้นหลัง · ตัวอักษร · เส้นขอบ)
+  สีแบรนด์ (run_green / run_lime / run_ink) คงเดิม เพราะใช้เป็นสีตัวอักษรบนปุ่มเขียว
+-->
+<resources>
+    <color name="bg_surface">#161C19</color>
+    <color name="bg_canvas">#0B0F0D</color>
+    <color name="bg_muted">#232B27</color>
+
+    <color name="text_primary">#F2F5F3</color>
+    <color name="text_secondary">#C4CDC8</color>
+    <color name="text_tertiary">#97A39D</color>
+    <color name="text_disabled">#5F6B65</color>
+
+    <color name="border">#2C3530</color>
+    <color name="divider">#232B27</color>
+    <color name="grabber">#3D4842</color>
+
+    <color name="run_green_soft">#123222</color>
+    <color name="run_lime_soft">#26330F</color>
+    <color name="danger_soft">#3B1D1F</color>
+    <color name="warning_soft">#3A2D12</color>
+
+    <color name="map_land">#18201C</color>
+    <color name="map_block">#1F2924</color>
+    <color name="map_road">#2C3732</color>
+    <color name="map_park">#1B3326</color>
+    <color name="map_water">#15283A</color>
+
+    <color name="ink_fill">#1F2824</color>
+    <color name="ink_fill_2">#2B3530</color>
+    <color name="ink_fill_3">#3A4540</color>
+    <color name="icon_ink">#E6EBE8</color>
+    <color name="btn_primary_off">#1D4A33</color>
+</resources>

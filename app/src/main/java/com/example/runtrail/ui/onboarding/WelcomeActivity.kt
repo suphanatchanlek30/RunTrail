@@ -11,6 +11,7 @@ import com.example.runtrail.databinding.ActivityWelcomeBinding
 import com.example.runtrail.domain.RouteGenerator
 import com.example.runtrail.ui.common.applySystemBarsPadding
 import com.example.runtrail.ui.common.dp
+import com.example.runtrail.ui.common.installExitGuard
 import com.example.runtrail.ui.common.setupEdgeToEdge
 
 /**
@@ -58,6 +59,8 @@ class WelcomeActivity : AppCompatActivity() {
         binding.btnStart.setOnClickListener {
             startActivity(Intent(this, PermissionsActivity::class.java))
         }
+        // หน้าแรกของการเปิดครั้งแรก (อยู่ล่างสุดของ task) → กด Back ต้องกดซ้ำก่อนออก
+        installExitGuard(onlyWhenTaskRoot = true)
     }
 
     private fun showPage(index: Int) {

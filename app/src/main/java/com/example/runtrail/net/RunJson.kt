@@ -1,5 +1,6 @@
 package com.example.runtrail.net
 
+import com.example.runtrail.domain.Lang
 import com.example.runtrail.data.PhotoSync
 import com.example.runtrail.data.Run
 import com.example.runtrail.data.RunSource
@@ -22,7 +23,7 @@ object RunJson {
 
     /** body ของ PUT /runs/{uuid} */
     fun toPutBody(run: Run, track: List<TrackPoint>): JSONObject = JSONObject().apply {
-        put("title", run.title.ifBlank { "การวิ่ง" })
+        put("title", run.title.ifBlank { Lang.t("การวิ่ง", "Run") })
         put("note", run.note ?: JSONObject.NULL)
         put("source", run.source.api)
         put("started_at", iso(run.startTime))
@@ -102,15 +103,15 @@ object RunJson {
     /** ข้อความภาษาไทยของเหตุผลที่ server ไม่นับเข้าอันดับ */
     fun verifyReasonText(reason: String?): String? = when (reason) {
         null, "" -> null
-        "manual" -> "บันทึกเอง ไม่มีเส้นทาง GPS"
-        "too_few_points" -> "จุด GPS น้อยเกินไป"
-        "sparse_points" -> "สัญญาณ GPS ขาดเป็นช่วง ๆ"
-        "distance_mismatch" -> "ระยะจาก GPS ไม่ตรงกับที่บันทึก"
-        "moving_time_mismatch" -> "เวลาไม่ตรงกับเส้นทาง"
-        "too_fast" -> "เพซเร็วผิดปกติ"
-        "too_fast_segment" -> "มีช่วงที่เร็วผิดปกติ (เช่น ขึ้นรถ)"
-        "future_start" -> "เวลาเริ่มอยู่ในอนาคต"
-        "no_distance" -> "ไม่มีระยะทาง"
+        "manual" -> Lang.t("บันทึกเอง ไม่มีเส้นทาง GPS", "Manual entry, no GPS route")
+        "too_few_points" -> Lang.t("จุด GPS น้อยเกินไป", "Too few GPS points")
+        "sparse_points" -> Lang.t("สัญญาณ GPS ขาดเป็นช่วง ๆ", "GPS signal had gaps")
+        "distance_mismatch" -> Lang.t("ระยะจาก GPS ไม่ตรงกับที่บันทึก", "GPS distance doesn't match the record")
+        "moving_time_mismatch" -> Lang.t("เวลาไม่ตรงกับเส้นทาง", "Time doesn't match the route")
+        "too_fast" -> Lang.t("เพซเร็วผิดปกติ", "Pace is unusually fast")
+        "too_fast_segment" -> Lang.t("มีช่วงที่เร็วผิดปกติ (เช่น ขึ้นรถ)", "A segment is unusually fast (e.g. in a vehicle)")
+        "future_start" -> Lang.t("เวลาเริ่มอยู่ในอนาคต", "Start time is in the future")
+        "no_distance" -> Lang.t("ไม่มีระยะทาง", "No distance")
         else -> reason
     }
 

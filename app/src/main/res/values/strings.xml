@@ -487,4 +487,22 @@
     <string name="local_network_denied">ไม่ได้รับสิทธิ์เครือข่ายภายใน จึงต่อเซิร์ฟเวอร์ในวง Wi-Fi ไม่ได้ (เปิดได้ในตั้งค่าแอป)</string>
     <string name="detail_lb_counted">นับในอันดับโลก</string>
     <string name="detail_lb_not_counted">ไม่นับในอันดับ: %s</string>
+
+    <!-- ===== CS364: Back / ยืนยันการทิ้ง / ธีม / ภาษา ===== -->
+    <string name="back_again_to_exit">กด Back อีกครั้งเพื่อออกจากแอป</string>
+    <string name="recover_discard_confirm_title">ทิ้งการวิ่งที่ค้าง?</string>
+    <string name="recover_discard_confirm_body">เส้นทาง เวลา และระยะทางที่บันทึกไว้ของการวิ่งนี้จะถูกลบถาวร</string>
+    <string name="settings_group_display">การแสดงผล</string>
+    <string name="setting_theme">ธีม</string>
+    <string name="setting_language">ภาษา</string>
+    <string name="sheet_theme_sub">เลือกโหมดสว่าง (Day) หรือโหมดมืด (Night)</string>
+    <string name="sheet_language_sub">ข้อความในแอปทั้งหมดจะเปลี่ยนทันที</string>
+    <string name="theme_system">ตามระบบ</string>
+    <string name="theme_day">กลางวัน (Day)</string>
+    <string name="theme_night">กลางคืน (Night)</string>
+    <string name="language_system">ตามภาษาเครื่อง</string>
+    <string name="language_th">ไทย</string>
+    <string name="language_en">English</string>
+    <string name="live_back_again">กด Back อีกครั้งเพื่อออกจากหน้าวิ่ง (ยังบันทึกการวิ่งต่อ)</string>
+    <string name="sheet_goal_per_week">%s/สัปดาห์</string>
 </resources>

@@ -101,11 +101,17 @@ class RegisterActivity : AppCompatActivity() {
 
     companion object {
         private const val KEY_COUNTRY = "country"
-        val COUNTRIES = listOf(
+        private val COUNTRIES_TH = listOf(
             "TH" to "ไทย", "LA" to "ลาว", "MM" to "เมียนมา", "KH" to "กัมพูชา", "MY" to "มาเลเซีย",
             "SG" to "สิงคโปร์", "VN" to "เวียดนาม", "ID" to "อินโดนีเซีย", "PH" to "ฟิลิปปินส์",
             "JP" to "ญี่ปุ่น", "KR" to "เกาหลีใต้", "CN" to "จีน", "IN" to "อินเดีย",
             "GB" to "สหราชอาณาจักร", "US" to "สหรัฐอเมริกา", "AU" to "ออสเตรเลีย",
         )
+
+        /** ชื่อประเทศตามภาษาที่เลือก (อังกฤษใช้ชื่อจาก java.util.Locale) */
+        val COUNTRIES: List<Pair<String, String>>
+            get() = if (com.example.runtrail.domain.Lang.english()) {
+                COUNTRIES_TH.map { (code, _) -> code to java.util.Locale("", code).getDisplayCountry(java.util.Locale.ENGLISH) }
+            } else COUNTRIES_TH
     }
 }

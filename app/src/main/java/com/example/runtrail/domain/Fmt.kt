@@ -9,17 +9,41 @@ import kotlin.math.roundToInt
  */
 object Fmt {
 
-    private val DAY_SHORT = arrayOf("อา.", "จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส.")
-    private val DAY_FULL = arrayOf("อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์")
-    private val MONTH_SHORT = arrayOf(
+    // ชื่อวัน/เดือน 2 ภาษา (CS364 เกณฑ์ 3.3) — เลือกตาม Lang.english
+    private val DAY_SHORT_TH = arrayOf("อา.", "จ.", "อ.", "พ.", "พฤ.", "ศ.", "ส.")
+    private val DAY_SHORT_EN = arrayOf("Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat")
+    private val DAY_FULL_TH = arrayOf("อาทิตย์", "จันทร์", "อังคาร", "พุธ", "พฤหัสบดี", "ศุกร์", "เสาร์")
+    private val DAY_FULL_EN = arrayOf("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday")
+    private val MONTH_SHORT_TH = arrayOf(
         "ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.",
         "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค.",
     )
-    private val MONTH_FULL = arrayOf(
+    private val MONTH_SHORT_EN = arrayOf(
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+    )
+    private val MONTH_FULL_TH = arrayOf(
         "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
         "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม",
     )
-    val WEEK_LETTERS = arrayOf("จ", "อ", "พ", "พฤ", "ศ", "ส", "อา")
+    private val MONTH_FULL_EN = arrayOf(
+        "January", "February", "March", "April", "May", "June",
+        "July", "August", "September", "October", "November", "December",
+    )
+    private val DAY_SHORT get() = if (Lang.english()) DAY_SHORT_EN else DAY_SHORT_TH
+    private val DAY_FULL get() = if (Lang.english()) DAY_FULL_EN else DAY_FULL_TH
+    private val MONTH_SHORT get() = if (Lang.english()) MONTH_SHORT_EN else MONTH_SHORT_TH
+    private val MONTH_FULL get() = if (Lang.english()) MONTH_FULL_EN else MONTH_FULL_TH
+
+    /** ตัวย่อวัน จันทร์ → อาทิตย์ */
+    val WEEK_LETTERS: Array<String>
+        get() = if (Lang.english()) arrayOf("M", "T", "W", "T", "F", "S", "S")
+        else arrayOf("จ", "อ", "พ", "พฤ", "ศ", "ส", "อา")
+
+    /** ตัวย่อวัน อาทิตย์ → เสาร์ (index = Calendar.DAY_OF_WEEK - 1) */
+    val DAY_LETTERS: Array<String>
+        get() = if (Lang.english()) arrayOf("S", "M", "T", "W", "T", "F", "S")
+        else arrayOf("อา", "จ", "อ", "พ", "พฤ", "ศ", "ส")
 
     const val KM_PER_MILE = 1.609344
 
@@ -29,9 +53,9 @@ object Fmt {
         return String.format(Locale.US, "%.${decimals}f", v)
     }
 
-    fun unit(miles: Boolean): String = if (miles) "ไมล์" else "กม."
+    fun unit(miles: Boolean): String = if (miles) Lang.t("ไมล์", "mi") else Lang.t("กม.", "km")
 
-    fun paceUnit(miles: Boolean): String = if (miles) "/ไมล์" else "/กม."
+    fun paceUnit(miles: Boolean): String = "/" + unit(miles)
 
     /** 28:41 หรือ 1:03:55 */
     fun duration(seconds: Long): String {
@@ -128,10 +152,10 @@ object Fmt {
     /** คำทักทายตามช่วงเวลา */
     fun greeting(millis: Long = System.currentTimeMillis()): String =
         when (cal(millis).get(Calendar.HOUR_OF_DAY)) {
-            in 5..11 -> "สวัสดีตอนเช้า"
-            in 12..15 -> "สวัสดีตอนบ่าย"
-            in 16..19 -> "สวัสดีตอนเย็น"
-            else -> "สวัสดีตอนค่ำ"
+            in 5..11 -> Lang.t("สวัสดีตอนเช้า", "Good morning")
+            in 12..15 -> Lang.t("สวัสดีตอนบ่าย", "Good afternoon")
+            in 16..19 -> Lang.t("สวัสดีตอนเย็น", "Good evening")
+            else -> Lang.t("สวัสดีตอนค่ำ", "Good night")
         }
 
     private fun cal(millis: Long): Calendar = Calendar.getInstance().apply { timeInMillis = millis }

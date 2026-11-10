@@ -151,6 +151,7 @@ object Sheets {
         confirmText: String,
         cancelText: String?,
         tone: Tone = Tone.NEUTRAL,
+        onCancel: () -> Unit = {},
         onConfirm: () -> Unit = {},
     ) {
         val b = DialogConfirmBinding.inflate(LayoutInflater.from(activity))
@@ -178,8 +179,11 @@ object Sheets {
         } else {
             b.btnCancel.text = cancelText
         }
+        var confirmed = false
         b.btnCancel.setOnClickListener { dialog.dismiss() }
-        b.btnConfirm.setOnClickListener { dialog.dismiss(); onConfirm() }
+        b.btnConfirm.setOnClickListener { confirmed = true; dialog.dismiss(); onConfirm() }
+        // ยกเลิกด้วยปุ่ม / Back / แตะนอกกล่อง → onCancel
+        dialog.setOnDismissListener { if (!confirmed) onCancel() }
         dialog.show()
     }
 

@@ -39,7 +39,7 @@ object RunCalculator {
             }
         }
         best1?.let { (sec, run) ->
-            out += PersonalRecord("1 กม. เร็วสุด", Fmt.pace(sec), run.startTime, run.startTime >= recent)
+            out += PersonalRecord(Lang.t("1 กม. เร็วสุด", "Fastest 1 km"), Fmt.pace(sec), run.startTime, run.startTime >= recent)
         }
 
         fun bestFor(km: Double, title: String) {
@@ -52,11 +52,11 @@ object RunCalculator {
                 out += PersonalRecord(title, "--:--", 0, false)
             }
         }
-        bestFor(5.0, "5 กม. เร็วสุด")
-        bestFor(10.0, "10 กม. เร็วสุด")
+        bestFor(5.0, Lang.t("5 กม. เร็วสุด", "Fastest 5 km"))
+        bestFor(10.0, Lang.t("10 กม. เร็วสุด", "Fastest 10 km"))
 
         runs.maxByOrNull { it.distanceM }?.let {
-            out += PersonalRecord("วิ่งไกลสุด", "${Fmt.distance(it.distanceM, decimals = 1)} กม.", it.startTime, it.startTime >= recent)
+            out += PersonalRecord(Lang.t("วิ่งไกลสุด", "Longest run"), "${Fmt.distance(it.distanceM, decimals = 1)} ${Fmt.unit(false)}", it.startTime, it.startTime >= recent)
         }
         return out
     }
@@ -68,7 +68,7 @@ object RunCalculator {
             val mine = run.movingTimeS * (km * 1000 / run.distanceM)
             val others = all.filter { it.id != run.id && it.distanceM >= km * 1000 && it.startTime < run.startTime }
             val bestOther = others.minOfOrNull { it.movingTimeS * (km * 1000 / it.distanceM) }
-            if (bestOther == null || mine < bestOther) return "สถิติใหม่ ${km.toInt()} กม."
+            if (bestOther == null || mine < bestOther) return Lang.t("สถิติใหม่ ${km.toInt()} กม.", "New ${km.toInt()} km PR")
         }
         return null
     }

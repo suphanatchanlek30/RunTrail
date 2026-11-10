@@ -220,8 +220,7 @@ object ShareSheet {
     private fun syncedAt(run: Run): String {
         val t = run.endTime ?: (run.startTime + run.movingTimeS * 1000)
         val c = Calendar.getInstance().apply { timeInMillis = t }
-        val months = arrayOf("ม.ค.", "ก.พ.", "มี.ค.", "เม.ย.", "พ.ค.", "มิ.ย.", "ก.ค.", "ส.ค.", "ก.ย.", "ต.ค.", "พ.ย.", "ธ.ค.")
-        return "${c.get(Calendar.DAY_OF_MONTH)} ${months[c.get(Calendar.MONTH)]} ${Fmt.time(t)}"
+        return "${c.get(Calendar.DAY_OF_MONTH)} ${Fmt.monthShort(c.get(Calendar.MONTH))} ${Fmt.time(t)}"
     }
 
     /** QR Code ของลิงก์ (สร้างในเครื่องด้วย ZXing) */

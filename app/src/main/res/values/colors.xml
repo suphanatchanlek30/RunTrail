@@ -58,4 +58,12 @@
     <color name="map_dark_water">#15283A</color>
 
     <color name="scrim">#8C0F1412</color>
+
+    <!-- พื้นผิวสีเข้มของการ์ด/ปุ่ม (กลางวัน = Ink · กลางคืนยกให้สว่างขึ้นเล็กน้อยเพื่อแยกจากพื้นหลัง) -->
+    <color name="ink_fill">#0F1412</color>
+    <color name="ink_fill_2">#1C2420</color>
+    <color name="ink_fill_3">#2B3530</color>
+    <!-- สีเส้นของไอคอน (กลางวันเข้ม · กลางคืนสว่าง) -->
+    <color name="icon_ink">#0F1412</color>
+    <color name="btn_primary_off">#B8EED3</color>
 </resources>

@@ -63,7 +63,7 @@ class SyncEngine(
 
     /** ส่งการวิ่งเดียวทันที (ใช้ในหน้าแชร์) · คืนการวิ่งล่าสุดในเครื่อง */
     fun pushNow(runId: Long): Run? = synchronized(LOCK) {
-        val uid = api.client.sessions.get()?.userId ?: throw ApiException(401, "not_logged_in", "ยังไม่ได้เข้าสู่ระบบ")
+        val uid = api.client.sessions.get()?.userId ?: throw ApiException(401, "not_logged_in", com.example.runtrail.domain.Lang.t("ยังไม่ได้เข้าสู่ระบบ", "Not signed in"))
         RunRepository.claimGuestRuns(uid)
         val run = RunRepository.getById(runId, withTrack = false) ?: return null
         if (run.syncStatus != SyncStatus.SYNCED || !run.onServer) {

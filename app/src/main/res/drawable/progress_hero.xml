@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <layer-list xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:id="@android:id/background">
-        <shape android:shape="rectangle"><corners android:radius="4dp" /><solid android:color="@color/run_ink_3" /></shape>
+        <shape android:shape="rectangle"><corners android:radius="4dp" /><solid android:color="@color/ink_fill_3" /></shape>
     </item>
     <item android:id="@android:id/progress">
         <scale android:scaleWidth="100%">

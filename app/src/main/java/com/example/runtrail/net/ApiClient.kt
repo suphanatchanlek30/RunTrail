@@ -1,5 +1,6 @@
 package com.example.runtrail.net
 
+import com.example.runtrail.domain.Lang
 import okhttp3.Authenticator
 import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.OkHttpClient
@@ -67,12 +68,12 @@ class ApiClient(
             header("Accept", "application/json")
             if (gzip && rb != null) header("Content-Encoding", "gzip")
             if (auth) sessions.get()?.let { header("Authorization", "Bearer ${it.accessToken}") }
-                ?: throw ApiException(401, "not_logged_in", "ยังไม่ได้เข้าสู่ระบบ")
+                ?: throw ApiException(401, "not_logged_in", Lang.t("ยังไม่ได้เข้าสู่ระบบ", "Not signed in"))
         }.build()
         val res = try {
             (if (auth) authed else plain).newCall(req).execute()
         } catch (e: IOException) {
-            throw ApiException(0, "network", "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้", cause = e)
+            throw ApiException(0, "network", Lang.t("เชื่อมต่อเซิร์ฟเวอร์ไม่ได้", "Can't reach the server"), cause = e)
         }
         return res.use { parse(it) }
     }
@@ -93,7 +94,7 @@ class ApiClient(
         if (res.isSuccessful) {
             if (text.isBlank()) return null
             return try { JSONObject(text) } catch (e: JSONException) {
-                throw ApiException(res.code, "bad_response", "ข้อมูลจากเซิร์ฟเวอร์ไม่ถูกต้อง")
+                throw ApiException(res.code, "bad_response", Lang.t("ข้อมูลจากเซิร์ฟเวอร์ไม่ถูกต้อง", "Invalid response from server"))
             }
         }
         throw errorFrom(res.code, text)
@@ -105,11 +106,11 @@ class ApiClient(
             headers.forEach { (k, v) -> header(k, v) }
         }.build()
         try {
-            plain.newCall(req).execute().use { if (!it.isSuccessful) throw ApiException(it.code, "upload_failed", "อัปโหลดรูปไม่สำเร็จ") }
+            plain.newCall(req).execute().use { if (!it.isSuccessful) throw ApiException(it.code, "upload_failed", Lang.t("อัปโหลดรูปไม่สำเร็จ", "Photo upload failed")) }
         } catch (e: ApiException) {
             throw e
         } catch (e: IOException) {
-            throw ApiException(0, "network", "อัปโหลดรูปไม่สำเร็จ", cause = e)
+            throw ApiException(0, "network", Lang.t("อัปโหลดรูปไม่สำเร็จ", "Photo upload failed"), cause = e)
         }
     }
 
@@ -158,9 +159,9 @@ class ApiClient(
             val e = JSONObject(text).getJSONObject("error")
             val fields = mutableMapOf<String, String>()
             e.optJSONObject("fields")?.let { f -> f.keys().forEach { k -> fields[k] = f.optString(k) } }
-            ApiException(status, e.optString("code", "error"), e.optString("message", "เกิดข้อผิดพลาด"), fields)
+            ApiException(status, e.optString("code", "error"), e.optString("message", Lang.t("เกิดข้อผิดพลาด", "Something went wrong")), fields)
         } catch (ex: JSONException) {
-            ApiException(status, "http_$status", "เซิร์ฟเวอร์ตอบกลับผิดพลาด ($status)")
+            ApiException(status, "http_$status", Lang.t("เซิร์ฟเวอร์ตอบกลับผิดพลาด ($status)", "Server error ($status)"))
         }
     }
 }

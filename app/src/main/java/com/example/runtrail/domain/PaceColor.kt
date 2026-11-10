@@ -19,9 +19,9 @@ object PaceColor {
     }
 
     fun label(secPerKm: Int): String = when (forPace(secPerKm)) {
-        FAST -> "ช่วงเร็ว"
-        STEADY -> "ช่วงคงที่"
-        MODERATE -> "ช่วงปานกลาง"
-        else -> "ช่วงช้า"
+        FAST -> Lang.t("ช่วงเร็ว", "Fast")
+        STEADY -> Lang.t("ช่วงคงที่", "Steady")
+        MODERATE -> Lang.t("ช่วงปานกลาง", "Moderate")
+        else -> Lang.t("ช่วงช้า", "Slow")
     }
 }

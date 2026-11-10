@@ -54,6 +54,14 @@ class PrefsHelper(context: Context, name: String = PREFS_NAME) {
         get() = prefs.getInt(KEY_TARGET_PACE, 6 * 60)
         set(value) = prefs.edit { putInt(KEY_TARGET_PACE, value); putBoolean(KEY_PROFILE_DIRTY, true) }
 
+    /**
+     * ธีมของแอป (CS364 เกณฑ์ 3.4) — ค่าตาม AppCompatDelegate:
+     * MODE_NIGHT_FOLLOW_SYSTEM (-1) · MODE_NIGHT_NO (1, Day) · MODE_NIGHT_YES (2, Night)
+     */
+    var themeMode: Int
+        get() = prefs.getInt(KEY_THEME_MODE, -1)
+        set(value) = prefs.edit { putInt(KEY_THEME_MODE, value) }
+
     var autoPause: Boolean
         get() = prefs.getBoolean(KEY_AUTO_PAUSE, true)
         set(value) = prefs.edit { putBoolean(KEY_AUTO_PAUSE, value) }
@@ -162,7 +170,7 @@ class PrefsHelper(context: Context, name: String = PREFS_NAME) {
         set(value) = prefs.edit { putInt(KEY_RECREATE, value) }
 
     /** ชื่อเล่นสำหรับทักทาย (คำแรกของชื่อ) */
-    val firstName: String get() = firstNameValue.ifEmpty { "นักวิ่ง" }
+    val firstName: String get() = firstNameValue.ifEmpty { com.example.runtrail.domain.Lang.t("นักวิ่ง", "Runner") }
 
     val initial: String get() = firstName.take(1)
 
@@ -178,6 +186,7 @@ class PrefsHelper(context: Context, name: String = PREFS_NAME) {
         private const val KEY_GOAL = "weekly_goal_km"
         private const val KEY_TARGET_PACE = "target_pace_sec"
         private const val KEY_AUTO_PAUSE = "auto_pause"
+        private const val KEY_THEME_MODE = "theme_mode"
         private const val KEY_KM_ALERT = "km_alert"
         private const val KEY_SERVER = "server_host"
         private const val KEY_API_URL = "api_url"
