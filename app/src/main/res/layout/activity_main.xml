@@ -68,11 +68,32 @@
                         tools:text="ศุภณัฐ" />
                 </LinearLayout>
 
-                <ImageView
-                    android:id="@+id/btnBell"
-                    style="@style/IconBtn"
-                    android:contentDescription="@string/perm_notify"
-                    android:src="@drawable/ic_bell" />
+                <!-- กระดิ่ง + จำนวนการแจ้งเตือนที่ยังไม่อ่าน -->
+                <FrameLayout
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content">
+
+                    <ImageView
+                        android:id="@+id/btnBell"
+                        style="@style/IconBtn"
+                        android:contentDescription="@string/notif_title"
+                        android:src="@drawable/ic_bell" />
+
+                    <TextView
+                        android:id="@+id/tvBellBadge"
+                        android:layout_width="wrap_content"
+                        android:layout_height="18dp"
+                        android:layout_gravity="top|end"
+                        android:background="@drawable/bg_badge"
+                        android:fontFamily="@font/plex_semibold"
+                        android:gravity="center"
+                        android:minWidth="18dp"
+                        android:paddingStart="5dp"
+                        android:paddingEnd="5dp"
+                        android:textColor="@color/white"
+                        android:textSize="11sp"
+                        android:visibility="gone" />
+                </FrameLayout>
             </LinearLayout>
 
             <!-- ===== สถานะว่าง (ผู้ใช้ใหม่) ===== -->

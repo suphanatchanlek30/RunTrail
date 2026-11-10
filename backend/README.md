@@ -15,7 +15,7 @@ cd backend
 make env        # สร้าง .env: ใส่ IP ของ Mac และสุ่มรหัสลับให้ (ถ้ามี .env อยู่แล้วจะไม่ทับ)
 make up         # build + รัน db, s3, api
 curl localhost:8080/readyz     # {"db":"ok","storage":"ok"}
-make smoke      # ทดสอบทั้ง flow กับ server จริง (26 ข้อ)
+make smoke      # ทดสอบทั้ง flow กับ server จริง (29 ข้อ)
 ```
 
 | คำสั่ง | ทำอะไร |
@@ -221,6 +221,24 @@ Response (ใช้กับ GET/PATCH ด้วย):
 **`GET /leaderboard/me?metric=&period=&scope=`** → `{ "me", "ahead", "behind", "total", … }`
 
 นับเฉพาะ: GPS + ผ่านการตรวจ (`verified`) + ไม่ถูกลบ + เจ้าของเปิด `leaderboard_opt_in` · cache 60 วินาที
+
+### การแจ้งเตือน 🔒
+สร้างจากเหตุการณ์จริงบน server (ไม่ใช่ข้อความจำลอง):
+
+| type | เกิดเมื่อ |
+|---|---|
+| `run_verified` / `run_not_counted` | อัปโหลดการวิ่ง GPS ครั้งแรก → นับในอันดับ / ไม่นับ (บอกเหตุผล) |
+| `personal_record` | 1K / 5K / 10K เร็วกว่าสถิติเดิม |
+| `weekly_goal` | ระยะสัปดาห์นี้ (ISO week UTC) ผ่าน `weekly_goal_km` |
+| `rank_passed` | มีคนวิ่งแซงเราในอันดับระยะรวมสัปดาห์นี้ |
+| `share_viewed` | มีคนเปิดหน้า `/s/{code}` ครั้งที่ 1, 10, 50, 100, 500, 1000 |
+
+- `GET /notifications?limit=50&cursor=…` → `{ "items": [{ "id", "type", "title", "body", "run_id", "created_at", "read" }], "unread_count", "next_cursor" }`
+- `POST /notifications/read` `{ "all": true }` หรือ `{ "ids": [...] }` → 204
+- ส่งการวิ่งเดิมซ้ำ (sync retry) ไม่เกิดการแจ้งเตือนซ้ำ
+
+### นักวิ่งคนอื่น 🔒
+`GET /users/{id}/summary` → ระยะสัปดาห์/เดือน/ทั้งหมด, จำนวนการวิ่ง GPS, 5K/10K เร็วสุด (เฉพาะคนที่เปิดแสดงในอันดับ ไม่งั้น 404)
 
 ### แชร์
 | | |

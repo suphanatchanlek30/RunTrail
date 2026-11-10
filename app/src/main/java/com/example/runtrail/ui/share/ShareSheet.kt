@@ -163,6 +163,7 @@ object ShareSheet {
             }
         }
         b.btnCopy.setOnClickListener(copy)
+        b.rowLink.setOnClickListener(copy)
         b.actCopy.setOnClickListener(copy)
         b.actOther.setOnClickListener {
             requireLink { url ->

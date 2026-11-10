@@ -291,7 +291,9 @@ func (s *Server) sharePage(c fiber.Ctx) error {
 		}
 		return err
 	}
-	c.Set(fiber.HeaderCacheControl, "public, max-age=60")
+	s.countShareView(c.Context(), code)
+	// no-store so every open is counted (the owner gets "someone viewed your run")
+	c.Set(fiber.HeaderCacheControl, "no-store")
 	return shareTmpl.ExecuteTemplate(c.Response().BodyWriter(), "share.html", map[string]any{
 		"Run": p, "Date": thaiDate(p.StartedAt, p.Timezone), "URL": s.shareURL(code),
 	})

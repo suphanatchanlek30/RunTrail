@@ -318,6 +318,7 @@ class RunTrackingService : Service() {
         private const val KM_NOTIFY_ID = 43
         const val CHANNEL_RUN = "run_tracking"
         const val CHANNEL_KM = "km_alert"
+        const val CHANNEL_UPDATES = "updates"
 
         /** การวิ่งที่กำลังบันทึกอยู่ (null = ไม่มี) */
         @Volatile var current: RunTrackingService? = null
@@ -338,6 +339,9 @@ class RunTrackingService : Service() {
             )
             nm.createNotificationChannel(
                 NotificationChannel(CHANNEL_KM, context.getString(R.string.channel_km), NotificationManager.IMPORTANCE_DEFAULT),
+            )
+            nm.createNotificationChannel(
+                NotificationChannel(CHANNEL_UPDATES, context.getString(R.string.channel_updates), NotificationManager.IMPORTANCE_DEFAULT),
             )
         }
     }

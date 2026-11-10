@@ -176,6 +176,48 @@ class LeaderboardActivity : AppCompatActivity() {
         return if (metric == "distance") "${Fmt.distance(value, miles, 1)} ${Fmt.unit(miles)}" else Fmt.duration(value.toLong())
     }
 
+    /** แตะรายชื่อ → สรุปของนักวิ่งคนนั้น (ระยะสัปดาห์/เดือน/ทั้งหมด · สถิติ 5K/10K) */
+    private fun showRunner(e: Entry) {
+        val b = com.example.runtrail.databinding.SheetRunnerBinding.inflate(layoutInflater)
+        val dialog = com.google.android.material.bottomsheet.BottomSheetDialog(this).apply { setContentView(b.root) }
+        b.tvAvatar.text = e.name.take(1).uppercase()
+        b.tvName.text = if (e.isMe) getString(R.string.lb_you, e.name) else e.name
+        b.tvSub.text = getString(R.string.lb_rank, e.rank) + (e.country?.let { " · $it" } ?: "")
+        dialog.show()
+        runAsync({ App.services.api.userSummary(e.userId) }) { result ->
+            b.progress.visibility = View.GONE
+            result.onSuccess { s ->
+                val miles = App.services.prefs.useMiles
+                fun dist(k: String) = "${Fmt.distance(s.optDouble(k), miles, 1)} ${Fmt.unit(miles)}"
+                fun best(k: String) = if (s.isNull(k)) "--" else Fmt.duration(s.optLong(k))
+                val since = try { Fmt.shortDate(com.example.runtrail.net.RunJson.millis(s.getString("member_since"))) } catch (x: Exception) { "" }
+                b.tvSub.text = b.tvSub.text.toString() + " · " + getString(R.string.runner_since, since)
+                listOf(
+                    getString(R.string.runner_week) to dist("week_distance_m"),
+                    getString(R.string.runner_month) to dist("month_distance_m"),
+                    getString(R.string.runner_total) to dist("total_distance_m"),
+                    getString(R.string.runner_runs) to s.optInt("run_count").toString(),
+                    getString(R.string.runner_best5k) to best("best_5k_s"),
+                    getString(R.string.runner_best10k) to best("best_10k_s"),
+                ).forEach { (label, value) ->
+                    val cell = layoutInflater.inflate(R.layout.view_stat, b.grid, false)
+                    val stat = com.example.runtrail.databinding.ViewStatBinding.bind(cell)
+                    stat.tvValue.text = value
+                    stat.tvUnit.visibility = View.GONE
+                    stat.tvLabel.text = label
+                    b.grid.addView(cell, android.widget.GridLayout.LayoutParams(
+                        android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED),
+                        android.widget.GridLayout.spec(android.widget.GridLayout.UNDEFINED, 1f),
+                    ).apply { width = 0; bottomMargin = (12 * resources.displayMetrics.density).toInt() })
+                }
+                b.grid.visibility = View.VISIBLE
+            }.onFailure {
+                b.tvError.text = it.userMessage()
+                b.tvError.visibility = View.VISIBLE
+            }
+        }
+    }
+
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putString(KEY_METRIC, metric)
@@ -183,10 +225,10 @@ class LeaderboardActivity : AppCompatActivity() {
         outState.putString(KEY_SCOPE, scope)
     }
 
-    data class Entry(val rank: Int, val name: String, val country: String?, val value: Double, val isMe: Boolean) {
+    data class Entry(val rank: Int, val userId: String, val name: String, val country: String?, val value: Double, val isMe: Boolean) {
         companion object {
             fun from(o: JSONObject) = Entry(
-                o.optInt("rank"), o.optString("display_name"),
+                o.optInt("rank"), o.optString("user_id"), o.optString("display_name"),
                 if (o.isNull("country_code")) null else o.optString("country_code"),
                 o.optDouble("value"), o.optBoolean("is_me"),
             )
@@ -220,6 +262,7 @@ class LeaderboardActivity : AppCompatActivity() {
                 b.tvCountry.visibility = if (e.country == null) View.GONE else View.VISIBLE
                 b.tvValue.text = format(e.value, metric)
                 b.row.setBackgroundResource(if (e.isMe) R.drawable.bg_tile_green else R.drawable.bg_card)
+                b.row.setOnClickListener { showRunner(e) }
             }
         }
     }

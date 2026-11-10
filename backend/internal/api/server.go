@@ -100,6 +100,10 @@ func New(d Deps) (*fiber.App, *Server) {
 
 	v1.Get("/leaderboard", s.requireAuth, s.leaderboard)
 	v1.Get("/leaderboard/me", s.requireAuth, s.leaderboardMe)
+	v1.Get("/users/:id/summary", s.requireAuth, s.userSummary)
+
+	v1.Get("/notifications", s.requireAuth, s.listNotifications)
+	v1.Post("/notifications/read", s.requireAuth, s.markRead)
 
 	v1.Get("/public/runs/:code", rateLimit(d.Config.PublicRateLimit), s.publicRun)
 

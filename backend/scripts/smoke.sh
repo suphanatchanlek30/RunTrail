@@ -117,6 +117,12 @@ print(f"  \033[32m✓\033[0m public route hides home: {len(vis)}/{len(pts)} poin
 PY
 pass=$((pass + 1))
 
+expect "$(req GET "/notifications" "$ACCESS" "")" 200 "notifications: $(j '[.items[].type] | join(", ")') (unread $(j .unread_count))"
+[ "$(j '[.items[] | select(.type == "run_verified")] | length')" -ge 1 ] || fail "no run_verified notification"
+[ "$(j '[.items[] | select(.type == "share_viewed")] | length')" -ge 1 ] || fail "no share_viewed notification"
+ok "real events became notifications (run verified + share viewed)"
+echo '{"all":true}' > "$TMP/read.json"
+expect "$(req POST /notifications/read "$ACCESS" "$TMP/read.json")" 204 "mark all notifications read"
 expect "$(req GET "/leaderboard?metric=distance&period=week" "$ACCESS" "")" 200 \
   "leaderboard week: my rank $(j .me.rank) of $(j .total)"
 expect "$(req GET "/leaderboard/me?period=week&scope=country" "$ACCESS" "")" 200 "leaderboard/me (TH)"

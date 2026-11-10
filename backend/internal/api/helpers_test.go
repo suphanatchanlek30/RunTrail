@@ -79,7 +79,7 @@ type env struct {
 func newEnv(t *testing.T, tweak ...func(*config.Config)) *env {
 	t.Helper()
 	_, err := testPool.Exec(context.Background(),
-		`TRUNCATE users, refresh_tokens, runs, run_tracks, run_splits, photo_uploads CASCADE`)
+		`TRUNCATE users, refresh_tokens, runs, run_tracks, run_splits, photo_uploads, notifications CASCADE`)
 	if err != nil {
 		t.Fatal(err)
 	}

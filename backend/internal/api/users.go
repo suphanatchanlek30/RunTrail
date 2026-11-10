@@ -200,6 +200,7 @@ func (s *Server) deleteMe(c fiber.Ctx) error {
 				WHERE user_id = $1 AND deleted_at IS NULL`, []any{uid, now}},
 			{`DELETE FROM run_tracks WHERE run_id IN (SELECT id FROM runs WHERE user_id = $1)`, []any{uid}},
 			{`DELETE FROM photo_uploads WHERE user_id = $1`, []any{uid}},
+			{`DELETE FROM notifications WHERE user_id = $1`, []any{uid}},
 		}
 		for _, st := range stmts {
 			if _, err := tx.Exec(ctx, st.sql, st.args...); err != nil {

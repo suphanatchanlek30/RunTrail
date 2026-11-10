@@ -143,6 +143,11 @@
             android:screenOrientation="portrait"
             android:exported="false" />
 
+        <activity
+            android:name=".ui.notifications.NotificationsActivity"
+            android:screenOrientation="portrait"
+            android:exported="false" />
+
         <service
             android:name=".service.RunTrackingService"
             android:exported="false"

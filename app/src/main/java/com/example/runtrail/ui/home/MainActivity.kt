@@ -20,6 +20,7 @@ import com.example.runtrail.ui.common.RunCardBinder
 import com.example.runtrail.ui.common.applySystemBarsPadding
 import com.example.runtrail.ui.common.dp
 import com.example.runtrail.ui.common.setupEdgeToEdge
+import com.example.runtrail.ui.common.runAsync
 import com.example.runtrail.ui.common.toast
 import com.example.runtrail.ui.detail.RunDetailActivity
 import com.example.runtrail.ui.history.HistoryActivity
@@ -75,15 +76,7 @@ class MainActivity : AppCompatActivity() {
             startActivity(Intent(this, RecordsActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_REORDER_TO_FRONT))
         }
         binding.btnBell.setOnClickListener {
-            val pending = RunRepository.pendingCount()
-            when {
-                !Accounts.isLoggedIn && pending > 0 -> toast(getString(R.string.home_bell_guest, pending))
-                pending > 0 -> {
-                    toast(getString(R.string.home_bell_pending, pending))
-                    SyncManager.requestSync(this)
-                }
-                else -> toast(getString(R.string.home_bell_none))
-            }
+            startActivity(Intent(this, com.example.runtrail.ui.notifications.NotificationsActivity::class.java))
         }
     }
 
@@ -96,6 +89,9 @@ class MainActivity : AppCompatActivity() {
         RunRepository.addListener(onDataChanged)
         render()
         checkUnfinishedRun()
+        if (Accounts.isLoggedIn) {
+            runAsync({ com.example.runtrail.App.services.sync.fetchNotifications() }) { if (::binding.isInitialized) render() }
+        }
     }
 
     override fun onPause() {
@@ -106,6 +102,9 @@ class MainActivity : AppCompatActivity() {
     private fun render() {
         val miles = prefs.useMiles
         binding.tvAvatar.text = prefs.initial
+        val unread = if (Accounts.isLoggedIn) prefs.unreadNotifications else 0
+        binding.tvBellBadge.visibility = if (unread > 0) View.VISIBLE else View.GONE
+        binding.tvBellBadge.text = if (unread > 99) "99+" else unread.toString()
         binding.tvGreeting.text = Fmt.greeting()
         binding.tvName.text = prefs.firstName
 

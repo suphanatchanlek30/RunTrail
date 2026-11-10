@@ -288,6 +288,7 @@ func (s *Server) putRun(c fiber.Ctx) error {
 	}
 	s.lb.clear()
 	if created {
+		s.afterRunCreated(ctx, uid, out)
 		return c.Status(fiber.StatusCreated).JSON(out)
 	}
 	return c.JSON(out)

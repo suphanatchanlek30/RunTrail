@@ -56,6 +56,7 @@ class SettingsActivity : AppCompatActivity() {
         setupRow(binding.rowAccount, R.drawable.ic_shield, R.string.setting_account)
         setupRow(binding.rowSync, R.drawable.ic_cloud_up, R.string.setting_sync)
         setupRow(binding.rowLeaderboard, R.drawable.ic_globe, R.string.setting_leaderboard, toggle = true)
+        setupRow(binding.rowUpdates, R.drawable.ic_bell, R.string.setting_updates, toggle = true)
         setupRow(binding.rowServer, R.drawable.ic_server, R.string.setting_server)
         setupRow(binding.rowPassword, R.drawable.ic_lock, R.string.setting_password)
         setupRow(binding.rowLogout, R.drawable.ic_x, R.string.setting_logout)
@@ -89,6 +90,8 @@ class SettingsActivity : AppCompatActivity() {
                 SyncManager.requestSync(this)
             }
         }
+        binding.rowUpdates.root.setOnClickListener { binding.rowUpdates.swToggle.toggle() }
+        binding.rowUpdates.swToggle.setOnCheckedChangeListener { _, checked -> prefs.updatesAlert = checked }
         binding.rowPassword.root.setOnClickListener { changePassword() }
         binding.rowLogout.root.setOnClickListener { confirmLogout() }
         binding.rowDeleteAccount.root.setOnClickListener { confirmDeleteAccount() }
@@ -133,6 +136,8 @@ class SettingsActivity : AppCompatActivity() {
             else -> getString(R.string.setting_sync_never)
         }
         binding.rowLeaderboard.swToggle.isChecked = prefs.leaderboardOptIn
+        binding.rowUpdates.swToggle.isChecked = prefs.updatesAlert
+        binding.rowUpdates.root.visibility = if (session != null) View.VISIBLE else View.GONE
         binding.groupAccount.visibility = if (session != null) View.VISIBLE else View.GONE
         binding.rowLeaderboard.root.visibility = if (session != null) View.VISIBLE else View.GONE
         binding.rowSensors.tvValue.text = "${SensorHelper.countAvailable(this)}/${SensorHelper.specs.size}"

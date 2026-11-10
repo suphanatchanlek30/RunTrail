@@ -11,6 +11,7 @@ import com.example.runtrail.net.ApiException
 import com.example.runtrail.net.RunJson
 import com.example.runtrail.net.RunTrailApi
 import com.example.runtrail.ui.common.ImageStore
+import com.example.runtrail.ui.notifications.Notifier
 import org.json.JSONObject
 import java.io.File
 
@@ -46,6 +47,7 @@ class SyncEngine(
             RunRepository.runsToPush(uid).forEach { if (pushRun(it)) pushed++ else failed++ }
             pushPhotos(uid)
             val pulled = pull(uid)
+            fetchNotifications()
             prefs.lastSyncAt = System.currentTimeMillis()
             prefs.lastSyncError = null
             RunRepository.notifyChanged()
@@ -189,6 +191,32 @@ class SyncEngine(
         return count
     }
 
+    /**
+     * ดึงการแจ้งเตือนจาก server → เก็บไว้แสดงตอนออฟไลน์ และขึ้นในแถบแจ้งเตือนของเครื่องสำหรับรายการใหม่
+     * ล้มเหลวก็ไม่เป็นไร (ไม่ทำให้การซิงก์การวิ่งล้ม)
+     */
+    fun fetchNotifications() {
+        val page = try { api.notifications() } catch (e: ApiException) {
+            if (e.status == 401) throw e
+            return
+        }
+        prefs.notificationsCache = page.toString()
+        prefs.unreadNotifications = page.optInt("unread_count")
+        val items = page.getJSONArray("items")
+        val shown = prefs.notifiedIds.toMutableSet()
+        val firstFetch = shown.isEmpty()
+        for (i in items.length() - 1 downTo 0) {
+            val n = items.getJSONObject(i)
+            val id = n.getString("id")
+            if (id in shown) continue
+            shown += id
+            // ครั้งแรกหลังล็อกอินไม่เด้งของเก่าทั้งหมด
+            if (!firstFetch && !n.optBoolean("read") && prefs.updatesAlert) Notifier.show(context, n)
+        }
+        shown += INIT_MARK   // จำว่าดึงครั้งแรกแล้ว แม้ยังไม่มีการแจ้งเตือนเลย
+        prefs.notifiedIds = if (shown.size > 400) shown.take(300).toSet() + INIT_MARK else shown
+    }
+
     private fun applyPulled(o: JSONObject, uid: String): Boolean {
         val uuid = o.getString("id")
         val local = RunRepository.getByUuid(uuid)
@@ -222,5 +250,6 @@ class SyncEngine(
         private const val TAG = "SyncEngine"
         /** lock เดียวทั้งแอป: WorkManager กับปุ่มซิงก์ในหน้าจอจะไม่ทำงานซ้อนกัน */
         val LOCK = Any()
+        private const val INIT_MARK = "_init"
     }
 }

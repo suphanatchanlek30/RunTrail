@@ -119,6 +119,10 @@ class SyncEndToEndTest {
         assertEquals("server ตรวจเส้นทางผ่าน: ${gps.verifyReason}", true, gps.verified)
         assertEquals(gps.distanceM, gps.serverDistanceM!!, gps.distanceM * 0.01)
         assertEquals(false, RunRepository.getById(manualId, withTrack = false)!!.verified)
+        // การแจ้งเตือนจาก server ถูกดึงมาเก็บไว้ (แสดงตอนออฟไลน์ได้)
+        val notes = org.json.JSONObject(prefs.notificationsCache!!).getJSONArray("items")
+        assertTrue("run_verified notification", (0 until notes.length()).any { notes.getJSONObject(it).getString("type") == "run_verified" })
+        assertTrue(prefs.unreadNotifications >= 1)
 
         // 3) ซิงก์ซ้ำ → ไม่ส่งซ้ำ ไม่เกิดข้อมูลซ้ำบน server
         assertEquals(0, (engine.sync() as SyncEngine.Outcome.Done).pushed)

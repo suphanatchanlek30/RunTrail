@@ -137,6 +137,8 @@
                 <View style="@style/Divider" />
                 <include android:id="@+id/rowLeaderboard" layout="@layout/view_setting_row" />
                 <View style="@style/Divider" />
+                <include android:id="@+id/rowUpdates" layout="@layout/view_setting_row" />
+                <View style="@style/Divider" />
                 <include android:id="@+id/rowServer" layout="@layout/view_setting_row" />
             </LinearLayout>
 

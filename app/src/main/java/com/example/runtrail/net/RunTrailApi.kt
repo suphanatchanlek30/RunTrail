@@ -99,6 +99,15 @@ class RunTrailApi(val client: ApiClient) {
     fun leaderboard(metric: String, period: String, scope: String): JSONObject =
         client.call("GET", "/leaderboard?metric=$metric&period=$period&scope=$scope&limit=100")!!
 
+    // ---------------- การแจ้งเตือน / นักวิ่งคนอื่น
+
+    fun notifications(cursor: String? = null): JSONObject =
+        client.call("GET", "/notifications?limit=50" + (cursor?.let { "&cursor=" + Uri.encode(it) } ?: ""))!!
+
+    fun markAllRead() { client.call("POST", "/notifications/read", JSONObject().put("all", true)) }
+
+    fun userSummary(userId: String): JSONObject = client.call("GET", "/users/$userId/summary")!!
+
     fun health(): Boolean = try {
         client.plain.newCall(okhttp3.Request.Builder().url(client.rootUrl("/healthz")).build())
             .execute().use { it.isSuccessful }

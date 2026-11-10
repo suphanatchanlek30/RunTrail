@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 24 · การแจ้งเตือน -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_canvas"
+    android:orientation="vertical"
+    tools:context=".ui.notifications.NotificationsActivity">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="60dp"
+        android:paddingStart="20dp"
+        android:paddingTop="8dp"
+        android:paddingEnd="20dp">
+
+        <ImageView
+            android:id="@+id/btnBack"
+            style="@style/IconBtn"
+            android:contentDescription="@string/action_back"
+            android:src="@drawable/ic_chevron_left" />
+
+        <TextView
+            style="@style/Txt.H2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/notif_title" />
+
+        <ImageView
+            android:id="@+id/btnRefresh"
+            style="@style/IconBtn"
+            android:layout_gravity="end"
+            android:contentDescription="@string/lb_refresh"
+            android:src="@drawable/ic_refresh" />
+    </FrameLayout>
+
+    <TextView
+        android:id="@+id/tvStatus"
+        style="@style/Txt.Caption"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:paddingStart="20dp"
+        android:paddingEnd="20dp"
+        android:textColor="@color/text_tertiary"
+        android:visibility="gone" />
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/recycler"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingStart="20dp"
+            android:paddingTop="8dp"
+            android:paddingEnd="20dp"
+            android:paddingBottom="16dp" />
+
+        <LinearLayout
+            android:id="@+id/emptyView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:gravity="center"
+            android:orientation="vertical"
+            android:padding="32dp"
+            android:visibility="gone">
+
+            <ImageView
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:importantForAccessibility="no"
+                android:src="@drawable/ic_bell"
+                app:tint="@color/text_tertiary" />
+
+            <TextView
+                android:id="@+id/tvEmpty"
+                style="@style/Txt.BodyS"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:gravity="center"
+                android:textColor="@color/text_secondary" />
+
+            <TextView
+                android:id="@+id/btnEmptyAction"
+                style="@style/Btn.Primary"
+                android:layout_width="wrap_content"
+                android:layout_marginTop="16dp"
+                android:paddingStart="24dp"
+                android:paddingEnd="24dp"
+                android:visibility="gone" />
+        </LinearLayout>
+
+        <ProgressBar
+            android:id="@+id/progress"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_gravity="center"
+            android:indeterminateTint="@color/run_green"
+            android:visibility="gone" />
+    </FrameLayout>
+</LinearLayout>

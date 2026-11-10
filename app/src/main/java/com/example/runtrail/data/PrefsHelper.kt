@@ -108,6 +108,25 @@ class PrefsHelper(context: Context, name: String = PREFS_NAME) {
         get() = prefs.getString(KEY_LAST_SYNC_ERROR, null)
         set(value) = prefs.edit { putString(KEY_LAST_SYNC_ERROR, value) }
 
+    /** แจ้งเตือนข่าวสาร (สถิติใหม่ ถึงเป้า มีคนแซง มีคนดูลิงก์) ในแถบแจ้งเตือนของเครื่อง */
+    var updatesAlert: Boolean
+        get() = prefs.getBoolean(KEY_UPDATES_ALERT, true)
+        set(value) = prefs.edit { putBoolean(KEY_UPDATES_ALERT, value) }
+
+    /** รายการแจ้งเตือนล่าสุดจาก server (JSON) สำหรับแสดงตอนออฟไลน์ */
+    var notificationsCache: String?
+        get() = prefs.getString(KEY_NOTIF_CACHE, null)
+        set(value) = prefs.edit { putString(KEY_NOTIF_CACHE, value) }
+
+    var unreadNotifications: Int
+        get() = prefs.getInt(KEY_NOTIF_UNREAD, 0)
+        set(value) = prefs.edit { putInt(KEY_NOTIF_UNREAD, value) }
+
+    /** id ของการแจ้งเตือนที่เคยขึ้นในแถบแจ้งเตือนแล้ว (กันเด้งซ้ำ) */
+    var notifiedIds: Set<String>
+        get() = prefs.getStringSet(KEY_NOTIFIED, emptySet()) ?: emptySet()
+        set(value) = prefs.edit { putStringSet(KEY_NOTIFIED, value.toSet()) }
+
     /** ผลอันดับโลกล่าสุด (JSON) เก็บไว้แสดงตอนออฟไลน์ */
     fun leaderboardCache(key: String): String? = prefs.getString("lb_$key", null)
     fun saveLeaderboardCache(key: String, json: String) = prefs.edit { putString("lb_$key", json) }
@@ -132,7 +151,8 @@ class PrefsHelper(context: Context, name: String = PREFS_NAME) {
     fun clearAccountData() {
         prefs.edit {
             listOf(KEY_FIRST, KEY_LAST, KEY_WEIGHT, KEY_HEIGHT, KEY_AGE, KEY_LAST_PULL, KEY_LAST_SYNC_AT,
-                KEY_LAST_SYNC_ERROR, KEY_PROFILE_DIRTY, KEY_LB_OPT_IN, KEY_ACCOUNT).forEach { remove(it) }
+                KEY_LAST_SYNC_ERROR, KEY_PROFILE_DIRTY, KEY_LB_OPT_IN, KEY_ACCOUNT, KEY_NOTIF_CACHE, KEY_NOTIF_UNREAD,
+                KEY_NOTIFIED).forEach { remove(it) }
             prefs.all.keys.filter { it.startsWith("lb_") }.forEach { remove(it) }
         }
     }
@@ -162,6 +182,10 @@ class PrefsHelper(context: Context, name: String = PREFS_NAME) {
         private const val KEY_SERVER = "server_host"
         private const val KEY_API_URL = "api_url"
         private const val KEY_ACCOUNT = "account_user_id"
+        private const val KEY_UPDATES_ALERT = "updates_alert"
+        private const val KEY_NOTIF_CACHE = "notifications_cache"
+        private const val KEY_NOTIF_UNREAD = "notifications_unread"
+        private const val KEY_NOTIFIED = "notified_ids"
         private const val KEY_PROFILE_DIRTY = "profile_dirty"
         private const val KEY_LB_OPT_IN = "leaderboard_opt_in"
         private const val KEY_COUNTRY = "country_code"
