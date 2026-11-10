@@ -20,7 +20,7 @@ object ImageStore {
 
     fun save(context: Context, bitmap: Bitmap): String {
         val dir = File(context.filesDir, "photos").apply { mkdirs() }
-        val file = File(dir, "run_${System.currentTimeMillis()}.jpg")
+        val file = File(dir, "run_${System.currentTimeMillis()}_${(1000..9999).random()}.jpg")
         file.outputStream().use { scale(bitmap).compress(Bitmap.CompressFormat.JPEG, QUALITY, it) }
         return file.absolutePath
     }
@@ -38,6 +38,12 @@ object ImageStore {
         val rotated = if (degrees == 0f) bmp else
             Bitmap.createBitmap(bmp, 0, 0, bmp.width, bmp.height, Matrix().apply { postRotate(degrees) }, true)
         return save(context, rotated)
+    }
+
+    /** รูปที่ดาวน์โหลดจาก server (การวิ่งที่บันทึกจากเครื่องอื่น) */
+    fun saveBytes(context: Context, bytes: ByteArray): String? {
+        val bmp = BitmapFactory.decodeByteArray(bytes, 0, bytes.size) ?: return null
+        return save(context, bmp)
     }
 
     fun load(path: String?): Bitmap? = path?.let { if (File(it).exists()) BitmapFactory.decodeFile(it) else null }

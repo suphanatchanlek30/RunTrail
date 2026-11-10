@@ -23,6 +23,7 @@
 
     <string name="nav_home">หน้าหลัก</string>
     <string name="nav_history">ประวัติ</string>
+    <string name="nav_leaderboard">อันดับ</string>
     <string name="nav_records">สถิติ</string>
     <string name="nav_settings">ตั้งค่า</string>
 
@@ -66,7 +67,7 @@
 
     <string name="title_morning_run">วิ่งเช้า</string>
     <string name="title_afternoon_run">วิ่งบ่าย</string>
-    <string name="title_evening_run">วิ่งเย็นริมสวน</string>
+    <string name="title_evening_run">วิ่งเย็น</string>
     <string name="title_night_run">วิ่งค่ำ</string>
 
     <!-- ===== 01 Welcome ===== -->
@@ -211,6 +212,7 @@
     <string name="stats_slowest">ช้าสุด</string>
     <string name="stats_temp">อุณหภูมิ</string>
     <string name="stats_humidity">ความชื้น</string>
+    <string name="stats_gps_points">จุด GPS</string>
 
     <!-- ===== 11 Replay ===== -->
     <string name="replay_title">Replay · %s</string>
@@ -265,16 +267,16 @@
     <string name="share_hide_ends">ซ่อน 200 ม. แรกและสุดท้าย</string>
     <string name="share_hide_ends_desc">ไม่เปิดเผยตำแหน่งบ้านหรือที่พัก</string>
     <string name="share_show_photo">แสดงรูปจากการวิ่ง</string>
-    <string name="share_show_photo_desc">รูปถูกย่อและส่งเป็น Base64</string>
+    <string name="share_show_photo_desc">รูปถูกย่อแล้วเก็บบนเซิร์ฟเวอร์</string>
     <string name="share_show_kcal">แสดงแคลอรี่</string>
     <string name="share_show_kcal_desc">คำนวณจากน้ำหนักของคุณ</string>
     <string name="share_copy_link">คัดลอกลิงก์</string>
     <string name="share_other_apps">แอปอื่น</string>
     <string name="share_qr">QR Code</string>
     <string name="share_open_web">เปิดเว็บ</string>
-    <string name="share_remove_server">ลบออกจากเซิร์ฟเวอร์ (ข้อมูลในเครื่องยังอยู่)</string>
-    <string name="share_remove_title">ลบออกจากเซิร์ฟเวอร์?</string>
-    <string name="share_remove_body">ลิงก์แชร์จะใช้ไม่ได้ทันที แต่การวิ่งยังอยู่ในเครื่องของคุณ</string>
+    <string name="share_remove_server">ยกเลิกลิงก์แชร์ (การวิ่งยังอยู่)</string>
+    <string name="share_remove_title">ยกเลิกลิงก์แชร์?</string>
+    <string name="share_remove_body">คนที่มีลิงก์จะเปิดดูไม่ได้ทันที ส่วนการวิ่งยังอยู่ทั้งในเครื่องและบนเซิร์ฟเวอร์</string>
     <string name="share_message">%1$s · %2$s กม. — ดูเส้นทางการวิ่งของฉันบน RunTrail %3$s</string>
 
     <!-- ===== 15 History ===== -->
@@ -323,9 +325,9 @@
     <string name="pace_level_fast">เร็ว</string>
     <string name="pace_level_steady">กลาง ๆ</string>
     <string name="pace_level_easy">สบาย ๆ</string>
-    <string name="setting_server_desc">ที่อยู่ API (ApiConfig.BASE_URL) — ใช้ 10.0.2.2 เมื่อทดสอบบน emulator</string>
-    <string name="setting_server_hint">เช่น 10.0.2.2 หรือ api.example.com</string>
-    <string name="setting_server_invalid">รูปแบบที่อยู่เซิร์ฟเวอร์ไม่ถูกต้อง</string>
+    <string name="setting_server_desc">ที่อยู่ backend เช่น http://10.0.2.2:8080 (emulator) หรือ http://IP ของเครื่อง:8080 (มือถือจริง)</string>
+    <string name="setting_server_hint">http://10.0.2.2:8080</string>
+    <string name="setting_server_invalid">ต้องขึ้นต้นด้วย http:// หรือ https:// เช่น http://10.0.2.2:8080</string>
     <string name="setting_sensors">ตรวจเซนเซอร์</string>
     <string name="setting_recreate">ทดสอบคืนสถานะหน้าจอ</string>
     <string name="setting_recreate_value">สร้าง %d ครั้ง</string>
@@ -344,4 +346,114 @@
     <string name="delete_body">“%1$s · %2$s กม.” จะถูกลบออกจากเครื่องถาวร รวมถึงเส้นทางและรูปภาพ</string>
     <string name="delete_server">ลบจากเซิร์ฟเวอร์ด้วย</string>
     <string name="delete_server_desc">การวิ่งนี้ซิงก์แล้ว ลิงก์แชร์จะใช้ไม่ได้</string>
+
+    <!-- ===== Backend / บัญชี / ซิงก์ / อันดับ ===== -->
+    <string name="channel_run">กำลังบันทึกการวิ่ง</string>
+    <string name="channel_km">แจ้งเตือนทุก 1 กม.</string>
+    <string name="notify_run_title">กำลังวิ่ง</string>
+    <string name="notify_run_paused">หยุดชั่วคราว</string>
+    <string name="notify_run_starting">กำลังหาสัญญาณ GPS…</string>
+    <string name="notify_run_text">%1$s %2$s · %3$s</string>
+    <string name="notify_km_title">ครบ %d กม.</string>
+    <string name="notify_km_text">เพซกิโลนี้ %1$s /กม. · เวลารวม %2$s</string>
+    <string name="live_still_recording">ยังบันทึกการวิ่งอยู่ กลับมาได้จากการแจ้งเตือน</string>
+    <string name="live_no_camera">ไม่พบแอปกล้องในเครื่อง</string>
+    <string name="edit_date_locked">การวิ่งที่บันทึกด้วย GPS แก้วันเวลาไม่ได้</string>
+    <string name="web_load_failed">เปิดหน้าเว็บไม่ได้ ตรวจสอบอินเทอร์เน็ต</string>
+    <string name="home_bell_guest">มี %d การวิ่งที่ยังไม่ได้อัปโหลด — เข้าสู่ระบบเพื่อซิงก์</string>
+
+    <string name="auth_login">เข้าสู่ระบบ</string>
+    <string name="auth_login_title">เข้าสู่ระบบ</string>
+    <string name="auth_login_body">ซิงก์การวิ่งข้ามเครื่อง สร้างลิงก์แชร์ และแข่งในอันดับโลก · ล็อกอินครั้งเดียว ใช้แบบออฟไลน์ได้ต่อเนื่อง</string>
+    <string name="auth_email">อีเมล</string>
+    <string name="auth_email_hint">you@example.com</string>
+    <string name="auth_password">รหัสผ่าน</string>
+    <string name="auth_password_hint">รหัสผ่าน</string>
+    <string name="auth_password_new_hint">อย่างน้อย 8 ตัวอักษร</string>
+    <string name="auth_password_confirm">ยืนยันรหัสผ่าน</string>
+    <string name="auth_password_confirm_hint">พิมพ์รหัสผ่านอีกครั้ง</string>
+    <string name="auth_no_account">ยังไม่มีบัญชี? สมัครสมาชิก</string>
+    <string name="auth_guest">ใช้งานแบบออฟไลน์ก่อน</string>
+    <string name="auth_guest_desc">วิ่งและบันทึกได้ครบทุกอย่าง การวิ่งจะอัปโหลดให้เมื่อเข้าสู่ระบบภายหลัง</string>
+    <string name="auth_server">เซิร์ฟเวอร์: %s (แตะเพื่อเปลี่ยน)</string>
+    <string name="auth_email_invalid">รูปแบบอีเมลไม่ถูกต้อง</string>
+    <string name="auth_email_taken">อีเมลนี้มีบัญชีอยู่แล้ว</string>
+    <string name="auth_password_required">กรุณาใส่รหัสผ่าน</string>
+    <string name="auth_password_short">รหัสผ่านต้องยาวอย่างน้อย 8 ตัวอักษร</string>
+    <string name="auth_password_mismatch">รหัสผ่านไม่ตรงกัน</string>
+    <string name="auth_name_required">กรุณาใส่ชื่อที่แสดง</string>
+    <string name="auth_welcome">ยินดีต้อนรับ %s</string>
+    <string name="auth_register">สมัครสมาชิก</string>
+    <string name="auth_register_title">สร้างบัญชี</string>
+    <string name="auth_register_body">การวิ่งที่บันทึกไว้แล้วในเครื่องนี้จะถูกอัปโหลดเข้าบัญชีใหม่ให้อัตโนมัติ</string>
+    <string name="auth_display_name">ชื่อที่แสดงในอันดับ</string>
+    <string name="auth_display_name_hint">เช่น พลอย</string>
+    <string name="auth_country">ประเทศ</string>
+    <string name="auth_country_desc">ใช้จัดอันดับรายประเทศ</string>
+    <string name="auth_registered">สมัครสมาชิกเรียบร้อย</string>
+    <string name="auth_register_privacy">รหัสผ่านถูกเข้ารหัสด้วย argon2id · เส้นทางที่แชร์ซ่อนจุดเริ่ม/จบได้</string>
+    <string name="session_expired">เซสชันหมดอายุ กรุณาเข้าสู่ระบบใหม่เพื่อซิงก์ (ข้อมูลในเครื่องยังอยู่)</string>
+
+    <string name="share_login_title">ยังไม่ได้เข้าสู่ระบบ</string>
+    <string name="share_login_desc">เข้าสู่ระบบเพื่ออัปโหลดและสร้างลิงก์แชร์</string>
+    <string name="share_create_link">สร้างลิงก์</string>
+    <string name="share_no_link_title">ซิงก์แล้ว ยังไม่มีลิงก์</string>
+    <string name="share_remove_confirm">ยกเลิกลิงก์</string>
+    <string name="share_run_missing">ไม่พบการวิ่งนี้</string>
+
+    <string name="setting_account">บัญชี</string>
+    <string name="setting_account_guest">ยังไม่ได้เข้าสู่ระบบ</string>
+    <string name="setting_sync">ซิงก์ข้อมูล</string>
+    <string name="setting_sync_login">เข้าสู่ระบบเพื่อซิงก์</string>
+    <string name="setting_sync_pending">รอส่ง %d รายการ</string>
+    <string name="setting_sync_done">ล่าสุด %s</string>
+    <string name="setting_sync_never">ยังไม่เคยซิงก์</string>
+    <string name="setting_sync_started">เริ่มซิงก์แล้ว (จะทำงานเมื่อมีอินเทอร์เน็ต)</string>
+    <string name="setting_leaderboard">แสดงชื่อในอันดับโลก</string>
+    <string name="setting_password">เปลี่ยนรหัสผ่าน</string>
+    <string name="setting_password_old">รหัสผ่านเดิม</string>
+    <string name="setting_password_new">รหัสผ่านใหม่ (อย่างน้อย 8 ตัว)</string>
+    <string name="setting_password_changed">เปลี่ยนรหัสผ่านแล้ว เครื่องอื่นถูกออกจากระบบ</string>
+    <string name="setting_logout">ออกจากระบบ</string>
+    <string name="setting_logout_title">ออกจากระบบ?</string>
+    <string name="setting_logout_body">ข้อมูลในเครื่องนี้จะถูกล้าง การวิ่งที่ซิงก์แล้วยังอยู่บนเซิร์ฟเวอร์ ล็อกอินใหม่เพื่อดึงกลับมาได้</string>
+    <string name="setting_logout_pending">มี %d รายการที่ยังไม่ได้อัปโหลด จะหายไปถ้าออกจากระบบตอนนี้ (เชื่อมต่อเน็ตแล้วรอซิงก์ก่อนจะดีกว่า)</string>
+    <string name="setting_logged_out">ออกจากระบบแล้ว</string>
+    <string name="setting_delete_account">ลบบัญชี</string>
+    <string name="setting_delete_title">ลบบัญชีถาวร?</string>
+    <string name="setting_delete_body">การวิ่ง รูป และลิงก์แชร์ทั้งหมดบนเซิร์ฟเวอร์จะถูกลบ และย้อนกลับไม่ได้</string>
+    <string name="setting_deleted">ลบบัญชีแล้ว</string>
+    <string name="settings_name_empty">ยังไม่ได้ตั้งชื่อ</string>
+
+    <string name="lb_title">อันดับโลก</string>
+    <string name="lb_refresh">รีเฟรช</string>
+    <string name="lb_week">สัปดาห์นี้</string>
+    <string name="lb_month">เดือนนี้</string>
+    <string name="lb_all">ทั้งหมด</string>
+    <string name="lb_metric_distance">ระยะรวม</string>
+    <string name="lb_metric_5k">5 กม. เร็วสุด</string>
+    <string name="lb_metric_10k">10 กม. เร็วสุด</string>
+    <string name="lb_scope_global">ทั่วโลก</string>
+    <string name="lb_scope_country">ประเทศของฉัน</string>
+    <string name="lb_reset_week">รีเซ็ตทุกวันจันทร์ 07:00 น.</string>
+    <string name="lb_reset_month">รีเซ็ตทุกวันที่ 1 ของเดือน</string>
+    <string name="lb_reset_all">ตลอดการใช้งาน</string>
+    <string name="lb_updated">อัปเดต %s</string>
+    <string name="lb_updated_offline">ออฟไลน์ · ข้อมูลเมื่อ %s</string>
+    <string name="lb_offline">ออฟไลน์อยู่ แสดงอันดับล่าสุดที่บันทึกไว้</string>
+    <string name="lb_login_needed">เข้าสู่ระบบเพื่อแข่งกับนักวิ่งทั่วโลก</string>
+    <string name="lb_retry">ลองใหม่</string>
+    <string name="lb_empty">ยังไม่มีใครในช่วงนี้ ออกไปวิ่งเป็นคนแรกเลย!</string>
+    <string name="lb_my_rank">อันดับของฉัน</string>
+    <string name="lb_rank">#%d</string>
+    <string name="lb_you">%s (คุณ)</string>
+    <string name="lb_me_none">ยังไม่มีการวิ่ง GPS ที่นับในช่วงนี้</string>
+    <string name="lb_me_hidden">คุณปิดการแสดงชื่อในอันดับไว้ (เปิดได้ในหน้าตั้งค่า)</string>
+    <string name="lb_me_first">คุณนำอยู่อันดับ 1!</string>
+    <string name="lb_me_total">จากนักวิ่งทั้งหมด %d คน</string>
+    <string name="lb_me_behind_distance">ตามอันดับก่อนหน้าอีก %s</string>
+    <string name="lb_me_behind_time">ช้ากว่าอันดับก่อนหน้า %s</string>
+    <string name="local_network_denied">ไม่ได้รับสิทธิ์เครือข่ายภายใน จึงต่อเซิร์ฟเวอร์ในวง Wi-Fi ไม่ได้ (เปิดได้ในตั้งค่าแอป)</string>
+    <string name="detail_lb_counted">นับในอันดับโลก</string>
+    <string name="detail_lb_not_counted">ไม่นับในอันดับ: %s</string>
 </resources>

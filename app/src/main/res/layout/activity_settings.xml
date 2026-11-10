@@ -131,7 +131,33 @@
                 android:paddingEnd="16dp"
                 android:paddingBottom="2dp">
 
+                <include android:id="@+id/rowAccount" layout="@layout/view_setting_row" />
+                <View style="@style/Divider" />
+                <include android:id="@+id/rowSync" layout="@layout/view_setting_row" />
+                <View style="@style/Divider" />
+                <include android:id="@+id/rowLeaderboard" layout="@layout/view_setting_row" />
+                <View style="@style/Divider" />
                 <include android:id="@+id/rowServer" layout="@layout/view_setting_row" />
+            </LinearLayout>
+
+            <!-- บัญชี (แสดงเมื่อล็อกอิน) -->
+            <LinearLayout
+                android:id="@+id/groupAccount"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:background="@drawable/bg_card"
+                android:orientation="vertical"
+                android:paddingStart="16dp"
+                android:paddingTop="2dp"
+                android:paddingEnd="16dp"
+                android:paddingBottom="2dp">
+
+                <include android:id="@+id/rowPassword" layout="@layout/view_setting_row" />
+                <View style="@style/Divider" />
+                <include android:id="@+id/rowLogout" layout="@layout/view_setting_row" />
+                <View style="@style/Divider" />
+                <include android:id="@+id/rowDeleteAccount" layout="@layout/view_setting_row" />
             </LinearLayout>
 
             <!-- ระบบ -->

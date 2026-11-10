@@ -26,7 +26,6 @@ import com.example.runtrail.ui.detail.RunDetailActivity
 import com.example.runtrail.ui.common.Sheets
 import java.util.Calendar
 import kotlin.math.roundToInt
-import kotlin.random.Random
 
 /**
  * 12 · Add / Edit Run (MA10 CRUD)
@@ -43,8 +42,28 @@ class AddEditRunActivity : AppCompatActivity() {
     private var photoPath: String? = null
     private var photoChanged = false
 
-    private val takePhoto = registerForActivityResult(ActivityResultContracts.TakePicturePreview()) { bmp: Bitmap? ->
-        if (bmp != null) setPhoto(ImageStore.save(this, bmp))
+    private var pendingPhoto: java.io.File? = null
+
+    /** กล้องแบบเต็มความละเอียดผ่าน FileProvider แล้วย่อ/แก้ทิศตาม EXIF */
+    private val takePhoto = registerForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
+        val file = pendingPhoto
+        pendingPhoto = null
+        if (ok && file != null) {
+            ImageStore.saveFromUri(this, Uri.fromFile(file))?.let { setPhoto(it) } ?: toast(getString(R.string.edit_photo_error))
+        }
+        file?.delete()
+    }
+
+    private fun openCamera() {
+        val dir = java.io.File(cacheDir, "camera").apply { mkdirs() }
+        val file = java.io.File(dir, "edit_${System.currentTimeMillis()}.jpg")
+        pendingPhoto = file
+        try {
+            takePhoto.launch(androidx.core.content.FileProvider.getUriForFile(this, "$packageName.files", file))
+        } catch (e: android.content.ActivityNotFoundException) {
+            pendingPhoto = null
+            toast(getString(R.string.live_no_camera))
+        }
     }
 
     private val pickPhoto = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
@@ -81,6 +100,7 @@ class AddEditRunActivity : AppCompatActivity() {
             startTime = savedInstanceState.getLong(KEY_START)
             photoPath = savedInstanceState.getString(KEY_PHOTO)
             photoChanged = savedInstanceState.getBoolean(KEY_PHOTO_CHANGED)
+            pendingPhoto = savedInstanceState.getString(KEY_PENDING)?.let { java.io.File(it) }
         } else {
             editing?.let {
                 binding.etName.setText(it.title)
@@ -92,10 +112,15 @@ class AddEditRunActivity : AppCompatActivity() {
         renderPhoto()
         renderDate()
 
-        binding.btnCamera.setOnClickListener { takePhoto.launch(null) }
+        binding.btnCamera.setOnClickListener { openCamera() }
         binding.btnGallery.setOnClickListener { pickPhoto.launch("image/*") }
         binding.photoChip.setOnClickListener { pickPhoto.launch("image/*") }
-        binding.fieldDate.setOnClickListener { pickDate() }
+        // การวิ่งที่บันทึกด้วย GPS มีเวลาในทุกจุดอยู่แล้ว จึงแก้วันเวลาไม่ได้ (server ก็ไม่ยอมให้แก้)
+        val dateLocked = editing?.isGps == true
+        binding.fieldDate.alpha = if (dateLocked) 0.5f else 1f
+        binding.fieldDate.setOnClickListener {
+            if (dateLocked) toast(getString(R.string.edit_date_locked)) else pickDate()
+        }
         binding.btnSave.setOnClickListener { save() }
         binding.btnSaveTop.setOnClickListener { save() }
         binding.btnClose.setOnClickListener { confirmClose() }
@@ -154,7 +179,14 @@ class AddEditRunActivity : AppCompatActivity() {
         val note = binding.etNote.text.toString().trim().ifEmpty { null }
         val current = editing
         if (current != null) {
-            RunRepository.update(current.copy(title = title, note = note, startTime = startTime, photoUri = photoPath))
+            val photoSync = when {
+                !photoChanged -> current.photoSync
+                photoPath != null -> com.example.runtrail.data.PhotoSync.PENDING
+                else -> com.example.runtrail.data.PhotoSync.NONE
+            }
+            RunRepository.update(current.copy(title = title, note = note, startTime = startTime, photoUri = photoPath,
+                endTime = current.endTime?.let { it + (startTime - current.startTime) }, photoSync = photoSync))
+            com.example.runtrail.sync.SyncManager.requestSync(this)
             toast(getString(R.string.toast_saved))
             finish()
             return
@@ -174,10 +206,11 @@ class AddEditRunActivity : AppCompatActivity() {
             title = title, note = note, startTime = startTime, endTime = startTime + seconds * 1000,
             distanceM = meters, movingTimeS = seconds,
             calories = RunCalculator.calories(meters, seconds, prefs.weightKg).roundToInt().toDouble(),
-            elevationGainM = (meters / 250).roundToInt(), photoUri = photoPath,
-            routeSeed = Random.nextInt(20, 400),
+            elevationGainM = 0, photoUri = photoPath, source = com.example.runtrail.data.RunSource.MANUAL,
+            photoSync = if (photoPath != null) com.example.runtrail.data.PhotoSync.PENDING else com.example.runtrail.data.PhotoSync.NONE,
         )
         val id = RunRepository.insert(run)
+        com.example.runtrail.sync.SyncManager.requestSync(this)
         toast(getString(R.string.toast_added))
         startActivity(Intent(this, RunDetailActivity::class.java).putExtra(RunDetailActivity.EXTRA_RUN_ID, id))
         finish()
@@ -209,11 +242,13 @@ class AddEditRunActivity : AppCompatActivity() {
         outState.putLong(KEY_START, startTime)
         outState.putString(KEY_PHOTO, photoPath)
         outState.putBoolean(KEY_PHOTO_CHANGED, photoChanged)
+        outState.putString(KEY_PENDING, pendingPhoto?.absolutePath)
     }
 
     companion object {
         private const val KEY_START = "start"
         private const val KEY_PHOTO = "photo"
         private const val KEY_PHOTO_CHANGED = "photo_changed"
+        private const val KEY_PENDING = "pending_photo"
     }
 }

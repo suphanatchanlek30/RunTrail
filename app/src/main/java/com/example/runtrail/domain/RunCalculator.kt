@@ -2,7 +2,6 @@ package com.example.runtrail.domain
 
 import com.example.runtrail.data.PersonalRecord
 import com.example.runtrail.data.Run
-import com.example.runtrail.data.RunRepository
 import kotlin.math.roundToInt
 
 /**
@@ -29,13 +28,13 @@ object RunCalculator {
 
     /** สถิติดีที่สุดจากทุกการวิ่ง */
     fun records(runs: List<Run>, now: Long = System.currentTimeMillis()): List<PersonalRecord> {
-        val recent = now - 7 * RunRepository.DAY_MS
+        val recent = now - 7 * Periods.DAY_MS
         val out = mutableListOf<PersonalRecord>()
 
         // 1 กม. เร็วสุด = split ที่เร็วที่สุด
         var best1: Pair<Int, Run>? = null
         runs.forEach { run ->
-            RunRepository.splits(run).filter { it.km <= run.distanceM / 1000.0 }.forEach { s ->
+            run.splits.filter { it.km <= run.distanceM / 1000.0 }.forEach { s ->
                 if (best1 == null || s.paceSecPerKm < best1!!.first) best1 = s.paceSecPerKm to run
             }
         }

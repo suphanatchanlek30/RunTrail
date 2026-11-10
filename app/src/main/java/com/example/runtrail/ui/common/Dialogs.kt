@@ -8,7 +8,6 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import com.example.runtrail.R
-import com.example.runtrail.data.DraftStore
 import com.example.runtrail.data.Run
 import com.example.runtrail.data.SyncStatus
 import com.example.runtrail.databinding.DialogDeleteBinding
@@ -40,7 +39,7 @@ object Dialogs {
             run.title,
             Fmt.distance(run.distanceM),
         )
-        val synced = run.syncStatus == SyncStatus.SYNCED
+        val synced = run.onServer
         var alsoServer = synced
         b.rowServer.visibility = if (synced) View.VISIBLE else View.GONE
         fun render() {
@@ -60,7 +59,7 @@ object Dialogs {
     /** 18 · พบการวิ่งที่ยังไม่จบ */
     fun recoverRun(
         context: Context,
-        draft: DraftStore.Draft,
+        draft: Run,
         miles: Boolean,
         onResume: () -> Unit,
         onSave: () -> Unit,
@@ -68,11 +67,11 @@ object Dialogs {
     ) {
         val b = DialogRecoverBinding.inflate(LayoutInflater.from(context))
         val dialog = create(context, b.root, cancelable = false)
-        b.tvBody.text = context.getString(R.string.recover_body, Fmt.time(draft.savedAt))
+        b.tvBody.text = context.getString(R.string.recover_body, Fmt.time(draft.updatedAt))
         b.tvDistance.text = Fmt.distance(draft.distanceM, miles)
         b.tvUnit.text = Fmt.unit(miles)
-        b.tvTime.text = Fmt.duration(draft.elapsedS)
-        b.tvPoints.text = draft.gpsPoints.toString()
+        b.tvTime.text = Fmt.duration(draft.movingTimeS)
+        b.tvPoints.text = draft.track.size.toString()
         b.btnResume.setOnClickListener { dialog.dismiss(); onResume() }
         b.btnSave.setOnClickListener { dialog.dismiss(); onSave() }
         b.btnDiscard.setOnClickListener { dialog.dismiss(); onDiscard() }

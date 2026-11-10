@@ -5,7 +5,7 @@ import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.example.runtrail.R
-import com.example.runtrail.data.DraftStore
+import com.example.runtrail.data.Accounts
 import com.example.runtrail.data.PrefsHelper
 import com.example.runtrail.data.Run
 import com.example.runtrail.data.RunRepository
@@ -27,6 +27,8 @@ import com.example.runtrail.ui.live.LiveRunActivity
 import com.example.runtrail.ui.onboarding.WelcomeActivity
 import com.example.runtrail.ui.records.RecordsActivity
 import com.example.runtrail.ui.sensor.SensorCheckActivity
+import com.example.runtrail.service.RunTrackingService
+import com.example.runtrail.sync.SyncManager
 import kotlin.math.roundToInt
 
 /**
@@ -38,8 +40,12 @@ class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var prefs: PrefsHelper
-    private lateinit var drafts: DraftStore
     private var recoverShown = false
+
+    /** server ในวง LAN (backend บน Mac) ต้องได้สิทธิ์เครือข่ายภายในก่อนซิงก์ได้ (Android 17+) */
+    private val askLocalNetwork = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
+    ) { granted -> if (granted) SyncManager.requestSync(this) else toast(getString(R.string.local_network_denied)) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,10 +59,12 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         binding.content.applySystemBarsPadding(top = true)
-        drafts = DraftStore(this)
 
         BottomNav.setup(this, binding.navContainer.bottomNav, R.id.nav_home)
 
+        if (savedInstanceState == null && Accounts.isLoggedIn &&
+            com.example.runtrail.ui.common.LocalNetwork.needsPermission(this)
+        ) askLocalNetwork.launch(com.example.runtrail.ui.common.LocalNetwork.PERMISSION)
         binding.fabStart.setOnClickListener { startRun() }
         binding.btnFirstRun.setOnClickListener { startRun() }
         binding.cardSensorCheck.setOnClickListener {
@@ -68,19 +76,31 @@ class MainActivity : AppCompatActivity() {
         }
         binding.btnBell.setOnClickListener {
             val pending = RunRepository.pendingCount()
-            toast(
-                if (pending > 0) getString(R.string.home_bell_pending, pending)
-                else getString(R.string.home_bell_none),
-            )
+            when {
+                !Accounts.isLoggedIn && pending > 0 -> toast(getString(R.string.home_bell_guest, pending))
+                pending > 0 -> {
+                    toast(getString(R.string.home_bell_pending, pending))
+                    SyncManager.requestSync(this)
+                }
+                else -> toast(getString(R.string.home_bell_none))
+            }
         }
     }
+
+    private val onDataChanged: () -> Unit = { if (::binding.isInitialized) render() }
 
     override fun onResume() {
         super.onResume()
         if (!::binding.isInitialized) return
         binding.navContainer.bottomNav.selectedItemId = R.id.nav_home
+        RunRepository.addListener(onDataChanged)
         render()
         checkUnfinishedRun()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        RunRepository.removeListener(onDataChanged)
     }
 
     private fun render() {
@@ -141,14 +161,15 @@ class MainActivity : AppCompatActivity() {
         startActivity(Intent(this, RunDetailActivity::class.java).putExtra(RunDetailActivity.EXTRA_RUN_ID, run.id))
     }
 
+    /** มีการวิ่งที่กำลังบันทึกอยู่ → กลับไปหน้าวิ่ง ไม่เริ่มใหม่ */
     private fun startRun() {
         startActivity(Intent(this, LiveRunActivity::class.java))
     }
 
-    /** 18 · กู้การวิ่งที่ค้าง */
+    /** 18 · กู้การวิ่งที่ค้าง (แอปถูกระบบปิดระหว่างวิ่ง) — ไม่ถามถ้ายังมีการวิ่งที่กำลังบันทึกอยู่ */
     private fun checkUnfinishedRun() {
-        if (recoverShown) return
-        val draft = drafts.load() ?: return
+        if (recoverShown || RunTrackingService.isRunning) return
+        val draft = RunRepository.activeDraft() ?: return
         recoverShown = true
         Dialogs.recoverRun(
             this, draft, prefs.useMiles,
@@ -158,23 +179,17 @@ class MainActivity : AppCompatActivity() {
             },
             onSave = {
                 recoverShown = false
-                val run = Run(
-                    title = getString(R.string.recover_saved_title),
-                    startTime = draft.startTime,
-                    endTime = draft.savedAt,
-                    distanceM = draft.distanceM,
-                    movingTimeS = draft.elapsedS,
-                    calories = RunCalculator.calories(draft.distanceM, draft.elapsedS, prefs.weightKg),
-                    cadenceSpm = 166,
-                    routeSeed = (draft.startTime % 97).toInt() + 1,
+                // บันทึกเท่าที่มีพร้อมจุด GPS ทั้งหมดที่เก็บไว้ (เดิมทิ้งจุดและใส่เส้นทางปลอม)
+                RunRepository.finishDraft(
+                    draft.copy(title = getString(R.string.recover_saved_title)),
+                    draft.track.lastOrNull()?.time ?: draft.updatedAt, draft.track,
                 )
-                val id = RunRepository.insert(run)
-                drafts.clear()
-                startActivity(Intent(this, RunDetailActivity::class.java).putExtra(RunDetailActivity.EXTRA_RUN_ID, id))
+                SyncManager.requestSync(this)
+                startActivity(Intent(this, RunDetailActivity::class.java).putExtra(RunDetailActivity.EXTRA_RUN_ID, draft.id))
             },
             onDiscard = {
                 recoverShown = false
-                drafts.clear()
+                RunRepository.discardDraft(draft.id)
                 toast(getString(R.string.recover_discarded))
             },
         )

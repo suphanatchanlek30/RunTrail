@@ -37,8 +37,11 @@ class LocationTracker(
         if (!hasPermission) return false
         lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, INTERVAL_MS, 0f, this, Looper.getMainLooper())
         running = true
-        // จุดล่าสุดที่เครื่องรู้ ใช้ให้แผนที่ขยับไปตำแหน่งปัจจุบันก่อนได้สัญญาณแรก
-        lm.getLastKnownLocation(LocationManager.GPS_PROVIDER)?.let { lastKnown = it }
+        // จุดล่าสุดที่เครื่องรู้ (GPS หรือเครือข่าย อันที่ใหม่กว่า) ให้แผนที่ขยับไปตำแหน่งปัจจุบันก่อนได้สัญญาณแรก
+        listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
+            .mapNotNull { p -> try { lm.getLastKnownLocation(p) } catch (e: IllegalArgumentException) { null } }
+            .maxByOrNull { it.time }
+            ?.let { lastKnown = it }
         return true
     }
 

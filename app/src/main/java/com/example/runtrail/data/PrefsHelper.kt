@@ -3,55 +3,56 @@ package com.example.runtrail.data
 import android.content.Context
 import android.content.SharedPreferences
 import androidx.core.content.edit
+import com.example.runtrail.BuildConfig
 
 /**
  * ค่าตั้งค่าและโปรไฟล์ทั้งหมด (MA09 SharedPreferences)
  */
-class PrefsHelper(context: Context) {
+class PrefsHelper(context: Context, name: String = PREFS_NAME) {
 
     private val prefs: SharedPreferences =
-        context.applicationContext.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        context.applicationContext.getSharedPreferences(name, Context.MODE_PRIVATE)
 
     var onboarded: Boolean
         get() = prefs.getBoolean(KEY_ONBOARDED, false)
         set(value) = prefs.edit { putBoolean(KEY_ONBOARDED, value) }
 
     var firstNameValue: String
-        get() = prefs.getString(KEY_FIRST, "ศุภณัฐ") ?: ""
-        set(value) = prefs.edit { putString(KEY_FIRST, value.trim()) }
+        get() = prefs.getString(KEY_FIRST, "") ?: ""
+        set(value) = prefs.edit { putString(KEY_FIRST, value.trim()); putBoolean(KEY_PROFILE_DIRTY, true) }
 
     var lastName: String
-        get() = prefs.getString(KEY_LAST, "จันทร์เลข") ?: ""
-        set(value) = prefs.edit { putString(KEY_LAST, value.trim()) }
+        get() = prefs.getString(KEY_LAST, "") ?: ""
+        set(value) = prefs.edit { putString(KEY_LAST, value.trim()); putBoolean(KEY_PROFILE_DIRTY, true) }
 
     /** ชื่อ-นามสกุลเต็ม */
     val name: String get() = "$firstNameValue $lastName".trim()
 
     var weightKg: Int
         get() = prefs.getInt(KEY_WEIGHT, 62)
-        set(value) = prefs.edit { putInt(KEY_WEIGHT, value) }
+        set(value) = prefs.edit { putInt(KEY_WEIGHT, value); putBoolean(KEY_PROFILE_DIRTY, true) }
 
     var heightCm: Int
         get() = prefs.getInt(KEY_HEIGHT, 172)
-        set(value) = prefs.edit { putInt(KEY_HEIGHT, value) }
+        set(value) = prefs.edit { putInt(KEY_HEIGHT, value); putBoolean(KEY_PROFILE_DIRTY, true) }
 
     var age: Int
         get() = prefs.getInt(KEY_AGE, 21)
-        set(value) = prefs.edit { putInt(KEY_AGE, value) }
+        set(value) = prefs.edit { putInt(KEY_AGE, value); putBoolean(KEY_PROFILE_DIRTY, true) }
 
     /** true = ไมล์, false = กม. */
     var useMiles: Boolean
         get() = prefs.getBoolean(KEY_MILES, false)
-        set(value) = prefs.edit { putBoolean(KEY_MILES, value) }
+        set(value) = prefs.edit { putBoolean(KEY_MILES, value); putBoolean(KEY_PROFILE_DIRTY, true) }
 
     var weeklyGoalKm: Int
         get() = prefs.getInt(KEY_GOAL, 20)
-        set(value) = prefs.edit { putInt(KEY_GOAL, value) }
+        set(value) = prefs.edit { putInt(KEY_GOAL, value); putBoolean(KEY_PROFILE_DIRTY, true) }
 
     /** เพซเป้าหมาย วินาที/กม. */
     var targetPaceSec: Int
         get() = prefs.getInt(KEY_TARGET_PACE, 6 * 60)
-        set(value) = prefs.edit { putInt(KEY_TARGET_PACE, value) }
+        set(value) = prefs.edit { putInt(KEY_TARGET_PACE, value); putBoolean(KEY_PROFILE_DIRTY, true) }
 
     var autoPause: Boolean
         get() = prefs.getBoolean(KEY_AUTO_PAUSE, true)
@@ -61,9 +62,80 @@ class PrefsHelper(context: Context) {
         get() = prefs.getBoolean(KEY_KM_ALERT, true)
         set(value) = prefs.edit { putBoolean(KEY_KM_ALERT, value) }
 
-    var serverHost: String
-        get() = prefs.getString(KEY_SERVER, "10.0.2.2") ?: "10.0.2.2"
-        set(value) = prefs.edit { putString(KEY_SERVER, value) }
+    /**
+     * ที่อยู่ backend แบบเต็ม เช่น http://10.0.2.2:8080
+     * (เวอร์ชันก่อนเก็บแค่ host เช่น "10.0.2.2" → แปลงให้อัตโนมัติ)
+     */
+    var apiUrl: String
+        get() {
+            prefs.getString(KEY_API_URL, null)?.let { return it }
+            val legacy = prefs.getString(KEY_SERVER, null) ?: return BuildConfig.DEFAULT_API_URL
+            return if (legacy.contains("://")) legacy else "http://$legacy${if (legacy.contains(':')) "" else ":8080"}"
+        }
+        set(value) = prefs.edit { putString(KEY_API_URL, value.trim().trimEnd('/')); remove(KEY_SERVER) }
+
+    /**
+     * บัญชีเจ้าของข้อมูลในเครื่อง — คงอยู่จนกว่าจะกดออกจากระบบ
+     * (ถ้า token หมดอายุ ผู้ใช้ยังเห็นการวิ่งของตัวเองได้ แค่ซิงก์ไม่ได้จนกว่าจะล็อกอินใหม่)
+     */
+    var accountUserId: String?
+        get() = prefs.getString(KEY_ACCOUNT, null)
+        set(value) = prefs.edit { putString(KEY_ACCOUNT, value) }
+
+    /** โปรไฟล์ถูกแก้ในเครื่องและยังไม่ได้ส่งขึ้น server */
+    var profileDirty: Boolean
+        get() = prefs.getBoolean(KEY_PROFILE_DIRTY, false)
+        set(value) = prefs.edit { putBoolean(KEY_PROFILE_DIRTY, value) }
+
+    var leaderboardOptIn: Boolean
+        get() = prefs.getBoolean(KEY_LB_OPT_IN, true)
+        set(value) = prefs.edit { putBoolean(KEY_LB_OPT_IN, value); putBoolean(KEY_PROFILE_DIRTY, true) }
+
+    var countryCode: String
+        get() = prefs.getString(KEY_COUNTRY, "TH") ?: "TH"
+        set(value) = prefs.edit { putString(KEY_COUNTRY, value); putBoolean(KEY_PROFILE_DIRTY, true) }
+
+    /** server_time ที่ได้จากการดึงข้อมูลครั้งล่าสุด (ใช้เป็น updated_since รอบหน้า) */
+    var lastPull: String?
+        get() = prefs.getString(KEY_LAST_PULL, null)
+        set(value) = prefs.edit { putString(KEY_LAST_PULL, value) }
+
+    var lastSyncAt: Long
+        get() = prefs.getLong(KEY_LAST_SYNC_AT, 0)
+        set(value) = prefs.edit { putLong(KEY_LAST_SYNC_AT, value) }
+
+    var lastSyncError: String?
+        get() = prefs.getString(KEY_LAST_SYNC_ERROR, null)
+        set(value) = prefs.edit { putString(KEY_LAST_SYNC_ERROR, value) }
+
+    /** ผลอันดับโลกล่าสุด (JSON) เก็บไว้แสดงตอนออฟไลน์ */
+    fun leaderboardCache(key: String): String? = prefs.getString("lb_$key", null)
+    fun saveLeaderboardCache(key: String, json: String) = prefs.edit { putString("lb_$key", json) }
+
+    /** ใส่ค่าโปรไฟล์จาก server (ไม่นับเป็นการแก้ในเครื่อง) */
+    fun applyServerProfile(first: String?, last: String?, weight: Int?, height: Int?, birthYear: Int?,
+                           miles: Boolean, goal: Int, pace: Int, optIn: Boolean, country: String?) {
+        prefs.edit {
+            first?.let { putString(KEY_FIRST, it) }
+            last?.let { putString(KEY_LAST, it) }
+            weight?.let { putInt(KEY_WEIGHT, it) }
+            height?.let { putInt(KEY_HEIGHT, it) }
+            birthYear?.let { putInt(KEY_AGE, java.util.Calendar.getInstance().get(java.util.Calendar.YEAR) - it) }
+            putBoolean(KEY_MILES, miles); putInt(KEY_GOAL, goal); putInt(KEY_TARGET_PACE, pace)
+            putBoolean(KEY_LB_OPT_IN, optIn)
+            country?.let { putString(KEY_COUNTRY, it) }
+            putBoolean(KEY_PROFILE_DIRTY, false)
+        }
+    }
+
+    /** ออกจากระบบ: ล้างข้อมูลส่วนตัวและสถานะซิงก์ (ค่าตั้งค่าเครื่อง เช่น ที่อยู่ server ยังอยู่) */
+    fun clearAccountData() {
+        prefs.edit {
+            listOf(KEY_FIRST, KEY_LAST, KEY_WEIGHT, KEY_HEIGHT, KEY_AGE, KEY_LAST_PULL, KEY_LAST_SYNC_AT,
+                KEY_LAST_SYNC_ERROR, KEY_PROFILE_DIRTY, KEY_LB_OPT_IN, KEY_ACCOUNT).forEach { remove(it) }
+            prefs.all.keys.filter { it.startsWith("lb_") }.forEach { remove(it) }
+        }
+    }
 
     var recreateCount: Int
         get() = prefs.getInt(KEY_RECREATE, 0)
@@ -88,6 +160,14 @@ class PrefsHelper(context: Context) {
         private const val KEY_AUTO_PAUSE = "auto_pause"
         private const val KEY_KM_ALERT = "km_alert"
         private const val KEY_SERVER = "server_host"
+        private const val KEY_API_URL = "api_url"
+        private const val KEY_ACCOUNT = "account_user_id"
+        private const val KEY_PROFILE_DIRTY = "profile_dirty"
+        private const val KEY_LB_OPT_IN = "leaderboard_opt_in"
+        private const val KEY_COUNTRY = "country_code"
+        private const val KEY_LAST_PULL = "last_pull"
+        private const val KEY_LAST_SYNC_AT = "last_sync_at"
+        private const val KEY_LAST_SYNC_ERROR = "last_sync_error"
         private const val KEY_RECREATE = "recreate_count"
     }
 }

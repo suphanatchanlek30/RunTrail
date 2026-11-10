@@ -65,6 +65,7 @@ class RunDetailActivity : AppCompatActivity() {
         binding.rowMain.setOnClickListener { openStats() }
         binding.rowSecondary.setOnClickListener { openStats() }
         binding.btnMore.setOnClickListener { showMenu(it) }
+        binding.badgeSync.setOnClickListener { explainSync() }
 
         if (savedInstanceState == null && intent.getBooleanExtra(EXTRA_JUST_FINISHED, false)) {
             toast(getString(R.string.detail_saved))
@@ -128,6 +129,21 @@ class RunDetailActivity : AppCompatActivity() {
         binding.tvPhotoDesc.setText(if (photo != null) R.string.detail_photo_has else R.string.detail_photo_none)
     }
 
+    /** แตะป้ายสถานะ: บอกเหตุผลที่ซิงก์ไม่ผ่าน หรือสถานะในอันดับโลก */
+    private fun explainSync() {
+        val run = RunRepository.getById(runId, withTrack = false) ?: return
+        val msg = when {
+            run.syncStatus == SyncStatus.FAILED -> run.syncError ?: getString(R.string.sync_failed)
+            !com.example.runtrail.data.Accounts.isLoggedIn && !run.onServer -> getString(R.string.share_login_desc)
+            run.syncStatus == SyncStatus.PENDING -> getString(R.string.setting_sync_started)
+            run.verified == true -> getString(R.string.detail_lb_counted)
+            else -> getString(R.string.detail_lb_not_counted,
+                com.example.runtrail.net.RunJson.verifyReasonText(run.verifyReason) ?: getString(R.string.sync_pending))
+        }
+        toast(msg)
+        if (run.syncStatus != SyncStatus.SYNCED) com.example.runtrail.sync.SyncManager.requestSync(this)
+    }
+
     private fun large(s: ViewStatLargeBinding, value: String, unit: String, label: Int) {
         s.tvValue.text = value
         s.tvUnit.text = unit
@@ -161,7 +177,8 @@ class RunDetailActivity : AppCompatActivity() {
     private fun confirmDelete() {
         val run = RunRepository.getById(runId) ?: return
         Dialogs.confirmDelete(this, run) { alsoServer ->
-            RunRepository.delete(run.id)
+            RunRepository.delete(run.id, alsoServer)
+            com.example.runtrail.sync.SyncManager.requestSync(this)
             toast(getString(if (alsoServer) R.string.toast_deleted_both else R.string.toast_deleted))
             finish()
         }

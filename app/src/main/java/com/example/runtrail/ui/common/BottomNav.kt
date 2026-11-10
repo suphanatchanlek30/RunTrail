@@ -10,7 +10,7 @@ import com.example.runtrail.ui.settings.SettingsActivity
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 /**
- * Bottom navigation ที่ใช้ร่วมกัน 4 หน้า (หน้าหลัก · ประวัติ · สถิติ · ตั้งค่า)
+ * Bottom navigation ที่ใช้ร่วมกัน 5 หน้า (หน้าหลัก · ประวัติ · อันดับ · สถิติ · ตั้งค่า)
  * แต่ละแท็บเป็น Activity แยกตามแบบในคาบเรียน และสลับแท็บโดยไม่มีแอนิเมชัน
  */
 object BottomNav {
@@ -22,6 +22,7 @@ object BottomNav {
             val target = when (item.itemId) {
                 R.id.nav_home -> MainActivity::class.java
                 R.id.nav_history -> HistoryActivity::class.java
+                R.id.nav_leaderboard -> com.example.runtrail.ui.leaderboard.LeaderboardActivity::class.java
                 R.id.nav_records -> RecordsActivity::class.java
                 R.id.nav_settings -> SettingsActivity::class.java
                 else -> return@setOnItemSelectedListener false

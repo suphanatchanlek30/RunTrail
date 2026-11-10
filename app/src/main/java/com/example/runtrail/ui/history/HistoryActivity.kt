@@ -51,7 +51,8 @@ class HistoryActivity : AppCompatActivity() {
             },
             onLongClick = { run ->
                 Dialogs.confirmDelete(this, run) { alsoServer ->
-                    RunRepository.delete(run.id)
+                    RunRepository.delete(run.id, alsoServer)
+            com.example.runtrail.sync.SyncManager.requestSync(this)
                     toast(getString(if (alsoServer) R.string.toast_deleted_both else R.string.toast_deleted))
                     load()
                 }
@@ -77,10 +78,18 @@ class HistoryActivity : AppCompatActivity() {
         binding.btnFilter.setOnClickListener { showSortMenu(it) }
     }
 
+    private val onDataChanged: () -> Unit = { load() }
+
     override fun onResume() {
         super.onResume()
         binding.navContainer.bottomNav.selectedItemId = R.id.nav_history
+        RunRepository.addListener(onDataChanged)
         load()
+    }
+
+    override fun onPause() {
+        super.onPause()
+        RunRepository.removeListener(onDataChanged)
     }
 
     private fun load() {

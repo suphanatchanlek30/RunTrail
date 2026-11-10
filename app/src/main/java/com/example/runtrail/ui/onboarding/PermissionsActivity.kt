@@ -95,7 +95,13 @@ class PermissionsActivity : AppCompatActivity() {
     private fun has(permission: String) =
         ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
 
+    /** ถัดไป: ยังไม่ล็อกอิน → หน้าเข้าสู่ระบบ (เลือกใช้แบบออฟไลน์ได้) · ล็อกอินแล้ว → หน้าโปรไฟล์ */
     private fun openProfile() {
-        startActivity(Intent(this, ProfileSetupActivity::class.java))
+        if (com.example.runtrail.data.Accounts.isLoggedIn) {
+            startActivity(Intent(this, ProfileSetupActivity::class.java))
+        } else {
+            startActivity(Intent(this, com.example.runtrail.ui.auth.LoginActivity::class.java)
+                .putExtra(com.example.runtrail.ui.auth.LoginActivity.EXTRA_ONBOARDING, true))
+        }
     }
 }
