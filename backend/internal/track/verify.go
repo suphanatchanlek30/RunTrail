@@ -17,14 +17,23 @@ type Summary struct {
 	Best10k       *int
 }
 
-func Summarize(raw []Point) Summary {
+// Pause is a [start, end] window (epoch ms) when the runner pressed pause or auto-pause kicked in.
+type Pause struct{ Start, End int64 }
+
+// Summarize recomputes the run. Like the app, distance covered while paused is not counted:
+// a segment whose two points straddle a pause is skipped. Splits/paces keep the app's behaviour
+// (TrackMath.splits also ignores pauses) so both sides show the same numbers.
+func Summarize(raw []Point, pauses []Pause) Summary {
 	pts := Clean(raw)
 	s := Summary{Points: pts}
 	if len(pts) < 2 {
 		return s
 	}
-	cum := Cumulative(pts)
-	s.DistanceM = cum[len(cum)-1]
+	for i := 1; i < len(pts); i++ {
+		if !spansPause(pts[i-1].T, pts[i].T, pauses) {
+			s.DistanceM += dist(pts[i-1], pts[i])
+		}
+	}
 	s.ElevationGain = ElevationGain(pts)
 	s.Splits = Splits(pts)
 	s.Best1k = BestEffort(pts, 1000)
@@ -74,6 +83,15 @@ func Verify(s Summary, clientDistanceM float64, movingTimeS int, startedAt, now 
 		return false, "too_fast_segment"
 	}
 	return true, ""
+}
+
+func spansPause(a, b int64, pauses []Pause) bool {
+	for _, p := range pauses {
+		if a <= p.End && b >= p.Start {
+			return true
+		}
+	}
+	return false
 }
 
 func medianInterval(pts []Point) float64 {

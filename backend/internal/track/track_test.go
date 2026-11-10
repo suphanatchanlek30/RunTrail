@@ -144,7 +144,7 @@ func TestTrimEndsHidesHome(t *testing.T) {
 func TestVerify(t *testing.T) {
 	now := time.UnixMilli(1_762_772_530_000).Add(time.Hour)
 	start := time.UnixMilli(1_762_772_530_000)
-	good := Summarize(northLine(1000, 3, 1)) // ~3 km in 999 s
+	good := Summarize(northLine(1000, 3, 1), nil) // ~3 km in 999 s
 	cases := []struct {
 		name   string
 		s      Summary
@@ -155,10 +155,10 @@ func TestVerify(t *testing.T) {
 	}{
 		{"honest run", good, good.DistanceM, 999, start, ""},
 		{"client inflates distance", good, good.DistanceM * 1.2, 999, start, "distance_mismatch"},
-		{"too few points", Summarize(northLine(10, 3, 1)), 27, 9, start, "too_few_points"},
-		{"car speed", Summarize(northLine(300, 8.5, 1)), 2541, 299, start, "too_fast"},
+		{"too few points", Summarize(northLine(10, 3, 1), nil), 27, 9, start, "too_few_points"},
+		{"car speed", Summarize(northLine(300, 8.5, 1), nil), 2541, 299, start, "too_fast"},
 		{"future", good, good.DistanceM, 999, now.Add(time.Hour), "future_start"},
-		{"sparse", Summarize(northLine(100, 3, 30)), 8910, 2970, start, "sparse_points"},
+		{"sparse", Summarize(northLine(100, 3, 30), nil), 8910, 2970, start, "sparse_points"},
 		{"moving time > track span", good, good.DistanceM, 5000, start, "moving_time_mismatch"},
 	}
 	for _, c := range cases {
@@ -183,7 +183,7 @@ func TestVerifyFastSegment(t *testing.T) {
 		p.T += dT
 		pts = append(pts, p)
 	}
-	s := Summarize(pts)
+	s := Summarize(pts, nil)
 	start := time.UnixMilli(pts[0].T)
 	ok, reason := Verify(s, s.DistanceM, int((pts[len(pts)-1].T-pts[0].T)/1000), start, start.Add(time.Hour))
 	if ok || reason != "too_fast_segment" {
@@ -196,4 +196,32 @@ func deref(p *int) any {
 		return nil
 	}
 	return *p
+}
+
+func TestPausedDistanceNotCounted(t *testing.T) {
+	// 1 km at 3 m/s, pause 120 s while walking 300 m (no points recorded), then 1 km more.
+	a := northLine(334, 3, 1)
+	b := northLine(334, 3, 1)
+	last := a[len(a)-1]
+	dLat := last.Lat - b[0].Lat + 300/mPerDegLat
+	dT := last.T - b[0].T + 120_000
+	for i := range b {
+		b[i].Lat += dLat
+		b[i].T += dT
+	}
+	pts := append(append([]Point(nil), a...), b...)
+	appDistance := 2 * 333 * 3.0 // the app stops counting while paused
+	start := time.UnixMilli(pts[0].T)
+	now := start.Add(time.Hour)
+	moving := 666
+
+	ok, reason := Verify(Summarize(pts, nil), appDistance, moving, start, now)
+	if ok || reason != "distance_mismatch" {
+		t.Fatalf("without pauses: (%v, %q), want distance_mismatch", ok, reason)
+	}
+	s := Summarize(pts, []Pause{{Start: last.T + 500, End: b[0].T - 500}})
+	near(t, "distance", s.DistanceM, appDistance, 5)
+	if ok, reason := Verify(s, appDistance, moving, start, now); !ok {
+		t.Fatalf("honest paused run rejected: %s", reason)
+	}
 }

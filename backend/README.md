@@ -151,10 +151,13 @@ scripts/smoke.sh           ทดสอบ end-to-end ด้วย curl
   "distance_m": 5020.4, "moving_time_s": 1868, "calories": 342, "elevation_gain_m": 12,
   "cadence_spm": 168, "temp_c": null,
   "points": [[13.7290, 100.5385, 1762772530000, 5.0, 6.0], …],
+  "pauses": [[1762772900000, 1762773020000]],
   "client_updated_at": "2026-11-10T11:34:05.123Z"
 }
 ```
 - `points` = `[lat, lng, เวลา epoch ms, ความสูง ม., ความแม่นยำ ม.]` ตรงกับ `TrackPoint` ในแอป · สูงสุด 50,000 จุด
+- `pauses` = ช่วงที่หยุดวิ่ง `[เริ่ม ms, จบ ms]` (กดหยุดเองหรือ auto-pause) — **แอปต้องส่ง** เพราะแอปไม่นับระยะช่วงหยุด
+  ถ้าไม่ส่ง server จะนับระยะที่เดินระหว่างหยุดด้วย แล้วการวิ่งอาจไม่ผ่านการตรวจ (`distance_mismatch`)
 - `source: "manual"` (เพิ่มเอง) ต้องไม่มี `points` และไม่เข้าอันดับ
 - ส่งครั้งแรก → **201** · ส่งซ้ำ → **200** (ไม่มีแถวซ้ำ)
 - `client_updated_at` เก่ากว่าหรือเท่ากับของ server → server ไม่เขียนทับ ตอบ 200 พร้อมข้อมูลของ server
@@ -193,7 +196,8 @@ Response (ใช้กับ GET/PATCH ด้วย):
 - ไม่ส่ง `updated_since` = ดึงทั้งหมด (ล็อกอินเครื่องใหม่) ไม่รวมที่ถูกลบ
 - ส่ง `updated_since` = เฉพาะที่เปลี่ยน **รวมรายการที่ถูกลบ** (`deleted: true`) → ลบในเครื่องตาม
 - มี `next_cursor` → เรียกซ้ำด้วย `updated_since` เดิม + `cursor` จนกว่าจะเป็น `null`
-- เก็บ `server_time` ของรอบแรกไว้เป็น `updated_since` ของรอบหน้า
+- เก็บ `server_time` ของรอบแรกไว้เป็น `updated_since` ของรอบหน้า (server ถอยเวลาให้ 1 นาทีกันตกหล่น
+  จึงอาจได้รายการเดิมซ้ำ → รวมด้วย UUID และเลือกอันที่ `client_updated_at` ใหม่กว่า)
 
 ### รูปภาพ 🔒 (มือถืออัปโหลดตรงไป S3)
 1. `POST /runs/{uuid}/photo/upload-url` `{ "content_type": "image/jpeg", "size": 183422 }`

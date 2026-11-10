@@ -408,6 +408,10 @@ func TestDeleteAndSyncList(t *testing.T) {
 	if tomb["id"] != ids[0] || tomb["deleted"] != true {
 		t.Fatalf("expected tombstone last, got %v", tomb)
 	}
+	st, err := time.Parse(time.RFC3339Nano, m["server_time"].(string))
+	if err != nil || e.clock.Now().Sub(st) < SyncOverlap {
+		t.Fatalf("server_time %v must be at least %v before now", m["server_time"], SyncOverlap)
+	}
 	if r := e.do("GET", "/api/v1/runs?updated_since=yesterday", u.Access, nil); r.Status != 400 {
 		t.Fatal("bad updated_since accepted")
 	}

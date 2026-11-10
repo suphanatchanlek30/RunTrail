@@ -20,6 +20,9 @@ import (
 
 const MaxPoints = 50_000
 
+// SyncOverlap is how far server_time is moved back so incremental sync never misses a late commit.
+const SyncOverlap = time.Minute
+
 type shareJSON struct {
 	Code      string `json:"code"`
 	URL       string `json:"url"`
@@ -128,6 +131,7 @@ type putRunReq struct {
 	CadenceSpm      *int        `json:"cadence_spm" validate:"omitempty,gte=0,lte=300"`
 	TempC           *int        `json:"temp_c" validate:"omitempty,gte=-60,lte=70"`
 	Points          [][]float64 `json:"points" validate:"max=50000,dive,len=5"`
+	Pauses          [][]int64   `json:"pauses" validate:"max=2000,dive,len=2"` // [[start_ms, end_ms], ...]
 	ClientUpdatedAt time.Time   `json:"client_updated_at" validate:"required"`
 }
 
@@ -157,7 +161,20 @@ func (r *putRunReq) check() ([]track.Point, error) {
 		}
 		pts[i] = track.Point{Lat: lat, Lng: lng, T: int64(t), Alt: p[3], Acc: p[4]}
 	}
+	for i, p := range r.Pauses {
+		if p[0] <= 0 || p[1] < p[0] {
+			return nil, httpx.Field(fmt.Sprintf("pauses[%d]", i), "range", "ช่วงหยุดไม่ถูกต้อง")
+		}
+	}
 	return pts, nil
+}
+
+func (r *putRunReq) pauses() []track.Pause {
+	out := make([]track.Pause, len(r.Pauses))
+	for i, p := range r.Pauses {
+		out[i] = track.Pause{Start: p[0], End: p[1]}
+	}
+	return out
 }
 
 // putRun is an idempotent upsert keyed by the UUID the app generated offline.
@@ -180,10 +197,14 @@ func (s *Server) putRun(c fiber.Ctx) error {
 	var sum track.Summary
 	verified, reason := false, "manual"
 	if r.Source == "gps" {
-		sum = track.Summarize(pts)
+		sum = track.Summarize(pts, r.pauses())
 		verified, reason = track.Verify(sum, r.DistanceM, r.MovingTimeS, r.StartedAt, s.now())
 	}
 	rawPoints, err := json.Marshal(nonNil(r.Points))
+	if err != nil {
+		return err
+	}
+	rawPauses, err := json.Marshal(nonNilPauses(r.Pauses))
 	if err != nil {
 		return err
 	}
@@ -247,9 +268,10 @@ func (s *Server) putRun(c fiber.Ctx) error {
 		if _, err := tx.Exec(ctx, `DELETE FROM run_splits WHERE run_id = $1`, id); err != nil {
 			return err
 		}
-		if _, err := tx.Exec(ctx, `INSERT INTO run_tracks (run_id, points, point_count, bbox) VALUES ($1,$2,$3,$4)
-			ON CONFLICT (run_id) DO UPDATE SET points=EXCLUDED.points, point_count=EXCLUDED.point_count, bbox=EXCLUDED.bbox`,
-			id, rawPoints, len(r.Points), track.BBox(sum.Points)); err != nil {
+		if _, err := tx.Exec(ctx, `INSERT INTO run_tracks (run_id, points, point_count, bbox, pauses) VALUES ($1,$2,$3,$4,$5)
+			ON CONFLICT (run_id) DO UPDATE SET points=EXCLUDED.points, point_count=EXCLUDED.point_count,
+				bbox=EXCLUDED.bbox, pauses=EXCLUDED.pauses`,
+			id, rawPoints, len(r.Points), track.BBox(sum.Points), rawPauses); err != nil {
 			return err
 		}
 		for _, sp := range sum.Splits {
@@ -269,6 +291,13 @@ func (s *Server) putRun(c fiber.Ctx) error {
 		return c.Status(fiber.StatusCreated).JSON(out)
 	}
 	return c.JSON(out)
+}
+
+func nonNilPauses(p [][]int64) [][]int64 {
+	if p == nil {
+		return [][]int64{}
+	}
+	return p
 }
 
 func nonNil(p [][]float64) [][]float64 {
@@ -431,16 +460,17 @@ func (s *Server) getTrack(c fiber.Ctx) error {
 	if _, err := s.ownRun(ctx, s.pool, userID(c), id, false); err != nil {
 		return err
 	}
-	var pts json.RawMessage
+	var pts, pauses json.RawMessage
 	var count int
 	var bbox []float64
-	err = s.pool.QueryRow(ctx, `SELECT points, point_count, bbox FROM run_tracks WHERE run_id = $1`, id).Scan(&pts, &count, &bbox)
+	err = s.pool.QueryRow(ctx, `SELECT points, point_count, bbox, pauses FROM run_tracks WHERE run_id = $1`, id).
+		Scan(&pts, &count, &bbox, &pauses)
 	if noRows(err) {
-		pts, count = json.RawMessage("[]"), 0
+		pts, pauses, count = json.RawMessage("[]"), json.RawMessage("[]"), 0
 	} else if err != nil {
 		return err
 	}
-	return c.JSON(fiber.Map{"run_id": id, "point_count": count, "bbox": bbox, "points": pts})
+	return c.JSON(fiber.Map{"run_id": id, "point_count": count, "bbox": bbox, "points": pts, "pauses": pauses})
 }
 
 type deletedJSON struct {
@@ -478,7 +508,9 @@ func (s *Server) listRuns(c fiber.Ctx) error {
 		// keep sending the same updated_since together with the cursor
 		after, afterID = t, id
 	}
-	serverTime := s.now()
+	// A write stamped just before this query may commit after it, so the next updated_since
+	// starts a minute earlier. Clients may see a run twice and merge by UUID (last-write-wins).
+	serverTime := s.now().Add(-SyncOverlap)
 	rows, err := s.pool.Query(ctx, `SELECT `+runCols+` FROM runs r
 		WHERE r.user_id = $1 AND (r.updated_at, r.id) > ($2, $3) AND ($4 OR r.deleted_at IS NULL)
 		ORDER BY r.updated_at, r.id LIMIT $5`, uid, after, afterID, includeDeleted, limit+1)
