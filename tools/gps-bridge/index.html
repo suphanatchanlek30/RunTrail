@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="th">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>RunTrail GPS Bridge</title>
+<style>
+  :root { --green:#00D47A; --lime:#A3F51F; --ink:#0F1412; --gray:#667085; }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; background:var(--ink); color:#fff; font-family:-apple-system,system-ui,sans-serif;
+         padding:24px 16px calc(24px + env(safe-area-inset-bottom)); display:flex; flex-direction:column; gap:16px; }
+  h1 { font-size:22px; margin:0; }
+  p { color:#9aa4b2; margin:0; font-size:14px; line-height:1.5; }
+  .card { background:#1b2220; border-radius:20px; padding:18px; }
+  .big { font-size:56px; font-weight:800; color:var(--lime); line-height:1; }
+  .row { display:flex; justify-content:space-between; font-size:15px; padding:6px 0; }
+  .row span:first-child { color:#9aa4b2; }
+  button { width:100%; height:64px; border:0; border-radius:18px; font-size:19px; font-weight:700; }
+  #start { background:var(--green); color:var(--ink); }
+  #stop { background:#3a1f1c; color:#ff8a75; display:none; }
+  .ok { color:var(--green); } .warn { color:#F5B83D; } .bad { color:#F0603F; }
+  ol { margin:0; padding-left:20px; color:#9aa4b2; font-size:14px; line-height:1.7; }
+</style>
+</head>
+<body>
+  <h1>RunTrail · ส่ง GPS จาก iPhone</h1>
+  <p>ตำแหน่งจริงของ iPhone จะถูกส่งเข้า Android Emulator บนโน้ตบุ๊ก แอป RunTrail จะบันทึกเหมือนวิ่งด้วยมือถือ Android</p>
+
+  <div class="card">
+    <div class="big" id="count">0</div>
+    <p>จุดที่ส่งแล้ว</p>
+    <div style="height:10px"></div>
+    <div class="row"><span>สถานะ</span><span id="status">ยังไม่เริ่ม</span></div>
+    <div class="row"><span>ความแม่นยำ</span><span id="acc">–</span></div>
+    <div class="row"><span>ตำแหน่ง</span><span id="pos">–</span></div>
+    <div class="row"><span>ข้าม (สัญญาณอ่อน)</span><span id="skip">0</span></div>
+  </div>
+
+  <button id="start">เริ่มส่งตำแหน่ง</button>
+  <button id="stop">หยุดส่ง</button>
+
+  <div class="card">
+    <ol>
+      <li>กด "เริ่มส่งตำแหน่ง" แล้วอนุญาตตำแหน่ง (เลือก "ขณะใช้แอป" + ตำแหน่งที่แม่นยำ)</li>
+      <li>เปิดหน้านี้ค้างไว้ <b>ห้ามล็อกจอ/สลับแอป</b> — Safari หยุดส่งตำแหน่งเมื่ออยู่เบื้องหลัง</li>
+      <li>ในแอป RunTrail บนโน้ตบุ๊ก กด "เริ่มวิ่ง" แล้วออกเดินได้เลย</li>
+    </ol>
+  </div>
+
+<script>
+  const k = new URLSearchParams(location.search).get("k") || "";
+  const $ = id => document.getElementById(id);
+  let watch = null, lock = null, sending = false;
+
+  async function keepAwake() {
+    try { if ("wakeLock" in navigator) lock = await navigator.wakeLock.request("screen"); } catch (e) {}
+  }
+  document.addEventListener("visibilitychange", () => { if (watch !== null && document.visibilityState === "visible") keepAwake(); });
+
+  async function send(p) {
+    if (sending) return;          // ไม่ส่งซ้อน ถ้าเน็ตช้าข้ามจุดนั้นไป
+    sending = true;
+    const c = p.coords;
+    $("acc").textContent = "±" + Math.round(c.accuracy) + " ม.";
+    $("acc").className = c.accuracy <= 10 ? "ok" : c.accuracy <= 30 ? "warn" : "bad";
+    $("pos").textContent = c.latitude.toFixed(5) + ", " + c.longitude.toFixed(5);
+    try {
+      const r = await fetch("/fix?k=" + encodeURIComponent(k), {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lat: c.latitude, lng: c.longitude, alt: c.altitude, acc: c.accuracy, speed: c.speed, t: p.timestamp }),
+      });
+      const j = await r.json();
+      if (!r.ok) throw new Error(j.error || r.status);
+      $("count").textContent = j.count;
+      $("skip").textContent = j.skipped;
+      $("status").textContent = j.ok ? "กำลังส่ง" : "สัญญาณอ่อน รอ GPS";
+      $("status").className = j.ok ? "ok" : "warn";
+    } catch (e) {
+      $("status").textContent = "ส่งไม่ได้: " + e.message;
+      $("status").className = "bad";
+    } finally { sending = false; }
+  }
+
+  $("start").onclick = () => {
+    if (!navigator.geolocation) { alert("เบราว์เซอร์นี้ไม่รองรับตำแหน่ง"); return; }
+    watch = navigator.geolocation.watchPosition(send, e => {
+      $("status").textContent = e.code === 1 ? "ไม่ได้รับอนุญาตตำแหน่ง (ตั้งค่า > Safari > ตำแหน่ง)" : "หา GPS ไม่ได้: " + e.message;
+      $("status").className = "bad";
+    }, { enableHighAccuracy: true, maximumAge: 0, timeout: 20000 });
+    keepAwake();
+    $("start").style.display = "none"; $("stop").style.display = "block";
+    $("status").textContent = "กำลังหา GPS…"; $("status").className = "warn";
+  };
+  $("stop").onclick = () => {
+    if (watch !== null) navigator.geolocation.clearWatch(watch);
+    watch = null; if (lock) lock.release();
+    $("stop").style.display = "none"; $("start").style.display = "block";
+    $("status").textContent = "หยุดแล้ว"; $("status").className = "";
+  };
+</script>
+</body>
+</html>
