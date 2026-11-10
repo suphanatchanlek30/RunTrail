@@ -4,15 +4,16 @@
 
 # RunTrail
 
-**แอปบันทึกการวิ่งด้วย GPS พร้อมแผนที่เส้นทาง เพซ แคลอรี่ และเว็บแชร์เส้นทาง**<br/>
-*GPS Run Tracker with Route Map, Pace, Calories & Web Sharing*
+**แอปบันทึกการวิ่งด้วย GPS · ใช้ได้แม้ไม่มีเน็ต · ซิงก์ขึ้นเซิร์ฟเวอร์ · แชร์เส้นทาง · แข่งอันดับโลก**<br/>
+*Offline-first GPS run tracker for Android with a Go backend*
 
-![Platform](https://img.shields.io/badge/platform-Android-3DDC84?logo=android&logoColor=white)
-![Language](https://img.shields.io/badge/Kotlin-100%25-7F52FF?logo=kotlin&logoColor=white)
-![UI](https://img.shields.io/badge/UI-XML%20%2B%20ViewBinding-00D47A)
-![minSdk](https://img.shields.io/badge/minSdk-28-0F1412)
-![targetSdk](https://img.shields.io/badge/targetSdk-37-0F1412)
-![Map](https://img.shields.io/badge/map-OpenStreetMap%20(osmdroid)-7EBC6F)
+![Android](https://img.shields.io/badge/Android-9%2B-3DDC84?logo=android&logoColor=white)
+![Kotlin](https://img.shields.io/badge/Kotlin-XML%20%2B%20ViewBinding-7F52FF?logo=kotlin&logoColor=white)
+![Go](https://img.shields.io/badge/Go-1.27-00ADD8?logo=go&logoColor=white)
+![Fiber](https://img.shields.io/badge/Fiber-v3-00ACD7)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+![Map](https://img.shields.io/badge/map-OpenStreetMap-7EBC6F)
 
 โครงงานรายวิชา **CS364 Mobile Application Development**<br/>
 ผู้จัดทำ: **ศุภณัฐ จันทร์เลข** · รหัสนักศึกษา 6709616897
@@ -23,217 +24,331 @@
 
 ## สารบัญ
 
-- [ภาพรวม](#ภาพรวม)
-- [ภาพหน้าจอ](#ภาพหน้าจอ)
-- [ฟีเจอร์](#ฟีเจอร์)
-- [เทคโนโลยีที่ใช้](#เทคโนโลยีที่ใช้)
-- [การนำเนื้อหา MA09–MA12 มาใช้](#การนำเนื้อหา-ma09ma12-มาใช้)
-- [โครงสร้างโปรเจค](#โครงสร้างโปรเจค)
-- [หน้าจอทั้งหมด (19 หน้าจาก Figma)](#หน้าจอทั้งหมด-19-หน้าจาก-figma)
-- [สูตรคำนวณ](#สูตรคำนวณ)
-- [ระบบออกแบบ (Design System)](#ระบบออกแบบ-design-system)
-- [วิธีติดตั้งและรัน](#วิธีติดตั้งและรัน)
-- [ทดสอบ GPS บน Emulator](#ทดสอบ-gps-บน-emulator)
-- [สิทธิ์ที่แอปขอ](#สิทธิ์ที่แอปขอ)
-- [สถานะปัจจุบันและแผนงานถัดไป](#สถานะปัจจุบันและแผนงานถัดไป)
-- [เครดิตและสัญญาอนุญาต](#เครดิตและสัญญาอนุญาต)
+1. [ภาพรวม](#ภาพรวม)
+2. [ภาพหน้าจอ](#ภาพหน้าจอ)
+3. [ฟีเจอร์](#ฟีเจอร์)
+4. [สถาปัตยกรรม](#สถาปัตยกรรม)
+5. [เทคโนโลยีที่ใช้](#เทคโนโลยีที่ใช้)
+6. [โครงสร้างโปรเจค](#โครงสร้างโปรเจค)
+7. [เริ่มต้นใช้งาน](#เริ่มต้นใช้งาน)
+8. [ทดสอบด้วย GPS](#ทดสอบด้วย-gps)
+9. [การทดสอบอัตโนมัติ (Test)](#การทดสอบอัตโนมัติ-test)
+10. [API โดยสรุป](#api-โดยสรุป)
+11. [สูตรคำนวณและการตรวจการวิ่ง](#สูตรคำนวณและการตรวจการวิ่ง)
+12. [ความเป็นส่วนตัวและความปลอดภัย](#ความเป็นส่วนตัวและความปลอดภัย)
+13. [สิทธิ์ที่แอปขอ](#สิทธิ์ที่แอปขอ)
+14. [การนำเนื้อหา MA09–MA12 มาใช้](#การนำเนื้อหา-ma09ma12-มาใช้)
+15. [ระบบออกแบบ (Design System)](#ระบบออกแบบ-design-system)
+16. [ข้อจำกัดและแผนถัดไป](#ข้อจำกัดและแผนถัดไป)
+17. [เอกสารเพิ่มเติม](#เอกสารเพิ่มเติม)
+18. [เครดิตและสัญญาอนุญาต](#เครดิตและสัญญาอนุญาต)
 
 ---
 
 ## ภาพรวม
 
-นักวิ่งทั่วไปอยากรู้ว่า *"วิ่งไปทางไหน ช่วงไหนเร็วหรือช้า เผาผลาญไปเท่าไร"* และอยากส่งเส้นทางให้เพื่อนดู
-แต่แอปที่มีอยู่มักบังคับสมัครบัญชีและเก็บตำแหน่งไว้บนระบบของผู้ให้บริการ
+นักวิ่งอยากรู้ว่า *"วิ่งไปทางไหน ช่วงไหนเร็วหรือช้า เผาผลาญไปเท่าไร"* อยากเก็บประวัติไว้ไม่หาย และอยากแชร์ให้เพื่อนดู
+RunTrail จึงประกอบด้วย 2 ส่วนที่ทำงานร่วมกัน:
 
-**RunTrail** จึงออกแบบแบบ **offline-first**:
+| ส่วน | ทำอะไร |
+|---|---|
+| **แอป Android** (`app/`) | บันทึก GPS จริงลงแผนที่ OpenStreetMap · เก็บทุกอย่างใน SQLite ในเครื่อง · ทำงานได้ครบแม้ไม่มีเน็ต |
+| **Backend** (`backend/`) | Go + Fiber + PostgreSQL + S3 · บัญชีผู้ใช้ · ซิงก์การวิ่ง · เก็บรูป · ลิงก์แชร์ · อันดับโลก · การแจ้งเตือน |
 
-- 📍 บันทึกเส้นทางจาก **GPS จริง** ลงบนแผนที่ OpenStreetMap ระหว่างวิ่ง
-- 🎨 เส้นทาง **ไล่สีตามเพซ** (เขียว → เหลือง → ส้มแดง) เห็นทันทีว่าช่วงไหนเร็วหรือช้า
-- 📊 Split รายกิโลเมตร กราฟเพซและความสูง สถิติดีที่สุด และ **Replay** การวิ่งย้อนหลัง
-- 🔒 ข้อมูลอยู่ในเครื่อง ใช้ได้แม้ไม่มีอินเทอร์เน็ต และจะซิงก์ขึ้นเซิร์ฟเวอร์ **เฉพาะเมื่อกดแชร์**
-- 🌐 เพื่อนเปิดลิงก์ดูแผนที่และสถิติผ่านเว็บได้โดยไม่ต้องติดตั้งแอป
+**หลักการ offline-first (แบบ Strava):** กดเริ่มวิ่งได้ทันทีแม้เปิดโหมดเครื่องบิน → บันทึกลงเครื่อง → เมื่อมีเน็ต แอปอัปโหลดให้เองผ่าน WorkManager
+ส่งซ้ำกี่ครั้งก็ไม่เกิดข้อมูลซ้ำ เพราะการวิ่งแต่ละรอบมีรหัส UUID ที่สร้างในเครื่อง
 
 ---
 
 ## ภาพหน้าจอ
 
-| Welcome | หน้าหลัก | วิ่งสด (GPS จริง) | สรุปผล |
-|:---:|:---:|:---:|:---:|
-| <img src="docs/screenshots/01-welcome.jpg" width="200"/> | <img src="docs/screenshots/06-home.jpg" width="200"/> | <img src="docs/screenshots/07-live-run-gps.jpg" width="200"/> | <img src="docs/screenshots/09-run-summary.jpg" width="200"/> |
+> ถ่ายจาก Android Emulator (Pixel 9 / 9a, Android 17) เชื่อมกับ backend จริงที่รันใน Docker
 
-| Replay | Splits & กราฟ | ประวัติ | สถิติส่วนตัว |
-|:---:|:---:|:---:|:---:|
-| <img src="docs/screenshots/11-replay.jpg" width="200"/> | <img src="docs/screenshots/10-splits-charts.jpg" width="200"/> | <img src="docs/screenshots/15-history.jpg" width="200"/> | <img src="docs/screenshots/16-records.jpg" width="200"/> |
+**เริ่มต้นใช้งาน**
+
+| Welcome | ขอสิทธิ์ | เข้าสู่ระบบ | สมัครสมาชิก | โปรไฟล์และเป้าหมาย |
+|:---:|:---:|:---:|:---:|:---:|
+| <img src="docs/screenshots/01-welcome.jpg" width="160"/> | <img src="docs/screenshots/02-permissions.jpg" width="160"/> | <img src="docs/screenshots/03-login.jpg" width="160"/> | <img src="docs/screenshots/04-register.jpg" width="160"/> | <img src="docs/screenshots/05-profile.jpg" width="160"/> |
+
+**วิ่งและดูผล**
+
+| หน้าหลัก | วิ่งสด (GPS จริง) | หยุดชั่วคราว | สรุปผล | กราฟและ Splits |
+|:---:|:---:|:---:|:---:|:---:|
+| <img src="docs/screenshots/06-home.jpg" width="160"/> | <img src="docs/screenshots/07-live-run.jpg" width="160"/> | <img src="docs/screenshots/08-paused.jpg" width="160"/> | <img src="docs/screenshots/09-run-summary.jpg" width="160"/> | <img src="docs/screenshots/10-stats.jpg" width="160"/> |
+
+**แชร์และเปรียบเทียบ**
+
+| แชร์และซิงก์ | ภาพแชร์ | หน้าเว็บแชร์ | อันดับโลก | การแจ้งเตือน |
+|:---:|:---:|:---:|:---:|:---:|
+| <img src="docs/screenshots/13-share-sheet.jpg" width="160"/> | <img src="docs/screenshots/14-share-image.jpg" width="160"/> | <img src="docs/screenshots/15-web-share.jpg" width="160"/> | <img src="docs/screenshots/18-leaderboard.jpg" width="160"/> | <img src="docs/screenshots/19-notifications.jpg" width="160"/> |
 
 <details>
 <summary><b>ดูหน้าจออื่น ๆ ทั้งหมด</b></summary>
 
-| ขอสิทธิ์ | โปรไฟล์และเป้าหมาย | หน้าหลัก (ผู้ใช้ใหม่) | หยุดชั่วคราว |
-|:---:|:---:|:---:|:---:|
-| <img src="docs/screenshots/02-permissions.jpg" width="200"/> | <img src="docs/screenshots/03-profile.jpg" width="200"/> | <img src="docs/screenshots/05-home-empty.jpg" width="200"/> | <img src="docs/screenshots/08-paused.jpg" width="200"/> |
+| Replay | แก้ไขการวิ่ง | ประวัติ | สถิติส่วนตัว | ตั้งค่า |
+|:---:|:---:|:---:|:---:|:---:|
+| <img src="docs/screenshots/11-replay.jpg" width="160"/> | <img src="docs/screenshots/12-edit-run.jpg" width="160"/> | <img src="docs/screenshots/16-history.jpg" width="160"/> | <img src="docs/screenshots/17-records.jpg" width="160"/> | <img src="docs/screenshots/20-settings.jpg" width="160"/> |
 
-| แก้ไขการวิ่ง | หน้าเว็บแชร์ | ตั้งค่า | ตัวเลือก (Bottom sheet) |
-|:---:|:---:|:---:|:---:|
-| <img src="docs/screenshots/12-edit-run.jpg" width="200"/> | <img src="docs/screenshots/14-web-share.jpg" width="200"/> | <img src="docs/screenshots/17-settings.jpg" width="200"/> | <img src="docs/screenshots/20-option-sheet.jpg" width="200"/> |
-
-| กู้การวิ่งที่ค้าง | ยืนยันการลบ |
-|:---:|:---:|
-| <img src="docs/screenshots/18-recover.jpg" width="200"/> | <img src="docs/screenshots/19-delete.jpg" width="200"/> |
+| กู้การวิ่งที่ค้าง | ยืนยันการลบ | ตัวเลือก (Bottom sheet) |
+|:---:|:---:|:---:|
+| <img src="docs/screenshots/21-recover.jpg" width="160"/> | <img src="docs/screenshots/22-delete.jpg" width="160"/> | <img src="docs/screenshots/23-option-sheet.jpg" width="160"/> |
 
 </details>
-
-> ภาพหน้าจอเหล่านี้ถ่ายจาก Android Emulator (Pixel 9) โดยป้อนพิกัด GPS จำลองรอบสวนลุมพินี กรุงเทพฯ
 
 ---
 
 ## ฟีเจอร์
 
 ### 🏃 บันทึกการวิ่ง
-- อ่านตำแหน่งจาก `LocationManager` ทุก 1 วินาที แล้ว **กรองจุดคลาดเคลื่อน** (ความแม่นยำแย่กว่า 25 ม. / เร็วเกิน 9 ม./วินาที / ขยับน้อยกว่าค่าคลาดเคลื่อน)
-- แสดงระยะทาง เวลา **เพซปัจจุบัน** (เฉลี่ย 30 วินาทีล่าสุด) เพซเฉลี่ย แคลอรี่ Cadence ความสูงสะสม และแบตเตอรี่
-- แผนที่ OpenStreetMap เลื่อนตามตำแหน่งนักวิ่ง เส้นทางไล่สีตามเพซ มีปุ่มกลับไปตำแหน่งปัจจุบันและสลับแผนที่โหมดมืด
-- ป้ายสถานะ GPS: กำลังหาสัญญาณ · ดี · พอใช้ · อ่อน · GPS ปิด · ยังไม่อนุญาต (แตะเพื่อแก้ไขได้ทันที)
-- ป้ายเทียบ **เพซเป้าหมาย** เช่น "เร็วกว่าเป้า 12 วิ/กม."
-- เข็มทิศจาก rotation vector (สำรองด้วย magnetometer + accelerometer)
-- **Auto-pause** เมื่อไม่ขยับเกิน 8 วินาที และวิ่งต่อเองเมื่อเริ่มเคลื่อนที่
-- **กดค้าง 1.5 วินาทีเพื่อจบ** กันกดพลาด · ปุ่มล็อกหน้าจอ · ถ่ายรูปแนบกับการวิ่ง
-- **กู้การวิ่งที่ค้าง**: เขียนสถานะ + จุด GPS ลงไฟล์ทุก 5 วินาที ถ้าแอปถูกปิดกลางคันจะถามว่าจะกู้คืน บันทึกเท่าที่มี หรือทิ้ง
+- อ่านตำแหน่งจาก GPS ทุก 1 วินาที กรองจุดคลาดเคลื่อน (ความแม่นยำแย่กว่า 25 ม. · เร็วเกิน 9 ม./วิ · ขยับน้อยกว่าค่าคลาดเคลื่อน)
+- **Foreground service** — ปิดจอ สลับแอป หรือออกจากหน้าวิ่ง GPS และเวลายังเดินต่อ พร้อมการแจ้งเตือนค้างที่กดหยุด/วิ่งต่อได้
+- ระยะ เวลา เพซปัจจุบัน (30 วินาทีล่าสุด) เพซเฉลี่ย แคลอรี่ Cadence ความสูงสะสม แบตเตอรี่ และป้ายเทียบเพซเป้าหมาย
+- เส้นทางไล่สีตามเพซบนแผนที่ OpenStreetMap · โหมดแผนที่มืด · ปุ่มกลับตำแหน่งปัจจุบัน · เข็มทิศ
+- **Auto-pause** เมื่อหยุดนิ่งเกิน 8 วินาที และวิ่งต่อเองเมื่อเริ่มเคลื่อนที่ · ช่วงที่หยุดไม่นับระยะ
+- แจ้งเตือนทุก 1 กม. พร้อมเพซของกิโลนั้น
+- **กดค้าง 1.5 วินาทีเพื่อจบ** · ล็อกปุ่ม · ถ่ายรูปเต็มความละเอียดแนบกับการวิ่ง
+- **กู้การวิ่งที่ค้าง** — เขียนจุด GPS ลง SQLite ทุก 5 วินาที ถ้าแอปถูกปิดกลางคันจะกู้คืนได้ครบทุกจุด
 
 ### 📈 วิเคราะห์ผล
-- สรุปผลหลังวิ่ง: ระยะ เวลาเคลื่อนที่ เพซ แคลอรี่ ความสูงสะสม Cadence ป้าย "สถิติใหม่" และสถานะซิงก์
-- **Splits** รายกิโลเมตร พร้อมแถบเทียบและป้าย *เร็วสุด / ช้าสุด*
-- กราฟเพซและความสูงตลอดเส้นทาง (วาดด้วย Canvas)
-- **Replay** เล่นย้อนการวิ่งบนแผนที่ เลื่อนไทม์ไลน์ได้ ปรับความเร็ว 1× / 2× / 4× / 8×
-- **สถิติส่วนตัว**: ระยะ/เวลา/แคลอรี่รวม · 1 / 5 / 10 กม. เร็วสุด · วิ่งไกลสุด · กราฟรายเดือน 6 เดือน
+- สรุปผลหลังวิ่ง · ป้าย "สถิติใหม่" · สถานะซิงก์และสถานะในอันดับ (แตะเพื่อดูเหตุผล)
+- Splits รายกิโลเมตร · กราฟเพซและความสูง · **Replay** ย้อนการวิ่งบนแผนที่ (1×–8×)
+- สถิติส่วนตัว: ระยะ/เวลา/แคลอรี่รวม · 1 / 5 / 10 กม. เร็วสุด · วิ่งไกลสุด · กราฟรายเดือน
 
 ### 🗂 จัดการข้อมูล
-- ประวัติการวิ่งแบบ RecyclerView จัดกลุ่มรายเดือน · ค้นหาชื่อ/โน้ต · กรอง (ทั้งหมด / 7 วัน / เดือนนี้ / > 5 กม.) · เรียงลำดับ
-- เพิ่มการวิ่งย้อนหลัง / แก้ไขชื่อ โน้ต วันเวลา และรูป (กล้องหรือแกลเลอรี · แก้ทิศตาม EXIF · ย่อ · JPEG 80%)
-- กดค้างที่การ์ดเพื่อลบ (เลือกลบจากเซิร์ฟเวอร์ด้วยได้)
+- ประวัติแบบ RecyclerView จัดกลุ่มรายเดือน · ค้นหา · กรอง · เรียงลำดับ
+- เพิ่มการวิ่งย้อนหลัง (บันทึกเอง ไม่นับเข้าอันดับ) · แก้ชื่อ โน้ต และรูป · ลบ (เลือกลบจากเซิร์ฟเวอร์ด้วยได้)
+
+### ☁️ บัญชีและการซิงก์
+- สมัคร / เข้าสู่ระบบ / **ใช้งานแบบออฟไลน์ก่อน (Guest)** แล้วล็อกอินทีหลัง การวิ่งเดิมจะถูกผูกบัญชีและอัปโหลดให้
+- ซิงก์อัตโนมัติเมื่อมีเน็ต · ล็อกอินเครื่องใหม่ดึงประวัติคืนครบพร้อมเส้นทางและรูป
+- เปลี่ยนรหัสผ่าน · ออกจากระบบ (เตือนถ้ายังมีรายการไม่ได้ซิงก์) · ลบบัญชี
 
 ### 🔗 แชร์
-- คัดลอกลิงก์ · ส่งต่อไปแอปอื่น · **QR Code** (สร้างในเครื่องด้วย ZXing) · ดูตัวอย่างหน้าเว็บ
-- ตัวเลือกความเป็นส่วนตัว: **ซ่อน 200 ม. แรกและสุดท้าย** (ไม่เปิดเผยตำแหน่งบ้าน) · แสดงรูป · แสดงแคลอรี่
+- **ลิงก์แชร์จริง** เปิดดูได้ในเบราว์เซอร์ (แผนที่ Leaflet + เส้นทางไล่สี + OG tag ให้พรีวิวใน LINE/Facebook)
+- ตัวเลือกความเป็นส่วนตัว: **ซ่อน 200 ม. แรกและสุดท้าย** (ตัดที่เซิร์ฟเวอร์) · แสดงรูป · แสดงแคลอรี่
+- คัดลอกลิงก์ · ส่งต่อแอปอื่น · QR Code · ยกเลิกลิงก์
+- **ภาพแชร์** — สร้างภาพสรุปในเครื่อง (ไม่ต้องใช้เน็ต) พื้นหลังเป็นรูปจากการวิ่งหรือเส้นทาง ขนาด 9:16 (Story) / 1:1 (โพสต์) บันทึกลงแกลเลอรีหรือแชร์ต่อ
+
+### 🏆 อันดับโลกและการแจ้งเตือน
+- อันดับ ระยะรวม / 5 กม. เร็วสุด / 10 กม. เร็วสุด · สัปดาห์นี้ / เดือนนี้ / ทั้งหมด · ทั่วโลก / ประเทศของฉัน
+- นับเฉพาะการวิ่ง GPS ที่เซิร์ฟเวอร์ตรวจแล้ว · แตะรายชื่อเพื่อดูสรุปของนักวิ่งคนนั้น · ปิดการแสดงชื่อได้
+- **ศูนย์แจ้งเตือน** จากเหตุการณ์จริง: นับในอันดับแล้ว/ไม่นับ (บอกเหตุผล) · สถิติใหม่ · ถึงเป้าสัปดาห์ · มีคนแซงในอันดับ · มีคนเปิดดูลิงก์แชร์
 
 ### ⚙️ ตั้งค่าและอื่น ๆ
-- Onboarding 3 ขั้น: แนะนำแอป → อธิบายเหตุผลก่อนขอสิทธิ์ → โปรไฟล์ (ชื่อ นามสกุล น้ำหนัก ส่วนสูง อายุ หน่วย) และเป้าหมายรายสัปดาห์
-- หน่วย กม./ไมล์ · เป้าหมายรายสัปดาห์ · เพซเป้าหมาย · Auto-pause · แจ้งเตือนทุก 1 กม. · ที่อยู่เซิร์ฟเวอร์
-- **ตรวจเซนเซอร์**: เครื่องมี/ไม่มีเซนเซอร์อะไร พร้อมค่าสด และแจ้งให้ปรับเทียบเข็มทิศเมื่อความแม่นยำต่ำ
-- ทดสอบการคืนสถานะหน้าจอ (`recreate()` + นับจำนวนครั้งผ่าน `onSaveInstanceState`)
+- Onboarding: แนะนำแอป → ขอสิทธิ์พร้อมเหตุผล → เข้าสู่ระบบ/Guest → โปรไฟล์และเป้าหมายรายสัปดาห์
+- หน่วย กม./ไมล์ · เป้าหมายรายสัปดาห์ · เพซเป้าหมาย · Auto-pause · แจ้งเตือนทุก 1 กม. · แจ้งเตือนสถิติและอันดับ · ที่อยู่เซิร์ฟเวอร์
+- ตรวจเซนเซอร์ของเครื่อง · ล็อกแนวตั้งทุกหน้า
+
+---
+
+## สถาปัตยกรรม
+
+```
+┌──────────────────── แอป Android (Kotlin + XML) ────────────────────┐
+│  Activity (ViewBinding)                                            │
+│     │ อ่าน/เขียน                                                     │
+│     ▼                                                              │
+│  RunRepository ──► SQLite  runs · run_points · splits              │ ◄─ แหล่งข้อมูลหลัก ใช้ได้ออฟไลน์
+│  RunTrackingService (foreground, location) ── GPS ทำงานตอนปิดจอ    │
+│  SyncEngine + WorkManager ── ส่ง/ดึงข้อมูลเมื่อมีเน็ต                  │
+│     │ OkHttp + JWT (refresh token อัตโนมัติ, gzip)                  │
+└─────┼──────────────────────────────────────────────────────────────┘
+      │ HTTPS /api/v1
+      ▼
+┌──────────────────── Backend (Go + Fiber, Docker) ──────────────────┐
+│  auth · users · runs · photos · share · leaderboard · notifications│
+│     │                          │                                   │
+│     ▼                          ▼                                   │
+│  PostgreSQL 17           S3 / RustFS (presigned URL)               │
+└────────────────────────────────────────────────────────────────────┘
+      หน้าเว็บแชร์  http://<host>:8080/s/{code}
+```
+
+- รูปภาพอัปโหลดจากมือถือ **ตรงไป S3** ด้วย presigned URL (ไม่ผ่าน Go)
+- เซิร์ฟเวอร์ **คำนวณระยะใหม่จากจุด GPS** ด้วยสูตรเดียวกับแอป และตรวจความน่าเชื่อก่อนนับเข้าอันดับ
 
 ---
 
 ## เทคโนโลยีที่ใช้
 
+**แอป Android**
+
 | ส่วน | ที่เลือกใช้ |
 |---|---|
-| ภาษา | **Kotlin** (ไม่มีไฟล์ `.java`) |
-| UI | XML Layout + **ViewBinding** + Material Components (Material3) |
-| Build | Gradle Kotlin DSL · Version Catalog (`gradle/libs.versions.toml`) · AGP 9.3.3 |
-| SDK | `compileSdk 37` · `minSdk 28` · `targetSdk 37` · Java 11 |
-| แผนที่ | [osmdroid](https://github.com/osmdroid/osmdroid) 6.1.20 (OpenStreetMap) |
-| ตำแหน่ง | `android.location.LocationManager` (GPS provider) |
-| เซนเซอร์ | `SensorManager` — Step Counter, Rotation Vector, Magnetometer, Accelerometer, Barometer, Light, Ambient Temperature |
-| รายการ | `RecyclerView` |
-| รูปภาพ | `ExifInterface` (แก้ทิศภาพ) · Activity Result API (กล้อง / แกลเลอรี) |
-| QR Code | [ZXing core](https://github.com/zxing/zxing) 3.5.3 |
-| กราฟ | Custom `View` วาดด้วย `Canvas` (ไม่ใช้ไลบรารีกราฟ) |
-| ฟอนต์ | Anuphan (หัวข้อ/ตัวเลข) · IBM Plex Sans Thai (เนื้อหา) |
-| ไอคอน | Lucide (แปลงเป็น VectorDrawable) |
+| ภาษา / UI | Kotlin 100% · XML Layout + ViewBinding · Material Components (Material3) |
+| Build | Gradle Kotlin DSL · Version Catalog · AGP 9.3.3 · `compileSdk 37` · `minSdk 28` · `targetSdk 37` |
+| ฐานข้อมูล | SQLite (`SQLiteOpenHelper`) |
+| เครือข่าย | OkHttp 5 · `org.json` · token เข้ารหัส AES-GCM ด้วย Android Keystore |
+| งานเบื้องหลัง | WorkManager (ซิงก์) · Foreground Service (บันทึกการวิ่ง) |
+| แผนที่ / ตำแหน่ง | osmdroid 6.1 (OpenStreetMap) · `LocationManager` (GPS) |
+| เซนเซอร์ | Step Counter · Rotation Vector · Magnetometer · Accelerometer · Barometer · Light · Temperature |
+| อื่น ๆ | ZXing (QR) · ExifInterface · กราฟและภาพแชร์วาดเองด้วย `Canvas` |
+| ฟอนต์ / ไอคอน | Anuphan · IBM Plex Sans Thai · Lucide |
 
----
+**Backend**
 
-## การนำเนื้อหา MA09–MA12 มาใช้
-
-| บทเรียน | ใช้ในโปรเจค |
+| ส่วน | ที่เลือกใช้ |
 |---|---|
-| **MA09** ข้อมูลภายในเครื่อง + คืนสถานะ | `SharedPreferences` เก็บโปรไฟล์และค่าตั้งค่า (`PrefsHelper`) · ไฟล์ `.properties` + CSV เก็บการวิ่งที่ค้าง (`DraftStore`) · `onSaveInstanceState` ในหน้าวิ่ง โปรไฟล์ Replay ประวัติ ตั้งค่า |
-| **MA10** SQLite + RecyclerView + รูปภาพ | `RecyclerView` + `RunAdapter` (2 view type) · CRUD ผ่าน `RunRepository` (ชื่อเมธอดตรงกับ DBHelper) · รูปจากกล้อง/แกลเลอรี แก้ EXIF ย่อ และบีบอัด (`ImageStore`) |
-| **MA11** ฐานข้อมูลออนไลน์ | `net/ApiConfig` · หน้าแชร์/ซิงก์/ลบออนไลน์ และหน้าเว็บแชร์ (ส่วนติดต่อเซิร์ฟเวอร์จริงอยู่ในแผนถัดไป) |
-| **MA12** เซนเซอร์ | GPS จริง (`LocationTracker`) · Cadence จาก Step Counter (`CadenceTracker`) · เข็มทิศ (`CompassHelper`) · ตรวจเซนเซอร์ register ใน `onResume` / unregister ใน `onPause` · `<uses-feature required="false">` |
+| ภาษา / Framework | Go 1.27 · Fiber v3 |
+| ฐานข้อมูล | PostgreSQL 17 · pgx v5 · goose (migration ฝังใน binary) |
+| เก็บไฟล์ | S3 API (aws-sdk-go-v2) · RustFS ตอนรันในเครื่อง / AWS S3 ตอนขึ้นจริง |
+| ความปลอดภัย | argon2id · JWT (HS256) · refresh token แบบหมุนเวียน · rate limit |
+| รันระบบ | Docker multi-stage (distroless) · Docker Compose · Makefile |
+| ทดสอบ | `go test` + testcontainers (Postgres จริง) · `scripts/smoke.sh` |
 
 ---
 
 ## โครงสร้างโปรเจค
 
 ```
-app/src/main/
-├── AndroidManifest.xml
-├── java/com/example/runtrail/
-│   ├── data/                    # โมเดลและแหล่งข้อมูล
-│   │   ├── Run.kt               #   Run · TrackPoint · Split · RoutePoint · SyncStatus
-│   │   ├── RunRepository.kt     #   CRUD + ค้นหา/กรอง/เรียง + สถิติรายสัปดาห์/เดือน
-│   │   ├── SampleData.kt        #   ข้อมูลตัวอย่าง (อิงวันที่ปัจจุบัน)
-│   │   ├── PrefsHelper.kt       #   SharedPreferences (MA09)
-│   │   └── DraftStore.kt        #   การวิ่งที่ค้าง → .properties + CSV (MA09)
-│   ├── domain/                  # ตรรกะล้วน ไม่ผูก Android (ทดสอบบน JVM ได้)
-│   │   ├── TrackMath.kt         #   Haversine · splits · ความสูงสะสม · GpsFilter
-│   │   ├── RunCalculator.kt     #   เพซ · แคลอรี่ (ACSM/MET) · สถิติดีที่สุด
-│   │   ├── RouteGenerator.kt    #   เส้นทางสำหรับวาด (จาก GPS จริง หรือจำลองสำหรับข้อมูลตัวอย่าง)
-│   │   ├── PaceColor.kt         #   สีตามระดับเพซ
-│   │   └── Fmt.kt               #   รูปแบบตัวเลข/เวลา/วันที่ภาษาไทย
-│   ├── sensor/                  # เซนเซอร์และตำแหน่ง (MA12)
-│   │   ├── LocationTracker.kt   #   GPS ทุก 1 วินาที
-│   │   ├── CadenceTracker.kt    #   ก้าว/นาที จาก Step Counter
-│   │   ├── CompassHelper.kt     #   เข็มทิศ
-│   │   └── SensorHelper.kt      #   รายการเซนเซอร์ + ตรวจว่ามีในเครื่องไหม
-│   ├── net/
-│   │   └── ApiConfig.kt         #   ที่อยู่เซิร์ฟเวอร์ (MA11)
-│   └── ui/                      # หน้าจอ แยกตามฟีเจอร์
-│       ├── onboarding/          #   Welcome · Permissions · ProfileSetup
-│       ├── home/                #   MainActivity (หน้าหลัก)
-│       ├── live/                #   LiveRunActivity (วิ่งสด)
-│       ├── detail/              #   RunDetailActivity · RunStatsActivity
-│       ├── replay/              #   ReplayActivity
-│       ├── edit/                #   AddEditRunActivity
-│       ├── share/               #   ShareSheet · WebPreviewActivity
-│       ├── history/             #   HistoryActivity · RunAdapter
-│       ├── records/             #   RecordsActivity
-│       ├── settings/            #   SettingsActivity
-│       ├── sensor/              #   SensorCheckActivity
-│       ├── common/              #   BottomNav · Dialogs · Sheets · RunCardBinder · ImageStore · Screen
-│       └── widget/              #   Custom View: MapRouteView · OsmRoute · BarChartView ·
-│                                #   LineChartView · RingProgressView · HoldToStopView · ToggleSwitch
-└── res/
-    ├── layout/                  # activity_* · item_* · view_* · dialog_* · sheet_*
-    ├── drawable/                # ไอคอน Lucide (VectorDrawable) + shape ทั้งหมด
-    ├── font/                    # Anuphan · IBM Plex Sans Thai
-    ├── values/                  # colors · strings (ภาษาไทยทั้งหมด) · themes · styles_text · styles_components
-    ├── color/                   # ColorStateList ของชิป แท็บ ตัวเลือก
-    └── menu/                    # bottom_nav
+RunTrail/
+├── app/                                  แอป Android
+│   └── src/
+│       ├── main/java/com/example/runtrail/
+│       │   ├── App.kt                    เริ่มแอป: เปิด DB · สร้างตัวเชื่อม backend · ตั้งเวลาซิงก์
+│       │   ├── data/                     Run · RunDb (SQLite) · RunRepository · PrefsHelper · Accounts
+│       │   ├── domain/                   Kotlin ล้วน (ทดสอบบน JVM ได้)
+│       │   │                             TrackMath · RunCalculator · LiveRunState · Codec · Fmt ·
+│       │   │                             PaceColor · Periods · RouteGenerator · ShareImageLayout
+│       │   ├── net/                      ApiClient (OkHttp + refresh) · RunTrailApi · RunJson · TokenStore
+│       │   ├── sync/                     SyncEngine · SyncManager (WorkManager)
+│       │   ├── service/                  RunTrackingService (foreground, type=location)
+│       │   ├── sensor/                   LocationTracker · CadenceTracker · CompassHelper · SensorHelper
+│       │   └── ui/
+│       │       ├── onboarding/           Welcome · Permissions · ProfileSetup
+│       │       ├── auth/                 Login · Register
+│       │       ├── home/                 หน้าหลัก
+│       │       ├── live/                 วิ่งสด
+│       │       ├── detail/               สรุปผล · กราฟ/Splits
+│       │       ├── replay/  edit/        Replay · เพิ่ม/แก้ไขการวิ่ง
+│       │       ├── history/  records/    ประวัติ · สถิติส่วนตัว
+│       │       ├── leaderboard/          อันดับโลก
+│       │       ├── notifications/        ศูนย์แจ้งเตือน · Notifier
+│       │       ├── share/                ShareSheet · ภาพแชร์ · หน้าเว็บแชร์
+│       │       ├── settings/  sensor/    ตั้งค่า · ตรวจเซนเซอร์
+│       │       ├── common/               BottomNav · Dialogs · Sheets · Async · ImageStore ฯลฯ
+│       │       └── widget/               MapRouteView · OsmRoute · กราฟ · HoldToStop · ToggleSwitch
+│       ├── main/res/                     layout · drawable · font · values (ภาษาไทยทั้งหมด) · xml
+│       ├── debug/                        อนุญาต HTTP + สิทธิ์เครือข่ายภายใน (เฉพาะ build debug)
+│       ├── test/                         JVM unit test
+│       └── androidTest/                  instrumented test (SQLite · ปิดจอ · ซิงก์กับ backend จริง)
+├── backend/                              เซิร์ฟเวอร์ Go
+│   ├── cmd/api/                          main: config → DB → migrate → listen
+│   ├── internal/
+│   │   ├── api/                          handler ทุก endpoint + หน้าเว็บแชร์ (templates/)
+│   │   ├── track/                        คำนวณระยะ/splits/best effort · ตรวจโกง · ตัด 200 ม.
+│   │   ├── auth/                         argon2id · JWT · refresh token · share code
+│   │   ├── db/                           pgx pool + migrations
+│   │   ├── storage/                      S3 client (+ ตัวจำลองสำหรับ test)
+│   │   ├── httpx/                        รูปแบบ error · อ่าน JSON/gzip · validation
+│   │   └── config/                       env vars
+│   ├── scripts/smoke.sh                  ทดสอบทั้ง flow กับเซิร์ฟเวอร์จริง
+│   ├── docker-compose.yml  Dockerfile  Makefile  .env.example
+│   └── README.md                         วิธีรัน + เอกสาร API ฉบับเต็ม
+├── tools/gps-bridge/                     ส่ง GPS จริงจาก iPhone เข้า Emulator
+├── docs/
+│   ├── BACKEND_PLAN.md                   แผนและการตัดสินใจออกแบบระบบ
+│   ├── prompts/                          prompt ที่ใช้สั่งงาน AI
+│   ├── screenshots/                      ภาพหน้าจอใน README
+│   └── logo.png
+└── gradle/  build.gradle.kts  settings.gradle.kts
 ```
 
-**หลักการ:** `domain/` เป็น Kotlin ล้วนไม่ผูก Android · หน้าจอ 1 หน้า = 1 Activity ตามแบบในคาบเรียน · แท็บล่าง 4 แท็บเป็น Activity แยกที่สลับกันโดยไม่มีแอนิเมชัน
+---
+
+## เริ่มต้นใช้งาน
+
+### สิ่งที่ต้องมี
+- Android Studio (รองรับ AGP 9.3.3) + Android SDK 37 · อุปกรณ์หรือ Emulator Android 9 ขึ้นไป
+- Docker Desktop (สำหรับ backend) · `make` · `jq` (ใช้กับ smoke test)
+
+### 1) ดาวน์โหลดโปรเจค
+```bash
+git clone https://github.com/suphanatchanlek30/RunTrail.git
+cd RunTrail
+```
+
+### 2) รัน backend
+```bash
+cd backend
+make env      # สร้าง .env: ใส่ IP ของเครื่องและสุ่มรหัสลับให้ (ครั้งแรกเท่านั้น)
+make up       # build + รัน PostgreSQL, RustFS (S3) และ API
+curl localhost:8080/readyz     # {"db":"ok","storage":"ok"}
+```
+รายละเอียดทั้งหมดอยู่ที่ [`backend/README.md`](backend/README.md)
+
+### 3) รันแอป
+เปิดโฟลเดอร์ `RunTrail` ใน Android Studio → รอ Gradle sync → เลือกอุปกรณ์ → **Run ▶**
+หรือผ่าน command line:
+```bash
+./gradlew assembleDebug        # ไฟล์ APK: app/build/outputs/apk/debug/app-debug.apk
+```
+
+### 4) เชื่อมแอปกับ backend
+ในหน้าเข้าสู่ระบบ แตะ **"เซิร์ฟเวอร์"** แล้วใส่ที่อยู่:
+
+| อุปกรณ์ | ที่อยู่ |
+|---|---|
+| Emulator | `http://10.0.2.2:8080` (ค่าเริ่มต้น) |
+| มือถือจริง (Wi-Fi เดียวกับเครื่องที่รัน backend) | `http://<IP ของเครื่อง>:8080` — ดู IP ด้วย `ipconfig getifaddr en0` |
+
+- Android 17 จะถามสิทธิ์ **"อุปกรณ์ใกล้เคียง/เครือข่ายภายใน"** ต้องกด **อนุญาต** ไม่อย่างนั้นต่อเซิร์ฟเวอร์ในวง Wi-Fi ไม่ได้
+- ถ้า IP ของเครื่องเปลี่ยน ให้แก้ `HOST_IP`, `PUBLIC_BASE_URL`, `S3_PUBLIC_ENDPOINT` ใน `backend/.env` แล้ว `make up` ใหม่ (ลิงก์แชร์และรูปอ้างอิง IP นี้)
+- ไม่ล็อกอินก็ใช้งานได้ (Guest) — การวิ่งจะรออยู่ในเครื่องและอัปโหลดเมื่อเข้าสู่ระบบ
 
 ---
 
-## หน้าจอทั้งหมด (19 หน้าจาก Figma)
+## ทดสอบด้วย GPS
 
-| # | หน้าจอ | Activity / Component |
+**Emulator — Extended Controls**: `⋯` → **Location** → แท็บ **Routes** → วาดเส้นทางหรือโหลด GPX → **Play route**
+
+**Emulator — คำสั่ง adb** (`ลองจิจูด ละติจูด ความสูง` ทีละจุด ทุก 1 วินาที)
+```bash
+adb emu geo fix 100.5385 13.7290 5
+adb emu geo fix 100.5386 13.7293 5
+```
+
+**ใช้ GPS จริงจาก iPhone** (ไม่มีมือถือ Android): ถือโน้ตบุ๊กกับ iPhone ออกไปวิ่งได้จริง
+ดูวิธีที่ [`tools/gps-bridge/README.md`](tools/gps-bridge/README.md)
+```
+iPhone (Safari) → Cloudflare Tunnel (HTTPS) → bridge.py → adb emu geo fix → Emulator
+```
+
+> 💡 เครื่องจริงให้ผลดีที่สุด — Emulator ไม่มี Step Counter และเซนเซอร์บางตัว (ช่อง Cadence จะเป็น `--`)
+
+---
+
+## การทดสอบอัตโนมัติ (Test)
+
+| ชุด | คำสั่ง | ครอบคลุม |
 |---|---|---|
-| 01 | Welcome | `ui/onboarding/WelcomeActivity` |
-| 02 | ขอสิทธิ์การใช้งาน | `ui/onboarding/PermissionsActivity` |
-| 03 | โปรไฟล์และเป้าหมาย | `ui/onboarding/ProfileSetupActivity` (ใช้เป็นหน้าแก้ไขโปรไฟล์ด้วย) |
-| 04 | ตรวจเซนเซอร์ | `ui/sensor/SensorCheckActivity` |
-| 05 | หน้าหลัก — สถานะว่าง | `ui/home/MainActivity` (เมื่อยังไม่มีการวิ่ง) |
-| 06 | หน้าหลัก | `ui/home/MainActivity` |
-| 07 | บันทึกการวิ่งสด | `ui/live/LiveRunActivity` |
-| 08 | หยุดชั่วคราว / กดค้างเพื่อจบ | `ui/live/LiveRunActivity` + `HoldToStopView` |
-| 09 | สรุปผลการวิ่ง | `ui/detail/RunDetailActivity` |
-| 10 | Splits และกราฟ | `ui/detail/RunStatsActivity` |
-| 11 | Replay | `ui/replay/ReplayActivity` |
-| 12 | เพิ่ม / แก้ไขการวิ่ง | `ui/edit/AddEditRunActivity` |
-| 13 | แชร์และซิงก์ | `ui/share/ShareSheet` (Bottom sheet) |
-| 14 | หน้าเว็บแชร์เส้นทาง | `ui/share/WebPreviewActivity` (WebView) |
-| 15 | ประวัติการวิ่ง | `ui/history/HistoryActivity` |
-| 16 | สถิติส่วนตัว | `ui/records/RecordsActivity` |
-| 17 | ตั้งค่า | `ui/settings/SettingsActivity` |
-| 18 | กู้การวิ่งที่ค้าง | `ui/common/Dialogs.recoverRun` |
-| 19 | ยืนยันการลบ | `ui/common/Dialogs.confirmDelete` |
+| แอป · JVM (32 ข้อ) | `./gradlew testDebugUnitTest` | สูตร TrackMath/RunCalculator · สถานะการวิ่งสด (auto-pause, ช่วงหยุด, จุด GPS มาเป็นชุด, จุดแรกค้าง) · JSON · HTTP client (refresh token พร้อมกันแล้ว refresh ครั้งเดียว, gzip) · ตำแหน่งในภาพแชร์ |
+| แอป · บนเครื่อง (12 ข้อ) | `./gradlew connectedDebugAndroidTest -Pe2eApiUrl=http://10.0.2.2:8080` | SQLite · **บันทึกต่อเนื่องตอนปิดจอ** · วาดภาพแชร์ · **ซิงก์กับ backend จริงทั้งวงจร** (ออฟไลน์ → ซิงก์ครั้งเดียว → รูปขึ้น S3 → ลิงก์แชร์ → แก้/ลบ → เครื่องใหม่ดึงคืน) |
+| Backend · Go | `cd backend && make test` | unit + integration กับ PostgreSQL จริง: auth, last-write-wins, UUID ของคนอื่น, gzip bomb, sync cursor, รูป, อันดับ, แชร์ซ่อนบ้าน, การแจ้งเตือน, ลบบัญชี |
+| Backend · smoke (29 ข้อ) | `cd backend && make smoke` | ทั้ง flow ผ่าน HTTP กับ Docker จริง |
+
+> ⚠️ `connectedDebugAndroidTest` จะ **ถอนแอปออกจากเครื่องหลังรันเสร็จ** (ข้อมูลในแอปหาย) ถ้ากำลังใช้แอปอยู่ ให้ใช้ `installDebug installDebugAndroidTest` แล้วรัน `adb shell am instrument` แทน
 
 ---
 
-## สูตรคำนวณ
+## API โดยสรุป
+
+ทุก endpoint อยู่ใต้ `/api/v1` (🔒 = ต้องส่ง `Authorization: Bearer <token>`) — ฉบับเต็มพร้อมตัวอย่างอยู่ที่ [`backend/README.md`](backend/README.md)
+
+| กลุ่ม | Endpoint |
+|---|---|
+| บัญชี | `POST /auth/register` · `/auth/login` · `/auth/refresh` · `/auth/logout` · `/auth/change-password` 🔒 |
+| ผู้ใช้ 🔒 | `GET/PATCH/DELETE /me` · `GET /me/stats` · `/me/avatar/*` · `GET /users/{id}/summary` |
+| การวิ่ง 🔒 | `PUT /runs/{uuid}` (upsert) · `PATCH` · `DELETE` · `GET /runs?updated_since=&cursor=` · `GET /runs/{uuid}` · `/track` |
+| รูป 🔒 | `POST /runs/{uuid}/photo/upload-url` → PUT ไป S3 → `POST …/photo/confirm` · `DELETE …/photo` |
+| แชร์ | `POST/DELETE /runs/{uuid}/share` 🔒 · `GET /public/runs/{code}` · หน้าเว็บ `GET /s/{code}` |
+| อันดับ 🔒 | `GET /leaderboard?metric=&period=&scope=` · `GET /leaderboard/me` |
+| แจ้งเตือน 🔒 | `GET /notifications` · `POST /notifications/read` |
+| ระบบ | `GET /healthz` · `GET /readyz` |
+
+---
+
+## สูตรคำนวณและการตรวจการวิ่ง
 
 | ค่า | สูตร |
 |---|---|
@@ -241,10 +356,54 @@ app/src/main/
 | เพซ (วินาที/กม.) | `เวลาเคลื่อนที่ ÷ (ระยะทาง ÷ 1000)` |
 | เพซปัจจุบัน | ระยะและเวลาของจุด GPS ใน 30 วินาทีล่าสุด |
 | แคลอรี่ | `MET × น้ำหนัก(กก.) × ชั่วโมง` โดย `MET = (0.2 × ความเร็ว(ม./นาที) + 3.5) ÷ 3.5` (ACSM) |
-| Split | ประมาณเวลาที่ผ่านแต่ละหลักกิโลเมตรแบบเชิงเส้นระหว่างจุด GPS |
-| ความสูงสะสม | รวมเฉพาะช่วงขึ้น ตัดการแกว่งที่น้อยกว่า 2 ม. |
-| Cadence | จำนวนก้าวที่เพิ่มขึ้นใน 30 วินาทีล่าสุด ÷ เวลาเป็นนาที (ก้าว/นาที) |
+| Split | เวลาที่ผ่านแต่ละหลักกิโลเมตร ประมาณเชิงเส้นระหว่างจุด GPS |
+| ความสูงสะสม | รวมเฉพาะช่วงขึ้น ตัดการแกว่งต่ำกว่า 2 ม. |
+| Cadence | ก้าวที่เพิ่มขึ้นใน 30 วินาทีล่าสุด ÷ เวลาเป็นนาที |
 | สีตามเพซ | เร็ว < 5:50 · คงที่ ≤ 6:15 · ปานกลาง ≤ 6:40 · ช้ากว่านั้น |
+| Best 1/5/10 กม. (server) | ช่วงที่เร็วที่สุดจริงในเส้นทาง (sliding window) |
+
+**เซิร์ฟเวอร์นับการวิ่งเข้าอันดับเมื่อผ่านทุกข้อ** (ไม่ผ่านก็ยังเก็บไว้ แต่ไม่นับ และบอกเหตุผลในแอป):
+อย่างน้อย 30 จุด · จุดห่างกันไม่เกิน 10 วินาที · ระยะต่างจากแอปไม่เกิน 5% · เพซเฉลี่ยไม่เร็วกว่า 2:50/กม. ·
+ไม่มีช่วง 30 วินาทีที่เร็วกว่า 7 ม./วิ · เวลาไม่อยู่ในอนาคต · ระยะช่วงที่กดหยุดไม่นับ · การวิ่งที่บันทึกเองไม่นับ
+
+---
+
+## ความเป็นส่วนตัวและความปลอดภัย
+
+- รหัสผ่านเข้ารหัสด้วย **argon2id** · access token อายุ 15 นาที · refresh token หมุนทุกครั้ง ใช้ซ้ำ = ยกเลิกทั้งชุด
+- token ในเครื่องเข้ารหัส **AES-GCM ด้วย Android Keystore** และไม่ถูกสำรองไปเครื่องอื่น
+- ทุก query ตรวจเจ้าของข้อมูล · ส่งการวิ่งด้วย UUID ของคนอื่นถูกปฏิเสธ (409)
+- **ซ่อน 200 ม. รอบจุดเริ่ม/จบที่เซิร์ฟเวอร์** ก่อนส่งให้คนอื่น และไม่เปิดเผยเวลาของแต่ละจุด
+- S3 bucket ปิดสาธารณะ เข้าถึงผ่าน presigned URL อายุสั้นเท่านั้น
+- release build ใช้ HTTPS เท่านั้น (HTTP อนุญาตเฉพาะ build debug)
+- ไฟล์ลับ (`.env`, key, keystore, state ของ Terraform) อยู่ใน `.gitignore`
+
+---
+
+## สิทธิ์ที่แอปขอ
+
+| สิทธิ์ | เหตุผล |
+|---|---|
+| `ACCESS_FINE_LOCATION` / `ACCESS_COARSE_LOCATION` | บันทึกเส้นทางและคำนวณระยะทาง (จำเป็น) |
+| `FOREGROUND_SERVICE` / `FOREGROUND_SERVICE_LOCATION` | บันทึก GPS ต่อเนื่องขณะปิดจอ |
+| `ACTIVITY_RECOGNITION` | อ่าน Step Counter เพื่อคำนวณ Cadence |
+| `POST_NOTIFICATIONS` | สถานะการวิ่ง · เพซทุก 1 กม. · สถิติใหม่และอันดับ |
+| `INTERNET` / `ACCESS_NETWORK_STATE` | แผนที่ OpenStreetMap และซิงก์กับ backend |
+| `WRITE_EXTERNAL_STORAGE` (Android 9 เท่านั้น) | บันทึกภาพแชร์ลงแกลเลอรี |
+| `ACCESS_LOCAL_NETWORK` (debug เท่านั้น) | Android 17: ต่อ backend ที่รันในวง Wi-Fi / Emulator |
+
+เซนเซอร์ทุกตัวประกาศ `required="false"` เครื่องที่ไม่มีบางตัวยังติดตั้งและใช้งานได้
+
+---
+
+## การนำเนื้อหา MA09–MA12 มาใช้
+
+| บทเรียน | ใช้ในโปรเจค |
+|---|---|
+| **MA09** ข้อมูลภายในเครื่อง + คืนสถานะ | `SharedPreferences` (โปรไฟล์ ตั้งค่า สถานะซิงก์) · ไฟล์รูปในพื้นที่แอป · `onSaveInstanceState` ทุกหน้าที่มีสถานะ |
+| **MA10** SQLite + RecyclerView + รูปภาพ | `RunDb` (`SQLiteOpenHelper`: runs · run_points · splits) · `RunRepository` CRUD/ค้นหา/กรอง/เรียง · RecyclerView ในประวัติ อันดับ การแจ้งเตือน · กล้อง/แกลเลอรี + EXIF |
+| **MA11** ฐานข้อมูลออนไลน์ | Backend Go + PostgreSQL · REST API + JWT · ซิงก์ด้วย OkHttp + WorkManager · ลิงก์แชร์และหน้าเว็บ |
+| **MA12** เซนเซอร์ | GPS (`LocationTracker` + foreground service) · Step Counter (Cadence) · เข็มทิศ · หน้าตรวจเซนเซอร์ |
 
 ---
 
@@ -263,90 +422,33 @@ app/src/main/
 
 **Pace scale:** `#0EDA62` → `#A3E635` → `#F5B83D` → `#F0603F`
 
-Text styles อยู่ใน `res/values/styles_text.xml` (Display · H1 · H2 · H3 · NumL · NumM · LabelL · Body · Caption · Overline)
-และ component styles อยู่ใน `res/values/styles_components.xml` (ปุ่ม · IconChip · ChipToggle · Segment · Field · Toggle · BottomNav)
+Text styles อยู่ใน `res/values/styles_text.xml` และ component styles อยู่ใน `res/values/styles_components.xml`
 
 ---
 
-## วิธีติดตั้งและรัน
+## ข้อจำกัดและแผนถัดไป
 
-**สิ่งที่ต้องมี**
-- Android Studio รุ่นที่รองรับ AGP 9.3.3
-- Android SDK 37
-- อุปกรณ์หรือ Emulator ที่เป็น Android 9 (API 28) ขึ้นไป
+**ข้อจำกัดตอนนี้**
+- แผนที่ใช้ tile ของ OpenStreetMap (ฟรี ไม่ต้องใช้ key) เหมาะกับงานสาธิต ถ้าผู้ใช้เยอะควรใช้ผู้ให้บริการแผนที่ของตัวเอง
+- backend รันในเครื่อง (Docker) มือถือจริงต้องอยู่ Wi-Fi เดียวกันจึงจะซิงก์ได้
+- รองรับโหมดสว่างเท่านั้น (ตามดีไซน์ Figma)
 
-**ขั้นตอน**
-```bash
-git clone https://github.com/suphanatchanlek30/POC-RunTrail.git
-```
-1. เปิดโฟลเดอร์โปรเจคใน Android Studio แล้วรอ Gradle sync
-2. เลือกอุปกรณ์แล้วกด **Run ▶**
-
-หรือ build ผ่าน command line:
-```bash
-./gradlew assembleDebug
-# ไฟล์ APK: app/build/outputs/apk/debug/app-debug.apk
-```
-
-> 💡 ทดสอบเซนเซอร์และ GPS บน **เครื่องจริง** จะได้ผลดีที่สุด (Emulator ไม่มี Step Counter และเซนเซอร์บางตัว)
+**แผนถัดไป**
+- [ ] ขึ้น AWS ด้วย Terraform (EC2 + S3 + HTTPS) ตามแผนใน [`docs/BACKEND_PLAN.md`](docs/BACKEND_PLAN.md) ข้อ 6
+- [ ] ลืมรหัสผ่านทางอีเมล
+- [ ] ดาวน์โหลดแผนที่ไว้ใช้ออฟไลน์
+- [ ] โหมดมืด
 
 ---
 
-## ทดสอบ GPS บน Emulator
+## เอกสารเพิ่มเติม
 
-**วิธีที่ 1 — Extended Controls**
-เปิด Emulator → `⋯` → **Location** → แท็บ **Routes** → วาดเส้นทางหรือโหลดไฟล์ GPX → **Play route**
-
-**วิธีที่ 2 — คำสั่ง adb** (ป้อนพิกัดทีละจุด รูปแบบ `ลองจิจูด ละติจูด ความสูง`)
-```bash
-adb emu geo fix 100.5385 13.7290 5
-adb emu geo fix 100.5386 13.7293 5
-# ...ป้อนต่อเนื่องทุก 1 วินาที เพื่อจำลองการวิ่ง
-```
-
----
-
-## สิทธิ์ที่แอปขอ
-
-| สิทธิ์ | เหตุผล |
+| ไฟล์ | เนื้อหา |
 |---|---|
-| `ACCESS_FINE_LOCATION` / `ACCESS_COARSE_LOCATION` | บันทึกเส้นทางและคำนวณระยะทาง (จำเป็น) |
-| `ACTIVITY_RECOGNITION` | อ่าน Step Counter เพื่อคำนวณ Cadence |
-| `POST_NOTIFICATIONS` | แจ้งเพซทุก 1 กม. |
-| `INTERNET` / `ACCESS_NETWORK_STATE` | โหลดภาพแผนที่ OpenStreetMap และซิงก์กับ backend |
-| `FOREGROUND_SERVICE` / `FOREGROUND_SERVICE_LOCATION` | บันทึก GPS ต่อเนื่องขณะปิดจอ |
-| `ACCESS_LOCAL_NETWORK` (debug เท่านั้น) | Android 17: ต่อ backend ที่รันบนเครื่องในวง Wi-Fi / emulator |
-
-ทุกเซนเซอร์ประกาศเป็น `required="false"` เครื่องที่ไม่มีเซนเซอร์บางตัวยังติดตั้งได้ และแอปจะใช้ค่าทดแทน
-
----
-
-## สถานะปัจจุบันและแผนงานถัดไป
-
-**ทำแล้ว (เชื่อม backend ครบ)**
-- [x] เก็บข้อมูลใน **SQLite** (`runs` · `run_points` · `splits`) ใช้ได้แม้ไม่มีเน็ต — ข้อมูลตัวอย่างถูกเอาออกแล้ว
-- [x] **Foreground service** (`RunTrackingService`) บันทึก GPS ต่อแม้ปิดจอ/สลับแอป · แจ้งเตือนทุก 1 กม. · กู้การวิ่งที่ค้างได้ทุกจุด
-- [x] **บัญชี**: สมัคร / เข้าสู่ระบบ / ใช้งานแบบออฟไลน์ก่อน (Guest) / เปลี่ยนรหัสผ่าน / ออกจากระบบ / ลบบัญชี · token เข้ารหัสด้วย Android Keystore
-- [x] **ซิงก์อัตโนมัติแบบ Strava**: วิ่งตอนไม่มีเน็ตได้ แล้ว WorkManager อัปโหลดเองเมื่อมีเน็ต (ส่งซ้ำไม่เกิดข้อมูลซ้ำ) · ดึงประวัติคืนเมื่อล็อกอินเครื่องใหม่
-- [x] **รูป** อัปโหลดตรงขึ้น S3 · **ลิงก์แชร์จริง** (หน้าเว็บจาก server ซ่อน 200 ม. แรก/สุดท้ายที่ server)
-- [x] แท็บ **อันดับโลก** (สัปดาห์/เดือน/ทั้งหมด · ระยะรวม/5K/10K · ทั่วโลก/ประเทศ) แสดงผลล่าสุดตอนออฟไลน์
-- [x] ล็อกแนวตั้งทุกหน้า
-
-**วิธีรันพร้อม backend**
-1. รัน backend ตาม [`backend/README.md`](backend/README.md) (`make env && make up`)
-2. เปิดแอป → หน้าเข้าสู่ระบบ → แตะ "เซิร์ฟเวอร์" ตั้งเป็น `http://10.0.2.2:8080` (Emulator) หรือ `http://<IP ของ Mac>:8080` (มือถือจริง)
-3. Android 17 จะถามสิทธิ์ "อุปกรณ์ใกล้เคียง/เครือข่ายภายใน" ต้องกด **อนุญาต** ไม่อย่างนั้นต่อ server ในวง Wi-Fi ไม่ได้ (เฉพาะ build debug)
-
-**Test**
-```bash
-./gradlew testDebugUnitTest                                              # JVM: สูตร, สถานะการวิ่ง, JSON, HTTP client
-./gradlew connectedDebugAndroidTest -Pe2eApiUrl=http://10.0.2.2:8080    # บนเครื่อง: SQLite, ปิดจอ, ซิงก์กับ backend จริง
-```
-
-**ข้อจำกัด**
-- แผนที่ใช้ tile ของ OpenStreetMap (ฟรี ไม่ต้องใช้ key) เหมาะกับงานสาธิต — ถ้าผู้ใช้เยอะควรใช้ผู้ให้บริการแผนที่ของตัวเอง
-- ถ้า IP ของ Mac เปลี่ยน ต้องแก้ `backend/.env` แล้ว `make up` ใหม่ (ลิงก์แชร์/รูปอ้างอิง IP นี้)
-- ยังไม่ได้ทำ: Terraform ขึ้น AWS, ลืมรหัสผ่านทางอีเมล, ดาวน์โหลดแผนที่ไว้ใช้ออฟไลน์
+| [`backend/README.md`](backend/README.md) | วิธีรัน backend · คำสั่ง Make · API ฉบับเต็มพร้อมตัวอย่าง request/response · รหัส error |
+| [`docs/BACKEND_PLAN.md`](docs/BACKEND_PLAN.md) | แผนระบบ · schema · การตัดสินใจออกแบบ · สิ่งที่เปลี่ยนจากแผนระหว่างทำ |
+| [`tools/gps-bridge/README.md`](tools/gps-bridge/README.md) | ทดสอบด้วย GPS จริงจาก iPhone |
+| [`docs/prompts/BACKEND_PROMPT.md`](docs/prompts/BACKEND_PROMPT.md) | prompt ที่ใช้สั่งงาน AI สร้าง backend และเชื่อมแอป |
 
 ---
 
@@ -355,13 +457,14 @@ adb emu geo fix 100.5386 13.7293 5
 | ทรัพยากร | สัญญาอนุญาต |
 |---|---|
 | ข้อมูลแผนที่ © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) | ODbL |
-| [osmdroid](https://github.com/osmdroid/osmdroid) | Apache License 2.0 |
-| [ZXing](https://github.com/zxing/zxing) | Apache License 2.0 |
+| [osmdroid](https://github.com/osmdroid/osmdroid) · [ZXing](https://github.com/zxing/zxing) · [OkHttp](https://github.com/square/okhttp) · AndroidX · Material Components | Apache License 2.0 |
+| [Leaflet](https://leafletjs.com) (หน้าเว็บแชร์) | BSD-2-Clause |
+| [Fiber](https://github.com/gofiber/fiber) · [pgx](https://github.com/jackc/pgx) · [goose](https://github.com/pressly/goose) | MIT |
+| [aws-sdk-go-v2](https://github.com/aws/aws-sdk-go-v2) · [RustFS](https://github.com/rustfs/rustfs) | Apache License 2.0 |
 | ฟอนต์ [Anuphan](https://fonts.google.com/specimen/Anuphan) · [IBM Plex Sans Thai](https://fonts.google.com/specimen/IBM+Plex+Sans+Thai) | SIL Open Font License 1.1 |
 | ไอคอน [Lucide](https://lucide.dev) | ISC License |
-| AndroidX · Material Components | Apache License 2.0 |
 
-> การใช้ภาพแผนที่จากเซิร์ฟเวอร์ของ OpenStreetMap เป็นไปตาม [Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/) — เหมาะกับการทดสอบและสาธิตงาน ถ้าจะเผยแพร่ให้ผู้ใช้จำนวนมากควรใช้ผู้ให้บริการแผนที่ของตัวเอง
+> การใช้ภาพแผนที่จากเซิร์ฟเวอร์ของ OpenStreetMap เป็นไปตาม [Tile Usage Policy](https://operations.osmfoundation.org/policies/tiles/) — แอปตั้ง User-Agent ของตัวเองและแสดงเครดิตทุกหน้าที่มีแผนที่
 
 ---
 
