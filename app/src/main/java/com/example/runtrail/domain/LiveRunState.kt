@@ -67,24 +67,31 @@ class LiveRunState(
     /** ได้ตำแหน่งใหม่ · คืนกิโลเมตรที่เพิ่งผ่าน (> 0) สำหรับแจ้งเตือน หรือ 0 */
     fun onLocation(p: TrackPoint, speedMps: Float?, wall: Long): Int {
         lastFix = p
+        if (paused && autoPaused && p.time <= pauseStartWall) {
+            // จุดที่วัดได้ "ก่อน" เริ่มหยุด แต่มาถึงช้า (ตอนจอดับ Android ส่งตำแหน่งเป็นชุด)
+            // → การหยุดอัตโนมัติครั้งนี้ผิด ยกเลิกและคืนเวลาเคลื่อนที่ที่หายไป
+            movingMs += (wall - pauseStartWall).coerceAtLeast(0)
+            paused = false
+            autoPaused = false
+        }
         if (paused) {
             val moved = filter.last?.let { TrackMath.distance(it, p) } ?: 0.0
             if (autoPaused && p.accuracy <= GPS_MAX_ACCURACY &&
                 ((speedMps ?: 0f) > RESUME_SPEED || moved > RESUME_DISTANCE_M)
             ) {
-                resume(wall)
+                resume(maxOf(p.time, pauseStartWall))
                 filter.reset(p)
                 track += p
             }
             return 0
         }
         val added = filter.accept(p) ?: return 0
-        if (track.isEmpty() || added > 0) {
+        if (track.isEmpty() || added > 0 || filter.reanchored) {
             track += p
             distanceM += added
-            if (added > 0) lastMoveAt = wall
+            if (added > 0) lastMoveAt = maxOf(lastMoveAt, p.time)
         }
-        if ((speedMps ?: 0f) > STILL_SPEED) lastMoveAt = wall
+        if ((speedMps ?: 0f) > STILL_SPEED) lastMoveAt = maxOf(lastMoveAt, p.time)
         val km = floor(distanceM / 1000).toInt()
         if (km > lastKm) {
             lastKm = km

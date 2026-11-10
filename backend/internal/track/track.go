@@ -40,14 +40,26 @@ func Distance(lat1, lng1, lat2, lng2 float64) float64 {
 
 func dist(a, b Point) float64 { return Distance(a.Lat, a.Lng, b.Lat, b.Lng) }
 
-// Cumulative distance at each point.
+// Cumulative distance at each point. A "teleport" segment faster than a runner
+// (GPS re-acquired a position, see Clean) adds no distance — same rule as the app.
 func Cumulative(t []Point) []float64 {
 	out := make([]float64, len(t))
 	for i := 1; i < len(t); i++ {
-		out[i] = out[i-1] + dist(t[i-1], t[i])
+		out[i] = out[i-1] + segment(t[i-1], t[i])
 	}
 	return out
 }
+
+func segment(a, b Point) float64 {
+	d := dist(a, b)
+	if dt := float64(b.T-a.T) / 1000; dt > 0 && d/dt > MaxSpeedMps {
+		return 0
+	}
+	return d
+}
+
+// ReanchorAfter consecutive too-fast fixes means the previous anchor was wrong (stale fix at GPS start).
+const ReanchorAfter = 5
 
 // Same thresholds as the app's GpsFilter.
 const (
@@ -63,6 +75,7 @@ func Clean(in []Point) []Point {
 	pts := append([]Point(nil), in...)
 	sort.SliceStable(pts, func(i, j int) bool { return pts[i].T < pts[j].T })
 	out := make([]Point, 0, len(pts))
+	fast := 0
 	for _, p := range pts {
 		if p.Acc > MaxAccuracyM {
 			continue
@@ -70,10 +83,17 @@ func Clean(in []Point) []Point {
 		if n := len(out); n > 0 {
 			prev := out[n-1]
 			dt := float64(p.T-prev.T) / 1000
-			if dt <= 0 || dist(prev, p)/dt > MaxSpeedMps {
+			if dt <= 0 {
 				continue
 			}
+			if dist(prev, p)/dt > MaxSpeedMps {
+				if fast++; fast < ReanchorAfter {
+					continue
+				}
+				// keep it as the new anchor; Cumulative gives this jump zero distance
+			}
 		}
+		fast = 0
 		out = append(out, p)
 	}
 	return out

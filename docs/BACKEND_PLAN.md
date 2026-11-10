@@ -473,11 +473,11 @@ infra/terraform/
 
 | เฟส | งาน | เกณฑ์ผ่าน |
 |---|---|---|
-| **1. แอปออฟไลน์ให้ใช้ได้จริงก่อน** | SQLite + `RunRepository` ใหม่ · `RunTrackingService` · แก้บั๊ก #1–8, #12, #14 · ล็อกแนวตั้ง | ป้อนเส้นทาง GPX ใน Emulator แล้ว**ปิดจอ 2 นาที** เส้นยังต่อเนื่อง · ปิดแอป (swipe kill) แล้วเปิดใหม่ การวิ่งยังอยู่ · โหมดเครื่องบินวิ่งได้ครบ |
+| **1. แอปออฟไลน์ให้ใช้ได้จริงก่อน** ✅ | SQLite + `RunRepository` ใหม่ · `RunTrackingService` · แก้บั๊ก #1–8, #12, #14 · ล็อกแนวตั้ง | ป้อนเส้นทาง GPX ใน Emulator แล้ว**ปิดจอ 2 นาที** เส้นยังต่อเนื่อง · ปิดแอป (swipe kill) แล้วเปิดใหม่ การวิ่งยังอยู่ · โหมดเครื่องบินวิ่งได้ครบ |
 | **2. Backend บน Docker** ✅ | โครง Go Fiber · migrations · auth (register/login/refresh/logout) · `/me` · health · test | `docker compose up` แล้ว `curl` สมัคร → ล็อกอิน → refresh → ใช้ refresh เก่าซ้ำโดนปฏิเสธ · `go test ./...` ผ่าน |
-| **3. Login/Register ในแอป** | 2 หน้าใหม่ · `TokenStore` · OkHttp + Authenticator · Guest mode · network security config (debug) · ProfileSetup ↔ `/me` | สมัครจากแอปบน Emulator ได้ · ปิดเน็ตแล้วเปิดแอปยังเข้าได้ · token หมดอายุแล้ว refresh เอง |
-| **4. ซิงก์การวิ่ง + รูป** (ฝั่ง server ✅) | `PUT/PATCH/DELETE/GET /runs` · server คำนวณใหม่/ตรวจโกง · presigned S3 · `SyncWorker` · ShareSheet ปุ่มซิงก์จริง | **วิ่งในโหมดเครื่องบิน → เปิดเน็ต → ขึ้น server ภายใน 1 นาที และมีแค่ 1 แถว** (กดซิงก์ซ้ำก็ไม่ซ้ำ) · รูปเปิดได้จาก MinIO · ลบในแอปแล้ว server ลบด้วย · ล็อกอินเครื่องที่ 2 เห็นประวัติครบ |
-| **5. แชร์ + อันดับโลก** (ฝั่ง server ✅) | `/runs/{id}/share` · หน้าเว็บ `/s/{code}` (Leaflet) · ตัด 200 ม. ที่ server · leaderboard API · แท็บ "อันดับ" | เปิดลิงก์ในเบราว์เซอร์มือถือเห็นเส้นทางจริง · ดู JSON ของ `/public/runs/{code}` แล้ว**ไม่มีจุดในรัศมี 200 ม. จากจุดเริ่ม** · การวิ่งที่เพิ่มเองไม่ขึ้นในอันดับ · มี 3 บัญชีทดสอบอันดับเรียงถูก |
+| **3. Login/Register ในแอป** ✅ | 2 หน้าใหม่ · `TokenStore` · OkHttp + Authenticator · Guest mode · network security config (debug) · ProfileSetup ↔ `/me` | สมัครจากแอปบน Emulator ได้ · ปิดเน็ตแล้วเปิดแอปยังเข้าได้ · token หมดอายุแล้ว refresh เอง |
+| **4. ซิงก์การวิ่ง + รูป** ✅ | `PUT/PATCH/DELETE/GET /runs` · server คำนวณใหม่/ตรวจโกง · presigned S3 · `SyncWorker` · ShareSheet ปุ่มซิงก์จริง | **วิ่งในโหมดเครื่องบิน → เปิดเน็ต → ขึ้น server ภายใน 1 นาที และมีแค่ 1 แถว** (กดซิงก์ซ้ำก็ไม่ซ้ำ) · รูปเปิดได้จาก MinIO · ลบในแอปแล้ว server ลบด้วย · ล็อกอินเครื่องที่ 2 เห็นประวัติครบ |
+| **5. แชร์ + อันดับโลก** ✅ | `/runs/{id}/share` · หน้าเว็บ `/s/{code}` (Leaflet) · ตัด 200 ม. ที่ server · leaderboard API · แท็บ "อันดับ" | เปิดลิงก์ในเบราว์เซอร์มือถือเห็นเส้นทางจริง · ดู JSON ของ `/public/runs/{code}` แล้ว**ไม่มีจุดในรัศมี 200 ม. จากจุดเริ่ม** · การวิ่งที่เพิ่มเองไม่ขึ้นในอันดับ · มี 3 บัญชีทดสอบอันดับเรียงถูก |
 | **6. ขัดเกลา** | ดาวน์โหลดแผนที่ออฟไลน์ · แจ้งเตือนทุก 1 กม. · ทดสอบหลายขนาดจอ · unit test `domain/` · อัปเดต README | ผ่าน checklist จอเล็ก/ใหญ่/font 1.3 · test ผ่าน |
 | **7. AWS** | Terraform แบบ A · Caddy HTTPS · CI deploy · backup DB | `terraform plan` สะอาด · (ผู้ใช้ apply) `https://<โดเมน>/readyz` = ok · แอป release ต่อได้ |
 
@@ -516,3 +516,14 @@ infra/terraform/
 | CORS | middleware cors | ไม่ใส่ | หน้าเว็บแชร์อยู่โดเมนเดียวกับ API และแอปมือถือไม่ใช้ CORS |
 
 รายละเอียด API ฉบับที่ใช้จริงอยู่ที่ [`backend/README.md`](../backend/README.md)
+
+
+## 10. สิ่งที่พบตอนเชื่อมแอป (10 พ.ย. 2026)
+
+| เรื่อง | ที่ทำ |
+|---|---|
+| บั๊ก #1 ในแผน (MAPNIK) ผิด | tile.openstreetmap.org ใช้ได้เมื่อตั้ง User-Agent ของแอป ส่วน **CARTO ต้องใช้ API key แล้ว** (ส่งภาพลายน้ำ) → แอปใช้ OSM ทั้งสองโหมด (โหมดมืด = กลับสี) และหน้าเว็บแชร์ใช้ OSM |
+| Android 17 บล็อกเครือข่ายภายใน | build debug ขอสิทธิ์ `ACCESS_LOCAL_NETWORK` เมื่อที่อยู่ server เป็น LAN/10.0.2.2 |
+| ตำแหน่งมาเป็นชุดตอนจอดับ | ใช้เวลาที่ GPS วัดได้จริง (`elapsedRealtimeNanos`) ไม่ใช่เวลาที่ได้รับ · ยกเลิกการหยุดอัตโนมัติที่เกิดเพราะจุดมาช้า |
+| จุดแรกเป็นตำแหน่งเก่าค้าง | ทั้งแอปและ server: เร็วเกินติดกัน 5 จุด = เริ่มจุดอ้างอิงใหม่ ช่วงกระโดดไม่นับระยะ |
+| ลิงก์แชร์เก่าเมื่อ IP server เปลี่ยน | หน้าแชร์ขอลิงก์ล่าสุดจาก server ทุกครั้งที่เปิด |

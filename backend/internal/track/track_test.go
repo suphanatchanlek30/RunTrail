@@ -225,3 +225,17 @@ func TestPausedDistanceNotCounted(t *testing.T) {
 		t.Fatalf("honest paused run rejected: %s", reason)
 	}
 }
+
+func TestStaleFirstFixReanchors(t *testing.T) {
+	stale := Point{Lat: 13.7350, Lng: 100.5385, T: 1_762_772_530_000, Acc: 5}
+	real := northLine(60, 3, 1)
+	for i := range real {
+		real[i].T += 15_000
+	}
+	s := Summarize(append([]Point{stale}, real...), nil)
+	// 4 fixes dropped, the 5th becomes the anchor; the 700 m jump counts as 0
+	near(t, "distance", s.DistanceM, (60-1-4)*3, 4)
+	if ok, reason := Verify(s, s.DistanceM, 74, time.UnixMilli(stale.T), time.UnixMilli(stale.T).Add(time.Hour)); !ok {
+		t.Fatalf("re-anchored run rejected: %s", reason)
+	}
+}

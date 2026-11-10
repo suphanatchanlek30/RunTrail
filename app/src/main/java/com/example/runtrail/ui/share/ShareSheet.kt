@@ -201,6 +201,19 @@ object ShareSheet {
 
         render()
         dialog.show()
+
+        // มีลิงก์อยู่แล้ว → ขอลิงก์ล่าสุดจาก server (ที่อยู่ server อาจเปลี่ยน หรือถูกยกเลิกจากเครื่องอื่น) · ออฟไลน์ก็ใช้ของเดิม
+        if (Accounts.isLoggedIn && current.shareUrl != null && current.onServer) {
+            val r = current
+            activity.runAsync({ App.services.api.share(r.uuid, r.shareHideEnds, r.shareShowPhoto, r.shareShowKcal) }) { result ->
+                result.onSuccess { o ->
+                    if (!busy && dialog.isShowing) {
+                        save(current.copy(shareCode = o.getString("code"), shareUrl = o.getString("url")))
+                        render()
+                    }
+                }
+            }
+        }
     }
 
     private fun syncedAt(run: Run): String {

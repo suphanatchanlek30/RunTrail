@@ -83,7 +83,7 @@
   </div>
   {{end}}
 
-  <footer>สร้างด้วย RunTrail · ข้อมูลแผนที่ © OpenStreetMap contributors © CARTO</footer>
+  <footer>สร้างด้วย RunTrail · ข้อมูลแผนที่ © OpenStreetMap contributors</footer>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
@@ -94,8 +94,9 @@
 
   if (run.segments.length && window.L) {
     const map = L.map("map", { zoomControl: false, attributionControl: true });
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-      subdomains: "abcd", maxZoom: 20, attribution: "© OpenStreetMap © CARTO"
+    // OSM ฟรีไม่ต้องใช้ key (CARTO ตอนนี้ต้องมี API key แล้ว)
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19, attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
     }).addTo(map);
     const all = [];
     for (const seg of run.segments) {

@@ -7,6 +7,7 @@ import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Looper
+import android.os.SystemClock
 import androidx.core.content.ContextCompat
 import com.example.runtrail.data.TrackPoint
 
@@ -59,11 +60,21 @@ class LocationTracker(
         val point = TrackPoint(
             lat = location.latitude,
             lng = location.longitude,
-            time = System.currentTimeMillis(),
+            time = fixTime(location),
             altitude = if (location.hasAltitude()) location.altitude else 0.0,
             accuracy = if (location.hasAccuracy()) location.accuracy else 10f,
         )
         onPoint(point, if (location.hasSpeed()) location.speed else null)
+    }
+
+    /**
+     * เวลาที่ GPS วัดตำแหน่งนี้ได้จริง (ไม่ใช่เวลาที่แอปได้รับ)
+     * ตอนจอดับ Android ส่งตำแหน่งมาเป็นชุด ถ้าใช้เวลาที่ได้รับ จุดในชุดเดียวกันจะดูเหมือนกระโดดเร็วผิดปกติแล้วถูกตัดทิ้ง
+     * ใช้นาฬิกา elapsedRealtime (ไม่เพี้ยนตามการตั้งเวลาเครื่อง) แปลงเป็น epoch
+     */
+    private fun fixTime(location: Location): Long {
+        val ageMs = (SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos) / 1_000_000
+        return System.currentTimeMillis() - ageMs.coerceIn(0, 10 * 60_000)
     }
 
     override fun onProviderEnabled(provider: String) = onProviderChanged(true)

@@ -88,4 +88,32 @@ class LiveRunStateTest {
         assertEquals(49, s.movingS.toInt())
         assertEquals(2, s.allPauses(t0 + 70_000).size)
     }
+
+    /** จอดับ: ตำแหน่งมาเป็นชุดหลังจากระบบหยุดอัตโนมัติไปแล้ว → ต้องยกเลิกการหยุดและนับครบ */
+    @Test fun batchedFixesUndoSpuriousAutoPause() {
+        val s = LiveRunState(t0) { true }
+        var mono = s.feed(TestTracks.north(20, 3.0), 3f, 0)
+        val pending = TestTracks.north(20, 3.0, startLat = s.lastFix!!.lat, t0 = s.lastFix!!.time + 1000)
+        // 12 วินาทีไม่มีจุดเข้ามา (ถูกเก็บไว้ส่งทีเดียว)
+        var wall = pending.first().time
+        repeat(12) { mono += 1000; wall += 1000; s.tick(mono, wall) }
+        assertTrue("auto-paused while fixes were delayed", s.paused)
+        val before = s.distanceM
+        pending.forEach { s.onLocation(it, 3f, wall) }
+        assertFalse(s.paused)
+        assertTrue("no pause recorded for a delay", s.pauses.isEmpty())
+        assertEquals(before + 19 * 3.0, s.distanceM, 1.0)   // จุดแรกของชุดอยู่ที่เดียวกับจุดก่อนหน้า
+        assertTrue("moving time restored: ${s.movingS}", s.movingS >= 30)
+    }
+
+    /** จุดแรกเป็นตำแหน่งเก่าค้าง (ห่างจริง 700 ม.) → เริ่มจุดอ้างอิงใหม่ ไม่นับระยะช่วงกระโดด */
+    @Test fun staleFirstFixIsReanchored() {
+        val s = LiveRunState(t0) { false }
+        val stale = TestTracks.north(1, 0.0, startLat = 13.7350).single()
+        s.onLocation(stale, 0f, t0)
+        val real = TestTracks.north(60, 3.0, t0 = t0 + 15_000)
+        real.forEach { s.onLocation(it, 3f, it.time) }
+        assertEquals((60 - 1 - 4) * 3.0, s.distanceM, 4.0)   // 4 จุดแรกถูกทิ้งก่อนเริ่มอ้างอิงใหม่
+        assertEquals(s.distanceM, TrackMath.cumulative(s.track).last(), 0.5)   // splits ใช้ระยะเดียวกัน
+    }
 }

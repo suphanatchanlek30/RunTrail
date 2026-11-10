@@ -29,11 +29,23 @@ object TrackMath {
         return 2 * EARTH_R * asin(sqrt(h.coerceIn(0.0, 1.0)))
     }
 
-    /** ระยะสะสมของแต่ละจุด (เมตร) */
+    /** ความเร็วสูงสุดที่ยังนับเป็นการวิ่ง (ม./วิ) — เหมือน backend */
+    const val MAX_SPEED_MPS = 9.0
+
+    /**
+     * ระยะสะสมของแต่ละจุด (เมตร)
+     * ช่วงที่ "กระโดด" เร็วเกินคนวิ่ง (GPS เพิ่งจับตำแหน่งใหม่ได้) ไม่นับระยะ — backend ใช้กฎเดียวกัน
+     */
     fun cumulative(track: List<TrackPoint>): DoubleArray {
         val out = DoubleArray(track.size)
-        for (i in 1 until track.size) out[i] = out[i - 1] + distance(track[i - 1], track[i])
+        for (i in 1 until track.size) out[i] = out[i - 1] + segment(track[i - 1], track[i])
         return out
+    }
+
+    fun segment(a: TrackPoint, b: TrackPoint): Double {
+        val d = distance(a, b)
+        val dt = (b.time - a.time) / 1000.0
+        return if (dt > 0 && d / dt > MAX_SPEED_MPS) 0.0 else d
     }
 
     /** เพซของแต่ละจุด (วินาที/กม.) เฉลี่ยในหน้าต่างประมาณ 60 ม. เพื่อลดความแกว่งของ GPS */
@@ -125,19 +137,37 @@ class GpsFilter(
     var last: TrackPoint? = null
         private set
 
+    /** true = จุดล่าสุดที่รับเป็นการย้ายจุดอ้างอิง (GPS เพิ่งจับตำแหน่งใหม่) ไม่มีระยะ แต่ต้องเก็บจุดไว้ */
+    var reanchored = false
+        private set
+    private var fastRejects = 0
+
     /** คืนระยะที่เพิ่มขึ้น (เมตร) หรือ null ถ้าจุดนี้ไม่ควรเก็บ */
     fun accept(p: TrackPoint): Double? {
+        reanchored = false
         if (p.accuracy > maxAccuracyM) return null
         val prev = last
         if (prev == null) { last = p; return 0.0 }
         val d = TrackMath.distance(prev, p)
         val dt = (p.time - prev.time) / 1000.0
         if (dt <= 0) return null
-        if (d / dt > maxSpeedMps) return null
+        if (d / dt > maxSpeedMps) {
+            // จุดอ้างอิงเดิมอาจผิด (เช่น ตำแหน่งเก่าค้างตอนเปิด GPS) — ถ้าเร็วเกินติดกัน 5 จุดให้เริ่มจุดอ้างอิงใหม่
+            if (++fastRejects < REANCHOR_AFTER) return null
+            fastRejects = 0
+            last = p
+            reanchored = true
+            return 0.0
+        }
+        fastRejects = 0
         if (d < max(3.0, p.accuracy / 2.0)) return null
         last = p
         return d
     }
 
-    fun reset(from: TrackPoint?) { last = from }
+    fun reset(from: TrackPoint?) { last = from; fastRejects = 0 }
+
+    companion object {
+        const val REANCHOR_AFTER = 5
+    }
 }

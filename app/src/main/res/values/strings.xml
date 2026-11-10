@@ -92,7 +92,7 @@
     <string name="perm_activity_desc">นับก้าวจาก Step Counter เพื่อคำนวณ cadence</string>
     <string name="perm_notify">การแจ้งเตือน</string>
     <string name="perm_notify_desc">บอกเพซทุก 1 กม. และแสดงสถานะการวิ่งขณะล็อกหน้าจอ</string>
-    <string name="perm_privacy">ข้อมูลตำแหน่งเก็บในเครื่องของคุณเท่านั้น และอัปโหลดเฉพาะเมื่อคุณกดแชร์</string>
+    <string name="perm_privacy">ข้อมูลตำแหน่งเก็บในเครื่องก่อนเสมอ และอัปโหลดเข้าบัญชีของคุณเมื่อเข้าสู่ระบบ · ลิงก์แชร์ซ่อนจุดเริ่ม/จบได้</string>
     <string name="perm_location_denied">ต้องอนุญาตตำแหน่งก่อนจึงจะบันทึกเส้นทางได้ (กด "ข้าม" เพื่อไปต่อ)</string>
 
     <!-- ===== 03 Profile & Goal ===== -->

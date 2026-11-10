@@ -31,7 +31,7 @@ func Summarize(raw []Point, pauses []Pause) Summary {
 	}
 	for i := 1; i < len(pts); i++ {
 		if !spansPause(pts[i-1].T, pts[i].T, pauses) {
-			s.DistanceM += dist(pts[i-1], pts[i])
+			s.DistanceM += segment(pts[i-1], pts[i])
 		}
 	}
 	s.ElevationGain = ElevationGain(pts)

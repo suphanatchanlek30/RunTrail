@@ -11,7 +11,6 @@ import com.example.runtrail.domain.PaceColor
 import com.example.runtrail.domain.TrackMath
 import org.osmdroid.config.Configuration
 import org.osmdroid.tileprovider.tilesource.TileSourceFactory
-import org.osmdroid.tileprovider.tilesource.XYTileSource
 import org.osmdroid.util.BoundingBox
 import org.osmdroid.util.GeoPoint
 import org.osmdroid.views.MapView
@@ -33,36 +32,38 @@ object OsmRoute {
     }
 
     fun setup(map: MapView, interactive: Boolean) {
-        map.setTileSource(LIGHT)
+        map.setTileSource(TileSourceFactory.MAPNIK)
         map.setMultiTouchControls(interactive)
         map.zoomController.setVisibility(org.osmdroid.views.CustomZoomButtonsController.Visibility.NEVER)
-        map.isTilesScaledToDpi = false   // ใช้ภาพ @2x ความละเอียดสูงอยู่แล้ว
+        map.isTilesScaledToDpi = true    // tile OSM เป็น 256 px ขยายตามความหนาแน่นจอให้อ่านง่าย
         map.minZoomLevel = 3.0
-        map.maxZoomLevel = 19.5
+        map.maxZoomLevel = 19.0
         map.controller.setZoom(17.0)
         map.isClickable = interactive
         map.overlays.add(CopyrightOverlay(map.context).apply { setTextSize(9) })
     }
 
-    /** โหมดกลางคืน: เปลี่ยนเป็นแผนที่โทนมืด */
+    /*
+     * ภาพแผนที่จาก tile.openstreetmap.org (ฟรี ไม่ต้องใช้ key) — ต้องตั้ง User-Agent ของแอปเอง (ทำใน init)
+     * และแสดงเครดิต OpenStreetMap ตาม Tile Usage Policy · เหมาะกับงานสาธิต ถ้าผู้ใช้เยอะควรใช้ผู้ให้บริการแผนที่ของตัวเอง
+     * (เคยใช้ CARTO สำหรับโหมดมืด แต่ตอนนี้ CARTO ต้องมี API key และส่งภาพลายน้ำกลับมาแทน)
+     */
+
+    /** กลับสี + ลดความสว่างเล็กน้อย ให้ถนนเป็นเส้นสว่างบนพื้นเข้ม */
+    private val INVERT = android.graphics.ColorMatrixColorFilter(
+        floatArrayOf(
+            -0.85f, 0f, 0f, 0f, 230f,
+            0f, -0.85f, 0f, 0f, 230f,
+            0f, 0f, -0.85f, 0f, 235f,
+            0f, 0f, 0f, 1f, 0f,
+        ),
+    )
+
+    /** โหมดกลางคืน: กลับสีภาพแผนที่ OSM ให้เป็นโทนมืด (ไม่ต้องพึ่งผู้ให้บริการแผนที่อื่น) */
     fun setDark(map: MapView, dark: Boolean) {
-        val source = if (dark) DARK else LIGHT
-        if (map.tileProvider.tileSource.name() != source.name()) map.setTileSource(source)
+        map.overlayManager.tilesOverlay.setColorFilter(if (dark) INVERT else null)
         map.invalidate()
     }
-
-    /*
-     * ภาพแผนที่จาก CARTO basemaps (ข้อมูล OpenStreetMap) — ใช้ฟรีสำหรับงานที่ไม่ใช่เชิงพาณิชย์ ต้องแสดงเครดิต
-     * ไม่ดึงจาก tile.openstreetmap.org โดยตรง เพราะเซิร์ฟเวอร์อาสาสมัครของ OSM บล็อกแอปทั่วไป
-     */
-    private const val CREDIT = "© OpenStreetMap contributors © CARTO"
-    private fun carto(name: String, style: String) = XYTileSource(
-        name, 0, 20, 256, "@2x.png",
-        arrayOf("a", "b", "c", "d").map { "https://$it.basemaps.cartocdn.com/rastertiles/$style/" }.toTypedArray(),
-        CREDIT,
-    )
-    private val LIGHT = TileSourceFactory.MAPNIK
-    private val DARK = carto("CartoDarkMatter", "dark_all")
 
     /** ซูมให้เห็นเส้นทางทั้งหมด เว้นขอบล่างตามความสูงของ sheet */
     fun fit(map: MapView, track: List<TrackPoint>, padTopPx: Int, padBottomPx: Int) {
