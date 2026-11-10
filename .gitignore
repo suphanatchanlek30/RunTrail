@@ -16,3 +16,28 @@ local.properties
 
 # Kotlin compiler cache
 .kotlin/
+
+# IDE (whole folder; it holds machine-specific paths)
+.idea/
+
+# ---- secrets: never commit ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+*.p12
+*.jks
+*.keystore
+keystore.properties
+secrets/
+.aws/
+
+# ---- terraform ----
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+crash.log
