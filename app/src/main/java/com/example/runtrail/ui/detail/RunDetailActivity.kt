@@ -58,6 +58,9 @@ class RunDetailActivity : AppCompatActivity() {
         binding.btnShare.setOnClickListener { share() }
         binding.actionShare.setOnClickListener { share() }
         binding.actionReplay.setOnClickListener { openReplay() }
+        binding.actionImage.setOnClickListener {
+            startActivity(Intent(this, com.example.runtrail.ui.share.ShareImageActivity::class.java).putExtra(EXTRA_RUN_ID, runId))
+        }
         binding.mapSpace.setOnClickListener { openReplay() }
         binding.actionDelete.setOnClickListener { confirmDelete() }
         binding.btnEdit.setOnClickListener { openEdit() }

@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 23 · ภาพแชร์ — รูป/เส้นทาง + ระยะ เวลา เพซ (สร้างในเครื่อง) -->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_canvas"
+    android:orientation="vertical"
+    android:paddingStart="20dp"
+    android:paddingTop="8dp"
+    android:paddingEnd="20dp"
+    android:paddingBottom="16dp"
+    tools:context=".ui.share.ShareImageActivity">
+
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="44dp">
+
+        <ImageView
+            android:id="@+id/btnBack"
+            style="@style/IconBtn"
+            android:contentDescription="@string/action_back"
+            android:src="@drawable/ic_chevron_left" />
+
+        <TextView
+            style="@style/Txt.H2"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:text="@string/share_image_title" />
+    </FrameLayout>
+
+    <!-- พรีวิว: ย่อให้พอดีพื้นที่ที่เหลือ ไม่ว่าจอจะสูงแค่ไหน -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_marginTop="12dp"
+        android:layout_weight="1">
+
+        <ImageView
+            android:id="@+id/ivPreview"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:contentDescription="@string/share_image_title"
+            android:scaleType="fitCenter" />
+
+        <ProgressBar
+            android:id="@+id/progress"
+            android:layout_width="36dp"
+            android:layout_height="36dp"
+            android:layout_gravity="center"
+            android:indeterminateTint="@color/run_green" />
+    </FrameLayout>
+
+    <TextView
+        style="@style/FieldLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="14dp"
+        android:text="@string/share_image_background" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:background="@drawable/bg_segmented_track"
+        android:orientation="horizontal"
+        android:padding="4dp">
+
+        <TextView
+            android:id="@+id/segPhoto"
+            style="@style/Segment"
+            android:text="@string/share_image_bg_photo" />
+
+        <TextView
+            android:id="@+id/segRoute"
+            style="@style/Segment"
+            android:text="@string/share_image_bg_route" />
+    </LinearLayout>
+
+    <TextView
+        style="@style/FieldLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:text="@string/share_image_size" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="44dp"
+        android:background="@drawable/bg_segmented_track"
+        android:orientation="horizontal"
+        android:padding="4dp">
+
+        <TextView
+            android:id="@+id/segStory"
+            style="@style/Segment"
+            android:text="@string/share_image_story" />
+
+        <TextView
+            android:id="@+id/segSquare"
+            style="@style/Segment"
+            android:text="@string/share_image_square" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/btnSave"
+            style="@style/Btn.Outline"
+            android:layout_width="0dp"
+            android:layout_height="54dp"
+            android:layout_weight="1"
+            android:text="@string/share_image_save" />
+
+        <TextView
+            android:id="@+id/btnShare"
+            style="@style/Btn.Primary"
+            android:layout_width="0dp"
+            android:layout_marginStart="12dp"
+            android:layout_weight="1"
+            android:text="@string/share_image_share" />
+    </LinearLayout>
+</LinearLayout>

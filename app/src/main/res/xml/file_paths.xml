@@ -2,4 +2,6 @@
 <!-- ไฟล์ชั่วคราวที่ให้แอปกล้องเขียนรูปเต็มความละเอียด -->
 <paths>
     <cache-path name="camera" path="camera/" />
+    <!-- ภาพแชร์ที่ส่งต่อไปแอปอื่น -->
+    <cache-path name="share" path="share/" />
 </paths>
