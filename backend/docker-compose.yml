@@ -1,0 +1,59 @@
+# RunTrail backend for local testing: Postgres + RustFS (S3-compatible) + Go API.
+# Start:  make env && make up      Stop: make down      Wipe data: make clean
+name: runtrail
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: runtrail
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+      POSTGRES_DB: runtrail
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "127.0.0.1:5432:5432" # only this Mac can reach the database
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U runtrail -d runtrail"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  # MinIO no longer publishes free images, so we use RustFS (Apache-2.0, S3 API compatible).
+  s3:
+    image: rustfs/rustfs:1.0.4
+    environment:
+      RUSTFS_ACCESS_KEY: ${S3_ACCESS_KEY:?set S3_ACCESS_KEY in .env}
+      RUSTFS_SECRET_KEY: ${S3_SECRET_KEY:?set S3_SECRET_KEY in .env}
+    volumes:
+      - s3data:/data
+    ports:
+      - "9000:9000" # phones upload photos here directly (presigned URL)
+      - "9001:9001" # web console
+    restart: unless-stopped
+
+  api:
+    build: .
+    env_file: .env
+    environment:
+      DATABASE_URL: postgres://runtrail:${POSTGRES_PASSWORD}@db:5432/runtrail?sslmode=disable
+      S3_ENDPOINT: http://s3:9000
+      S3_PATH_STYLE: "true"
+    ports:
+      - "8080:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+      s3:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "/api", "healthcheck"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    restart: unless-stopped
+
+volumes:
+  pgdata:
+  s3data:

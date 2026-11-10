@@ -1,0 +1,5 @@
+.env
+*.md
+scripts/
+Makefile
+docker-compose.yml
