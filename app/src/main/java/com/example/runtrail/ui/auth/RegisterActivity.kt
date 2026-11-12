@@ -12,6 +12,7 @@ import com.example.runtrail.databinding.ActivityRegisterBinding
 import com.example.runtrail.ui.common.Sheets
 import com.example.runtrail.ui.common.applySystemBarsPadding
 import com.example.runtrail.ui.common.runAsync
+import com.example.runtrail.ui.common.showWakeHintIfSlow
 import com.example.runtrail.ui.common.setupEdgeToEdge
 import com.example.runtrail.ui.common.toast
 import com.example.runtrail.ui.common.userMessage
@@ -70,6 +71,7 @@ class RegisterActivity : AppCompatActivity() {
             password != confirm -> { binding.etConfirm.error = getString(R.string.auth_password_mismatch); return }
         }
         setBusy(true)
+        showWakeHintIfSlow { busy }
         runAsync({ Accounts.register(applicationContext, email, password, name, country) }) { result ->
             setBusy(false)
             result.onSuccess {

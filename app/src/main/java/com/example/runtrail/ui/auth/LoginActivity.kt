@@ -13,6 +13,7 @@ import com.example.runtrail.databinding.ActivityLoginBinding
 import com.example.runtrail.ui.common.applySystemBarsPadding
 import com.example.runtrail.ui.common.editServerUrl
 import com.example.runtrail.ui.common.runAsync
+import com.example.runtrail.ui.common.showWakeHintIfSlow
 import com.example.runtrail.ui.common.setupEdgeToEdge
 import com.example.runtrail.ui.common.toast
 import com.example.runtrail.ui.common.userMessage
@@ -56,6 +57,7 @@ class LoginActivity : AppCompatActivity() {
         binding.btnServer.setOnClickListener { editServerUrl { renderServer(); askLocalNetworkIfNeeded() } }
         renderServer()
         askLocalNetworkIfNeeded()
+        App.services.wakeServer()   // ระหว่างผู้ใช้พิมพ์อีเมล/รหัสผ่าน เซิร์ฟเวอร์ที่หลับอยู่จะได้ตื่น
     }
 
     private fun askLocalNetworkIfNeeded() {
@@ -77,6 +79,7 @@ class LoginActivity : AppCompatActivity() {
             password.isEmpty() -> { binding.etPassword.error = getString(R.string.auth_password_required); return }
         }
         setBusy(true)
+        showWakeHintIfSlow { busy }
         runAsync({ Accounts.login(applicationContext, email, password) }) { result ->
             setBusy(false)
             result.onSuccess {

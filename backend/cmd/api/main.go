@@ -79,7 +79,7 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	if cfg.S3Endpoint != "" { // local S3-compatible server: create the bucket on first start
+	if cfg.S3Endpoint != "" && cfg.S3CreateBucket { // local S3-compatible server: create the bucket on first start
 		if err := retry(ctx, 20, func() error { return store.EnsureBucket(ctx) }); err != nil {
 			return fmt.Errorf("bucket: %w", err)
 		}

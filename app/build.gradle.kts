@@ -24,6 +24,10 @@ android {
 
     buildTypes {
         release {
+            // ที่อยู่เซิร์ฟเวอร์จริง (HTTPS) — เปลี่ยนได้ตอน build: ./gradlew assembleRelease -PreleaseApiUrl=https://...
+            // ผู้ใช้ยังเปลี่ยนเองได้ในหน้าเข้าสู่ระบบ → "เซิร์ฟเวอร์" (ดู docs/DEPLOY_RENDER.md)
+            val releaseApiUrl = (project.findProperty("releaseApiUrl") as String?) ?: "https://runtrail-api.onrender.com"
+            buildConfigField("String", "DEFAULT_API_URL", "\"$releaseApiUrl\"")
             optimization {
                 enable = false
             }

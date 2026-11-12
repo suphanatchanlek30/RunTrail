@@ -448,6 +448,8 @@ Text styles อยู่ใน `res/values/styles_text.xml` และ component 
 |---|---|
 | [`backend/README.md`](backend/README.md) | วิธีรัน backend · คำสั่ง Make · API ฉบับเต็มพร้อมตัวอย่าง request/response · รหัส error |
 | [`docs/BACKEND_PLAN.md`](docs/BACKEND_PLAN.md) | แผนระบบ · schema · การตัดสินใจออกแบบ · สิ่งที่เปลี่ยนจากแผนระหว่างทำ |
+| [`docs/DEPLOY_RENDER.md`](docs/DEPLOY_RENDER.md) | ขึ้นระบบจริงฟรี: Render (backend) + Neon (PostgreSQL) + Cloudflare R2 (รูป) ทีละขั้น |
+| [`docs/AUDIT.md`](docs/AUDIT.md) | ผลตรวจทั้งระบบ · bug ที่พบและแก้ · ผล test · สิ่งที่ยังไม่ได้ตรวจ |
 | [`tools/gps-bridge/README.md`](tools/gps-bridge/README.md) | ทดสอบด้วย GPS จริงจาก iPhone |
 | [`docs/prompts/BACKEND_PROMPT.md`](docs/prompts/BACKEND_PROMPT.md) | prompt ที่ใช้สั่งงาน AI สร้าง backend และเชื่อมแอป |
 

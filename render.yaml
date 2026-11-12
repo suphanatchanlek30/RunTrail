@@ -1,0 +1,46 @@
+# Render Blueprint — RunTrail backend (free plan)
+# ขั้นตอนเต็ม: docs/DEPLOY_RENDER.md
+#
+# Render Dashboard → New → Blueprint → เลือก repo นี้ → Render อ่านไฟล์นี้ แล้วถามค่าที่มี `sync: false`
+# (ค่าความลับ ไม่เก็บใน git) · JWT_SECRET สุ่มให้อัตโนมัติ (256 บิต base64)
+# ฐานข้อมูลอยู่ที่ Neon และรูปอยู่ที่ Cloudflare R2 (ไม่ใช้ Postgres/ดิสก์ของ Render)
+
+services:
+  - type: web
+    name: runtrail-api              # → https://runtrail-api.onrender.com (ถ้าชื่อซ้ำ Render จะต่อท้ายให้ ต้องแก้ PUBLIC_BASE_URL ตาม)
+    runtime: docker
+    plan: free
+    region: singapore               # เปลี่ยนภายหลังไม่ได้
+    branch: main
+    autoDeployTrigger: commit
+    dockerContext: ./backend
+    dockerfilePath: ./backend/Dockerfile
+    healthCheckPath: /healthz
+    buildFilter:
+      paths:
+        - backend/**                # deploy ใหม่เฉพาะเมื่อโค้ด backend เปลี่ยน
+    envVars:
+      # ---- ตั้งให้แล้ว
+      - key: PUBLIC_BASE_URL
+        value: https://runtrail-api.onrender.com
+      - key: S3_REGION
+        value: auto
+      - key: S3_BUCKET
+        value: runtrail-photos
+      - key: S3_PATH_STYLE
+        value: "true"
+      - key: S3_CREATE_BUCKET        # bucket สร้างเองในหน้าเว็บ R2 · token ของ R2 อาจไม่มีสิทธิ์สร้าง bucket
+        value: "false"
+      - key: LOG_LEVEL
+        value: info
+      - key: JWT_SECRET
+        generateValue: true
+      # ---- ใส่เองตอนสร้าง Blueprint (Render ถามครั้งแรกครั้งเดียว)
+      - key: DATABASE_URL            # Neon, แบบ direct (ไม่มี -pooler) และมี ?sslmode=require
+        sync: false
+      - key: S3_ENDPOINT             # https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+        sync: false
+      - key: S3_ACCESS_KEY           # R2 API token: Access Key ID
+        sync: false
+      - key: S3_SECRET_KEY           # R2 API token: Secret Access Key
+        sync: false

@@ -36,6 +36,9 @@ type Config struct {
 	S3AccessKey      string `env:"S3_ACCESS_KEY"` // empty = default AWS chain (IAM role on EC2)
 	S3SecretKey      string `env:"S3_SECRET_KEY"`
 	S3PathStyle      bool   `env:"S3_PATH_STYLE" envDefault:"false"`
+	// Create the bucket at startup when S3_ENDPOINT is set (local RustFS/MinIO). Set false for a hosted
+	// bucket created in the provider's console (Cloudflare R2), whose token may not manage buckets.
+	S3CreateBucket bool `env:"S3_CREATE_BUCKET" envDefault:"true"`
 }
 
 func Load() (Config, error) {

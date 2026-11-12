@@ -39,6 +39,7 @@ class App : Application() {
             android.widget.Toast.makeText(this, R.string.session_expired, android.widget.Toast.LENGTH_LONG).show()
         }
         if (!isInstrumentationTest()) {
+            services.wakeServer()
             SyncManager.schedulePeriodic(this)
             if (services.sessions.get() != null) SyncManager.requestSync(this)
         }
@@ -90,6 +91,14 @@ class Services(val context: Context) {
 
     /** thread สำหรับงานเครือข่ายที่สั่งจากหน้าจอ */
     val io = Executors.newFixedThreadPool(3)
+
+    /**
+     * ปลุกเซิร์ฟเวอร์ล่วงหน้า (ไม่รอผล) — โฮสต์ฟรีอย่าง Render หลับเมื่อว่าง ถ้าปลุกตั้งแต่เปิดแอป
+     * พอผู้ใช้กดเข้าสู่ระบบ/เปิดอันดับ เซิร์ฟเวอร์ก็ตื่นแล้วหรือใกล้ตื่น
+     */
+    fun wakeServer() {
+        io.execute { api.health() }
+    }
 
     val deviceName: String
         get() = (Settings.Global.getString(context.contentResolver, Settings.Global.DEVICE_NAME) ?: Build.MODEL).take(100)

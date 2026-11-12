@@ -1,4 +1,4 @@
-.PHONY: env up down clean logs ps test test-race lint smoke run
+.PHONY: env up down clean logs ps test test-race lint smoke run deploy-check
 
 # Create .env with this Mac's LAN IP and random secrets (keeps an existing .env).
 env:
@@ -43,3 +43,11 @@ smoke:
 run:
 	set -a; . ./.env; set +a; DATABASE_URL=postgres://runtrail:$$POSTGRES_PASSWORD@localhost:5432/runtrail?sslmode=disable \
 	  S3_ENDPOINT=http://localhost:9000 S3_PATH_STYLE=true go run ./cmd/api
+
+# Check a deployed server (e.g. Render): waits for a sleeping free instance, then runs the full smoke test.
+#   make deploy-check URL=https://runtrail-api.onrender.com
+deploy-check:
+	@test -n "$(URL)" || (echo "usage: make deploy-check URL=https://..." && exit 1)
+	@echo "waking $(URL) (a free instance can take ~1 minute)..."
+	@curl -sf --max-time 120 --retry 3 --retry-delay 5 "$(URL)/readyz" && echo
+	./scripts/smoke.sh "$(URL)"

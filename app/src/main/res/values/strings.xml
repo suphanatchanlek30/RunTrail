@@ -515,4 +515,5 @@
     <string name="lb_country_needed">ตั้งประเทศของคุณก่อน เพื่อดูอันดับในประเทศ</string>
     <string name="server_change_logged_in">ที่อยู่นี้ไม่ใช่เซิร์ฟเวอร์ของบัญชีนี้ หรือเชื่อมต่อไม่ได้ ถ้าต้องการย้ายไปเซิร์ฟเวอร์อื่น ให้ซิงก์ให้ครบแล้วออกจากระบบก่อน</string>
     <string name="server_checking">กำลังตรวจเซิร์ฟเวอร์…</string>
+    <string name="server_waking">เซิร์ฟเวอร์กำลังตื่น (โฮสต์ฟรี) อาจใช้เวลาถึง 1 นาที…</string>
 </resources>

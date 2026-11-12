@@ -41,6 +41,15 @@ class ApiClientTest {
 
     @After fun tearDown() = server.close()
 
+    /** เซิร์ฟเวอร์ฟรีที่เพิ่งตื่น (Render) ตอบช้าเกือบนาที — เดิม readTimeout 30 s ทำให้ครั้งแรกล้มทุกครั้ง */
+    @Test fun waitsForASleepingServerToWakeUp() {
+        assertTrue("read timeout covers a ~60 s cold start", ApiClient.READ_TIMEOUT_S >= 75)
+        server.enqueue(MockResponse.Builder().code(200).addHeader("Content-Type", "application/json")
+            .body("""{"status":"ok"}""").headersDelay(35, TimeUnit.SECONDS).build())
+        val o = client().call("GET", "/me")!!
+        assertEquals("ok", o.getString("status"))
+    }
+
     @Test fun sendsBearerTokenAndParsesJson() {
         server.enqueue(json(200, """{"id":"u1","email":"a@b.co"}"""))
         val o = client().call("GET", "/me")!!

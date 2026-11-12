@@ -122,7 +122,13 @@ func (s *S3) Delete(ctx context.Context, key string) error {
 	return err
 }
 
+// Ping checks the bucket is reachable with object-level permission only (HEAD of a key that does
+// not exist → 404 = reachable). Bucket-scoped tokens such as Cloudflare R2 "Object Read & Write"
+// may not be allowed to call HeadBucket.
 func (s *S3) Ping(ctx context.Context) error {
-	_, err := s.client.HeadBucket(ctx, &s3.HeadBucketInput{Bucket: &s.bucket})
+	_, err := s.Head(ctx, ".runtrail-ping")
+	if errors.Is(err, ErrNotFound) {
+		return nil
+	}
 	return err
 }

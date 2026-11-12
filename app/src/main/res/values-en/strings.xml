@@ -517,4 +517,5 @@
     <string name="lb_country_needed">Set your country first to see your country\'s ranking</string>
     <string name="server_change_logged_in">This address isn\'t this account\'s server, or it can\'t be reached. To move to another server, finish syncing and sign out first.</string>
     <string name="server_checking">Checking server…</string>
+    <string name="server_waking">The server is waking up (free hosting). This can take up to a minute…</string>
 </resources>

@@ -48,9 +48,9 @@ class ApiClient(
 
     /** client ไม่มี authenticator สำหรับ refresh เอง (กันวนซ้ำ) และสำหรับอัปโหลดไป S3 */
     val plain: OkHttpClient = builder
-        .connectTimeout(15, TimeUnit.SECONDS)
-        .readTimeout(30, TimeUnit.SECONDS)
-        .writeTimeout(60, TimeUnit.SECONDS)
+        .connectTimeout(CONNECT_TIMEOUT_S, TimeUnit.SECONDS)
+        .readTimeout(READ_TIMEOUT_S, TimeUnit.SECONDS)
+        .writeTimeout(WRITE_TIMEOUT_S, TimeUnit.SECONDS)
         .build()
 
     private val authed: OkHttpClient = plain.newBuilder()
@@ -154,6 +154,14 @@ class ApiClient(
 
     companion object {
         val JSON = "application/json; charset=utf-8".toMediaType()
+
+        const val CONNECT_TIMEOUT_S = 15L
+        /**
+         * รอคำตอบได้ถึง 90 วินาที: เซิร์ฟเวอร์แพ็กเกจฟรี (Render) หลับเมื่อว่าง 15 นาที และใช้ ~1 นาทีกว่าจะตื่น
+         * ระหว่างนั้นการเชื่อมต่อสำเร็จแล้ว (proxy ของ Render รับไว้) แค่ยังไม่ตอบ — เดิม 30 วินาทีจึง timeout ทุกครั้งแรก
+         */
+        const val READ_TIMEOUT_S = 90L
+        const val WRITE_TIMEOUT_S = 60L
 
         fun errorFrom(status: Int, text: String): ApiException = try {
             val e = JSONObject(text).getJSONObject("error")
