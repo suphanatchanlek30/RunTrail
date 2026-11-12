@@ -8,7 +8,7 @@
     android:background="@drawable/bg_dialog"
     android:gravity="center_horizontal"
     android:orientation="vertical"
-    android:padding="24dp">
+    android:padding="@dimen/space_xxl">
 
     <FrameLayout
         android:layout_width="60dp"
@@ -16,8 +16,8 @@
         android:background="@drawable/bg_circle_green_soft">
 
         <ImageView
-            android:layout_width="28dp"
-            android:layout_height="28dp"
+            android:layout_width="@dimen/icon_xxl"
+            android:layout_height="@dimen/icon_xxl"
             android:layout_gravity="center"
             android:importantForAccessibility="no"
             android:src="@drawable/ic_refresh"
@@ -28,7 +28,7 @@
         style="@style/Txt.H2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
+        android:layout_marginTop="@dimen/space_14"
         android:text="@string/recover_title" />
 
     <TextView
@@ -36,7 +36,7 @@
         style="@style/Txt.BodyS"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="@dimen/space_m"
         android:gravity="center"
         android:textColor="@color/text_secondary"
         tools:text="แอปถูกปิดระหว่างวิ่งเมื่อ 17:58 น. ข้อมูลล่าสุดถูกเก็บไว้แล้ว" />
@@ -44,12 +44,12 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="75dp"
-        android:layout_marginTop="14dp"
+        android:layout_marginTop="@dimen/space_14"
         android:background="@drawable/bg_tile"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingStart="8dp"
-        android:paddingEnd="8dp">
+        android:paddingStart="@dimen/space_s"
+        android:paddingEnd="@dimen/space_s">
 
         <LinearLayout
             android:layout_width="0dp"
@@ -75,8 +75,8 @@
                     style="@style/Txt.Unit"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="4dp"
-                    android:layout_marginBottom="2dp"
+                    android:layout_marginStart="@dimen/space_xs"
+                    android:layout_marginBottom="@dimen/space_xxs"
                     android:text="@string/unit_km" />
             </LinearLayout>
 
@@ -84,7 +84,7 @@
                 style="@style/Txt.Caption"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="@dimen/space_xxs"
                 android:text="@string/label_distance" />
         </LinearLayout>
 
@@ -106,7 +106,7 @@
                 style="@style/Txt.Caption"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="@dimen/space_xxs"
                 android:text="@string/label_time" />
         </LinearLayout>
 
@@ -128,7 +128,7 @@
                 style="@style/Txt.Caption"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="2dp"
+                android:layout_marginTop="@dimen/space_xxs"
                 android:text="@string/label_gps_points" />
         </LinearLayout>
     </LinearLayout>
@@ -137,13 +137,13 @@
         android:id="@+id/btnResume"
         style="@style/Btn.Primary"
         android:layout_width="match_parent"
-        android:layout_height="52dp"
-        android:layout_marginTop="14dp"
+        android:layout_height="@dimen/button_height_compact"
+        android:layout_marginTop="@dimen/space_14"
         android:orientation="horizontal">
 
         <ImageView
-            android:layout_width="18dp"
-            android:layout_height="18dp"
+            android:layout_width="@dimen/icon_m"
+            android:layout_height="@dimen/icon_m"
             android:importantForAccessibility="no"
             android:src="@drawable/ic_play"
             app:tint="@color/run_ink" />
@@ -152,7 +152,7 @@
             style="@style/Txt.LabelL"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="8dp"
+            android:layout_marginStart="@dimen/space_s"
             android:text="@string/recover_resume"
             android:textColor="@color/run_ink" />
     </LinearLayout>
@@ -161,15 +161,15 @@
         android:id="@+id/btnSave"
         style="@style/Btn.Soft"
         android:layout_width="match_parent"
-        android:layout_height="52dp"
-        android:layout_marginTop="14dp"
+        android:layout_height="@dimen/button_height_compact"
+        android:layout_marginTop="@dimen/space_14"
         android:text="@string/recover_save" />
 
     <TextView
         android:id="@+id/btnDiscard"
         style="@style/Btn.Text"
         android:layout_width="match_parent"
-        android:layout_marginTop="14dp"
+        android:layout_marginTop="@dimen/space_14"
         android:background="@drawable/bg_btn_soft"
         android:backgroundTint="@color/bg_surface"
         android:text="@string/recover_discard"

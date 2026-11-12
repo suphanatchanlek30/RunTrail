@@ -61,8 +61,8 @@
     <!-- Heading/H3 18 -->
     <style name="Txt.H3">
         <item name="android:fontFamily">@font/anuphan_semibold</item>
-        <item name="android:textSize">18sp</item>
-        <item name="android:lineHeight">26sp</item>
+        <item name="android:textSize">@dimen/text_size_xl</item>
+        <item name="android:lineHeight">@dimen/line_height_l</item>
     </style>
 
     <!-- Number/L 24 (ไทล์สถิติ) -->
@@ -76,63 +76,63 @@
     <!-- Number/M 18 -->
     <style name="Txt.NumM">
         <item name="android:fontFamily">@font/anuphan_bold</item>
-        <item name="android:textSize">18sp</item>
-        <item name="android:lineHeight">26sp</item>
+        <item name="android:textSize">@dimen/text_size_xl</item>
+        <item name="android:lineHeight">@dimen/line_height_l</item>
     </style>
 
     <!-- Label/L 15 SemiBold (หัวการ์ด ปุ่ม) -->
     <style name="Txt.LabelL">
         <item name="android:fontFamily">@font/plex_semibold</item>
-        <item name="android:textSize">15sp</item>
-        <item name="android:lineHeight">22sp</item>
+        <item name="android:textSize">@dimen/text_size_15</item>
+        <item name="android:lineHeight">@dimen/line_height_m</item>
     </style>
 
     <!-- Body/L 16 -->
     <style name="Txt.BodyL">
-        <item name="android:textSize">16sp</item>
-        <item name="android:lineHeight">26sp</item>
+        <item name="android:textSize">@dimen/text_size_l</item>
+        <item name="android:lineHeight">@dimen/line_height_l</item>
         <item name="android:textColor">@color/text_secondary</item>
     </style>
 
     <!-- Body/M 15 -->
     <style name="Txt.Body">
-        <item name="android:textSize">15sp</item>
-        <item name="android:lineHeight">22sp</item>
+        <item name="android:textSize">@dimen/text_size_15</item>
+        <item name="android:lineHeight">@dimen/line_height_m</item>
     </style>
 
     <!-- Label/M 14 Medium -->
     <style name="Txt.LabelM">
         <item name="android:fontFamily">@font/plex_medium</item>
-        <item name="android:textSize">14sp</item>
+        <item name="android:textSize">@dimen/text_size_m</item>
         <item name="android:lineHeight">21sp</item>
     </style>
 
     <!-- Body/S 14 -->
     <style name="Txt.BodyS">
-        <item name="android:textSize">14sp</item>
-        <item name="android:lineHeight">22sp</item>
+        <item name="android:textSize">@dimen/text_size_m</item>
+        <item name="android:lineHeight">@dimen/line_height_m</item>
         <item name="android:textColor">@color/text_tertiary</item>
     </style>
 
     <!-- Caption 12 -->
     <style name="Txt.Caption">
-        <item name="android:textSize">12sp</item>
-        <item name="android:lineHeight">18sp</item>
+        <item name="android:textSize">@dimen/text_size_s</item>
+        <item name="android:lineHeight">@dimen/line_height_s</item>
         <item name="android:textColor">@color/text_tertiary</item>
     </style>
 
     <!-- Label/S 12 Medium -->
     <style name="Txt.LabelS">
         <item name="android:fontFamily">@font/plex_medium</item>
-        <item name="android:textSize">12sp</item>
-        <item name="android:lineHeight">18sp</item>
+        <item name="android:textSize">@dimen/text_size_s</item>
+        <item name="android:lineHeight">@dimen/line_height_s</item>
         <item name="android:letterSpacing">0.008</item>
     </style>
 
     <!-- Overline 11 SemiBold -->
     <style name="Txt.Overline">
         <item name="android:fontFamily">@font/plex_semibold</item>
-        <item name="android:textSize">11sp</item>
+        <item name="android:textSize">@dimen/text_size_xs</item>
         <item name="android:lineHeight">17sp</item>
         <item name="android:letterSpacing">0.055</item>
         <item name="android:textColor">@color/text_tertiary</item>
@@ -141,15 +141,15 @@
     <!-- หน่วยข้างตัวเลข -->
     <style name="Txt.Unit">
         <item name="android:fontFamily">@font/plex_medium</item>
-        <item name="android:textSize">12sp</item>
-        <item name="android:lineHeight">18sp</item>
+        <item name="android:textSize">@dimen/text_size_s</item>
+        <item name="android:lineHeight">@dimen/line_height_s</item>
         <item name="android:textColor">@color/text_tertiary</item>
     </style>
 
     <style name="Txt.UnitL">
         <item name="android:fontFamily">@font/plex_medium</item>
-        <item name="android:textSize">18sp</item>
-        <item name="android:lineHeight">26sp</item>
+        <item name="android:textSize">@dimen/text_size_xl</item>
+        <item name="android:lineHeight">@dimen/line_height_l</item>
         <item name="android:textColor">@color/text_tertiary</item>
     </style>
 </resources>

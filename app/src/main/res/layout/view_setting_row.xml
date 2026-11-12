@@ -20,7 +20,7 @@
         style="@style/Txt.LabelL"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="12dp"
+        android:layout_marginStart="@dimen/space_m"
         android:layout_weight="1"
         android:fontFamily="@font/plex_medium"
         tools:text="หน่วยระยะทาง" />
@@ -30,16 +30,16 @@
         style="@style/Txt.LabelM"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginStart="8dp"
+        android:layout_marginStart="@dimen/space_s"
         android:fontFamily="@font/plex_regular"
         android:textColor="@color/text_tertiary"
         tools:text="กม." />
 
     <ImageView
         android:id="@+id/ivChevron"
-        android:layout_width="18dp"
-        android:layout_height="18dp"
-        android:layout_marginStart="12dp"
+        android:layout_width="@dimen/icon_m"
+        android:layout_height="@dimen/icon_m"
+        android:layout_marginStart="@dimen/space_m"
         android:importantForAccessibility="no"
         android:src="@drawable/ic_chevron_right"
         app:tint="@color/text_disabled" />

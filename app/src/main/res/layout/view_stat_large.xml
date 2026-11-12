@@ -23,8 +23,8 @@
             style="@style/Txt.Unit"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginStart="4dp"
-            android:layout_marginBottom="4dp"
+            android:layout_marginStart="@dimen/space_xs"
+            android:layout_marginBottom="@dimen/space_xs"
             tools:text="กม." />
     </LinearLayout>
 
@@ -33,6 +33,6 @@
         style="@style/Txt.Caption"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="2dp"
+        android:layout_marginTop="@dimen/space_xxs"
         tools:text="ระยะทาง" />
 </LinearLayout>

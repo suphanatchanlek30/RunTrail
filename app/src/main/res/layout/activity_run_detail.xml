@@ -50,10 +50,10 @@
                 android:background="@drawable/bg_sheet"
                 android:minHeight="544dp"
                 android:orientation="vertical"
-                android:paddingStart="20dp"
-                android:paddingTop="22dp"
-                android:paddingEnd="20dp"
-                android:paddingBottom="24dp">
+                android:paddingStart="@dimen/space_xl"
+                android:paddingTop="@dimen/space_22"
+                android:paddingEnd="@dimen/space_xl"
+                android:paddingBottom="@dimen/space_xxl">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -78,7 +78,7 @@
                             style="@style/Txt.Caption"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="2dp"
+                            android:layout_marginTop="@dimen/space_xxs"
                             tools:text="อา. 9 พ.ย. 2026 · 17:42 – 18:15" />
                     </LinearLayout>
 
@@ -89,7 +89,7 @@
                         android:background="@drawable/bg_circle_canvas"
                         android:contentDescription="@string/action_edit"
                         android:foreground="?attr/selectableItemBackgroundBorderless"
-                        android:padding="11dp"
+                        android:padding="@dimen/space_11"
                         android:src="@drawable/ic_edit"
                         app:tint="@color/text_primary" />
                 </LinearLayout>
@@ -97,14 +97,14 @@
                 <LinearLayout
                     android:layout_width="wrap_content"
                     android:layout_height="28dp"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="@dimen/space_l"
                     android:orientation="horizontal">
 
                     <TextView
                         android:id="@+id/badgeRecord"
                         style="@style/Pill"
                         android:background="@drawable/bg_pill_lime_soft"
-                        android:layout_marginEnd="8dp"
+                        android:layout_marginEnd="@dimen/space_s"
                         android:textColor="@color/text_primary"
                         tools:text="สถิติใหม่ 5 กม." />
 
@@ -119,7 +119,7 @@
                     android:id="@+id/rowMain"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="@dimen/space_l"
                     android:background="?attr/selectableItemBackground"
                     android:orientation="horizontal">
 
@@ -147,13 +147,13 @@
 
                 <View
                     style="@style/Divider"
-                    android:layout_marginTop="16dp" />
+                    android:layout_marginTop="@dimen/space_l" />
 
                 <LinearLayout
                     android:id="@+id/rowSecondary"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="@dimen/space_l"
                     android:background="?attr/selectableItemBackground"
                     android:orientation="horizontal">
 
@@ -184,12 +184,12 @@
                     android:id="@+id/cardPhoto"
                     android:layout_width="match_parent"
                     android:layout_height="76dp"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="@dimen/space_l"
                     android:background="@drawable/bg_tile"
                     android:foreground="?attr/selectableItemBackground"
                     android:gravity="center_vertical"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp">
+                    android:paddingStart="@dimen/space_m"
+                    android:paddingEnd="@dimen/space_m">
 
                     <FrameLayout
                         android:id="@+id/photoFrame"
@@ -199,8 +199,8 @@
 
                         <ImageView
                             android:id="@+id/ivPhotoIcon"
-                            android:layout_width="22dp"
-                            android:layout_height="22dp"
+                            android:layout_width="@dimen/icon_22"
+                            android:layout_height="@dimen/icon_22"
                             android:layout_gravity="center"
                             android:importantForAccessibility="no"
                             android:src="@drawable/ic_image"
@@ -218,7 +218,7 @@
                     <LinearLayout
                         android:layout_width="0dp"
                         android:layout_height="wrap_content"
-                        android:layout_marginStart="12dp"
+                        android:layout_marginStart="@dimen/space_m"
                         android:layout_weight="1"
                         android:orientation="vertical">
 
@@ -237,8 +237,8 @@
                     </LinearLayout>
 
                     <ImageView
-                        android:layout_width="20dp"
-                        android:layout_height="20dp"
+                        android:layout_width="@dimen/icon_l"
+                        android:layout_height="@dimen/icon_l"
                         android:importantForAccessibility="no"
                         android:src="@drawable/ic_chevron_right"
                         app:tint="@color/text_tertiary" />
@@ -248,7 +248,7 @@
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="16dp"
+                    android:layout_marginTop="@dimen/space_l"
                     android:orientation="horizontal">
 
                     <LinearLayout
@@ -264,7 +264,7 @@
                             android:background="@drawable/bg_icon_chip_green"
                             android:foreground="?attr/selectableItemBackground"
                             android:importantForAccessibility="no"
-                            android:padding="17dp"
+                            android:padding="@dimen/space_17"
                             android:src="@drawable/ic_share"
                             app:tint="@color/run_green_dark" />
 
@@ -272,7 +272,7 @@
                             style="@style/Txt.LabelS"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
+                            android:layout_marginTop="@dimen/space_6"
                             android:text="@string/action_share" />
                     </LinearLayout>
 
@@ -294,7 +294,7 @@
                             android:background="@drawable/bg_icon_chip_lime"
                             android:foreground="?attr/selectableItemBackground"
                             android:importantForAccessibility="no"
-                            android:padding="17dp"
+                            android:padding="@dimen/space_17"
                             android:src="@drawable/ic_image"
                             app:tint="@color/run_ink" />
 
@@ -302,7 +302,7 @@
                             style="@style/Txt.LabelS"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
+                            android:layout_marginTop="@dimen/space_6"
                             android:text="@string/share_image_action" />
                     </LinearLayout>
 
@@ -324,7 +324,7 @@
                             android:background="@drawable/bg_icon_chip_canvas"
                             android:foreground="?attr/selectableItemBackground"
                             android:importantForAccessibility="no"
-                            android:padding="17dp"
+                            android:padding="@dimen/space_17"
                             android:src="@drawable/ic_rotate"
                             app:tint="@color/text_primary" />
 
@@ -332,7 +332,7 @@
                             style="@style/Txt.LabelS"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
+                            android:layout_marginTop="@dimen/space_6"
                             android:text="@string/action_replay" />
                     </LinearLayout>
 
@@ -354,7 +354,7 @@
                             android:background="@drawable/bg_icon_chip_danger"
                             android:foreground="?attr/selectableItemBackground"
                             android:importantForAccessibility="no"
-                            android:padding="17dp"
+                            android:padding="@dimen/space_17"
                             android:src="@drawable/ic_trash"
                             app:tint="@color/danger" />
 
@@ -362,7 +362,7 @@
                             style="@style/Txt.LabelS"
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_marginTop="6dp"
+                            android:layout_marginTop="@dimen/space_6"
                             android:text="@string/action_delete"
                             android:textColor="@color/danger" />
                     </LinearLayout>
@@ -377,15 +377,15 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:paddingStart="16dp"
-        android:paddingTop="8dp"
-        android:paddingEnd="16dp">
+        android:paddingStart="@dimen/space_l"
+        android:paddingTop="@dimen/space_s"
+        android:paddingEnd="@dimen/space_l">
 
         <ImageView
             android:id="@+id/btnBack"
             style="@style/IconBtn"
             android:contentDescription="@string/action_back"
-            android:elevation="2dp"
+            android:elevation="@dimen/elevation_s"
             android:src="@drawable/ic_chevron_left" />
 
         <Space
@@ -397,15 +397,15 @@
             android:id="@+id/btnShare"
             style="@style/IconBtn"
             android:contentDescription="@string/action_share"
-            android:elevation="2dp"
+            android:elevation="@dimen/elevation_s"
             android:src="@drawable/ic_share" />
 
         <ImageView
             android:id="@+id/btnMore"
             style="@style/IconBtn"
-            android:layout_marginStart="10dp"
+            android:layout_marginStart="@dimen/space_10"
             android:contentDescription="@string/action_more"
-            android:elevation="2dp"
+            android:elevation="@dimen/elevation_s"
             android:src="@drawable/ic_more" />
     </LinearLayout>
 </FrameLayout>

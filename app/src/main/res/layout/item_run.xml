@@ -10,8 +10,8 @@
     android:foreground="?attr/selectableItemBackground"
     android:gravity="center_vertical"
     android:orientation="horizontal"
-    android:paddingStart="14dp"
-    android:paddingEnd="14dp">
+    android:paddingStart="@dimen/space_14"
+    android:paddingEnd="@dimen/space_14">
 
     <com.example.runtrail.ui.widget.MapRouteView
         android:id="@+id/thumb"
@@ -22,7 +22,7 @@
     <LinearLayout
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="14dp"
+        android:layout_marginStart="@dimen/space_14"
         android:layout_weight="1"
         android:orientation="vertical">
 
@@ -40,19 +40,19 @@
             style="@style/Txt.Caption"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="3dp"
+            android:layout_marginTop="@dimen/space_3"
             tools:text="ส. 8 พ.ย. · 17:42" />
 
         <LinearLayout
             android:layout_width="wrap_content"
             android:layout_height="18dp"
-            android:layout_marginTop="3dp"
+            android:layout_marginTop="@dimen/space_3"
             android:gravity="center_vertical"
             android:orientation="horizontal">
 
             <ImageView
-                android:layout_width="13dp"
-                android:layout_height="13dp"
+                android:layout_width="@dimen/icon_13"
+                android:layout_height="@dimen/icon_13"
                 android:importantForAccessibility="no"
                 android:src="@drawable/ic_pin"
                 app:tint="@color/text_tertiary" />
@@ -62,14 +62,14 @@
                 style="@style/Txt.LabelS"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
+                android:layout_marginStart="@dimen/space_xs"
                 android:textColor="@color/text_secondary"
                 tools:text="4.3 กม." />
 
             <ImageView
-                android:layout_width="13dp"
-                android:layout_height="13dp"
-                android:layout_marginStart="10dp"
+                android:layout_width="@dimen/icon_13"
+                android:layout_height="@dimen/icon_13"
+                android:layout_marginStart="@dimen/space_10"
                 android:importantForAccessibility="no"
                 android:src="@drawable/ic_clock"
                 app:tint="@color/text_tertiary" />
@@ -79,14 +79,14 @@
                 style="@style/Txt.LabelS"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
+                android:layout_marginStart="@dimen/space_xs"
                 android:textColor="@color/text_secondary"
                 tools:text="27:05" />
 
             <ImageView
-                android:layout_width="13dp"
-                android:layout_height="13dp"
-                android:layout_marginStart="10dp"
+                android:layout_width="@dimen/icon_13"
+                android:layout_height="@dimen/icon_13"
+                android:layout_marginStart="@dimen/space_10"
                 android:importantForAccessibility="no"
                 android:src="@drawable/ic_gauge"
                 app:tint="@color/text_tertiary" />
@@ -96,7 +96,7 @@
                 style="@style/Txt.LabelS"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="4dp"
+                android:layout_marginStart="@dimen/space_xs"
                 android:textColor="@color/text_secondary"
                 tools:text="6:18" />
         </LinearLayout>
@@ -104,9 +104,9 @@
 
     <ImageView
         android:id="@+id/ivSync"
-        android:layout_width="20dp"
-        android:layout_height="20dp"
-        android:layout_marginStart="14dp"
+        android:layout_width="@dimen/icon_l"
+        android:layout_height="@dimen/icon_l"
+        android:layout_marginStart="@dimen/space_14"
         android:src="@drawable/ic_cloud_check"
         app:tint="@color/run_green_dark"
         tools:ignore="ContentDescription" />

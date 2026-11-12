@@ -41,9 +41,9 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingStart="16dp"
-        android:paddingTop="8dp"
-        android:paddingEnd="16dp"
+        android:paddingStart="@dimen/space_l"
+        android:paddingTop="@dimen/space_s"
+        android:paddingEnd="@dimen/space_l"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent">
@@ -57,7 +57,7 @@
                 android:id="@+id/btnBack"
                 style="@style/IconBtn"
                 android:contentDescription="@string/action_back"
-                android:elevation="2dp"
+                android:elevation="@dimen/elevation_s"
                 android:src="@drawable/ic_chevron_left" />
 
             <TextView
@@ -65,16 +65,16 @@
                 style="@style/Txt.LabelM"
                 android:layout_width="wrap_content"
                 android:layout_height="41dp"
-                android:layout_marginStart="10dp"
+                android:layout_marginStart="@dimen/space_10"
                 android:background="@drawable/bg_pill_white"
-                android:drawablePadding="8dp"
-                android:elevation="2dp"
+                android:drawablePadding="@dimen/space_s"
+                android:elevation="@dimen/elevation_s"
                 android:ellipsize="end"
                 android:fontFamily="@font/plex_semibold"
                 android:gravity="center_vertical"
                 android:maxLines="1"
-                android:paddingStart="14dp"
-                android:paddingEnd="14dp"
+                android:paddingStart="@dimen/space_14"
+                android:paddingEnd="@dimen/space_14"
                 tools:text="Replay · วิ่งเย็นริมสวน" />
         </LinearLayout>
 
@@ -83,12 +83,12 @@
             android:id="@+id/segmentBadge"
             android:layout_width="wrap_content"
             android:layout_height="56dp"
-            android:layout_marginTop="22dp"
+            android:layout_marginTop="@dimen/space_22"
             android:background="@drawable/bg_card"
-            android:elevation="3dp"
+            android:elevation="@dimen/elevation_3"
             android:gravity="center_vertical"
-            android:paddingStart="14dp"
-            android:paddingEnd="14dp">
+            android:paddingStart="@dimen/space_14"
+            android:paddingEnd="@dimen/space_14">
 
             <View
                 android:id="@+id/segmentDot"
@@ -99,7 +99,7 @@
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
+                android:layout_marginStart="@dimen/space_10"
                 android:orientation="vertical">
 
                 <TextView
@@ -126,12 +126,12 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:background="@drawable/bg_sheet"
-        android:elevation="12dp"
+        android:elevation="@dimen/elevation_l"
         android:orientation="vertical"
-        android:paddingStart="20dp"
-        android:paddingTop="10dp"
-        android:paddingEnd="20dp"
-        android:paddingBottom="30dp"
+        android:paddingStart="@dimen/space_xl"
+        android:paddingTop="@dimen/space_10"
+        android:paddingEnd="@dimen/space_xl"
+        android:paddingBottom="@dimen/space_30"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent">
@@ -145,7 +145,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/space_l"
             android:orientation="horizontal">
 
             <include
@@ -176,7 +176,7 @@
             android:layout_width="match_parent"
             android:layout_height="24dp"
             android:layout_marginStart="-11dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/space_l"
             android:layout_marginEnd="-11dp"
             android:max="1000" />
 
@@ -184,13 +184,13 @@
             android:id="@+id/axis"
             android:layout_width="match_parent"
             android:layout_height="18dp"
-            android:layout_marginTop="6dp"
+            android:layout_marginTop="@dimen/space_6"
             android:orientation="horizontal" />
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="72dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/space_l"
             android:gravity="center"
             android:orientation="horizontal">
 
@@ -201,7 +201,7 @@
                 android:background="@drawable/bg_circle_canvas"
                 android:contentDescription="@string/replay_back"
                 android:foreground="?attr/selectableItemBackgroundBorderless"
-                android:padding="16dp"
+                android:padding="@dimen/space_l"
                 android:src="@drawable/ic_chevron_left"
                 app:tint="@color/text_primary" />
 
@@ -209,13 +209,13 @@
                 android:id="@+id/btnPlay"
                 android:layout_width="72dp"
                 android:layout_height="72dp"
-                android:layout_marginStart="24dp"
-                android:layout_marginEnd="24dp"
+                android:layout_marginStart="@dimen/space_xxl"
+                android:layout_marginEnd="@dimen/space_xxl"
                 android:background="@drawable/bg_circle_green"
                 android:contentDescription="@string/replay_play"
-                android:elevation="4dp"
+                android:elevation="@dimen/elevation_m"
                 android:foreground="?attr/selectableItemBackgroundBorderless"
-                android:padding="22dp"
+                android:padding="@dimen/space_22"
                 android:src="@drawable/ic_pause"
                 app:tint="@color/run_ink" />
 
@@ -226,7 +226,7 @@
                 android:background="@drawable/bg_circle_canvas"
                 android:contentDescription="@string/replay_forward"
                 android:foreground="?attr/selectableItemBackgroundBorderless"
-                android:padding="16dp"
+                android:padding="@dimen/space_l"
                 android:src="@drawable/ic_chevron_right"
                 app:tint="@color/text_primary" />
         </LinearLayout>
@@ -235,7 +235,7 @@
             android:layout_width="wrap_content"
             android:layout_height="34dp"
             android:layout_gravity="center_horizontal"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/space_l"
             android:orientation="horizontal">
 
             <TextView
@@ -246,19 +246,19 @@
             <TextView
                 android:id="@+id/speed2"
                 style="@style/ChipToggle"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="@dimen/space_s"
                 android:text="2×" />
 
             <TextView
                 android:id="@+id/speed4"
                 style="@style/ChipToggle"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="@dimen/space_s"
                 android:text="4×" />
 
             <TextView
                 android:id="@+id/speed8"
                 style="@style/ChipToggle"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="@dimen/space_s"
                 android:text="8×" />
         </LinearLayout>
     </LinearLayout>

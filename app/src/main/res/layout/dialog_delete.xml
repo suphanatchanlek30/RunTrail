@@ -8,7 +8,7 @@
     android:background="@drawable/bg_dialog"
     android:gravity="center_horizontal"
     android:orientation="vertical"
-    android:padding="24dp">
+    android:padding="@dimen/space_xxl">
 
     <FrameLayout
         android:layout_width="60dp"
@@ -16,8 +16,8 @@
         android:background="@drawable/bg_circle_danger_soft">
 
         <ImageView
-            android:layout_width="28dp"
-            android:layout_height="28dp"
+            android:layout_width="@dimen/icon_xxl"
+            android:layout_height="@dimen/icon_xxl"
             android:layout_gravity="center"
             android:importantForAccessibility="no"
             android:src="@drawable/ic_trash"
@@ -28,7 +28,7 @@
         style="@style/Txt.H2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="14dp"
+        android:layout_marginTop="@dimen/space_14"
         android:text="@string/delete_title" />
 
     <TextView
@@ -36,7 +36,7 @@
         style="@style/Txt.BodyS"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="@dimen/space_m"
         android:gravity="center"
         android:textColor="@color/text_secondary"
         tools:text="“วิ่งเย็นริมสวน · 5.02 กม.” จะถูกลบออกจากเครื่องถาวร" />
@@ -45,13 +45,13 @@
         android:id="@+id/rowServer"
         android:layout_width="match_parent"
         android:layout_height="64dp"
-        android:layout_marginTop="14dp"
+        android:layout_marginTop="@dimen/space_14"
         android:background="@drawable/bg_tile"
         android:foreground="?attr/selectableItemBackground"
         android:gravity="center_vertical"
         android:orientation="horizontal"
-        android:paddingStart="14dp"
-        android:paddingEnd="14dp">
+        android:paddingStart="@dimen/space_14"
+        android:paddingEnd="@dimen/space_14">
 
         <FrameLayout
             android:id="@+id/checkServer"
@@ -62,8 +62,8 @@
 
             <ImageView
                 android:id="@+id/ivCheck"
-                android:layout_width="14dp"
-                android:layout_height="14dp"
+                android:layout_width="@dimen/icon_xs"
+                android:layout_height="@dimen/icon_xs"
                 android:layout_gravity="center"
                 android:importantForAccessibility="no"
                 android:src="@drawable/ic_check"
@@ -73,7 +73,7 @@
         <LinearLayout
             android:layout_width="0dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="@dimen/space_m"
             android:layout_weight="1"
             android:orientation="vertical">
 
@@ -94,14 +94,14 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="52dp"
-        android:layout_marginTop="14dp"
+        android:layout_marginTop="@dimen/space_14"
         android:orientation="horizontal">
 
         <TextView
             android:id="@+id/btnCancel"
             style="@style/Btn.Soft"
             android:layout_width="0dp"
-            android:layout_height="52dp"
+            android:layout_height="@dimen/button_height_compact"
             android:layout_weight="1"
             android:text="@string/action_cancel" />
 
@@ -109,8 +109,8 @@
             android:id="@+id/btnDelete"
             style="@style/Btn.Danger"
             android:layout_width="0dp"
-            android:layout_height="52dp"
-            android:layout_marginStart="10dp"
+            android:layout_height="@dimen/button_height_compact"
+            android:layout_marginStart="@dimen/space_10"
             android:layout_weight="1"
             android:text="@string/action_delete" />
     </LinearLayout>

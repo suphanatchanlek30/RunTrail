@@ -13,9 +13,9 @@
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="60dp"
-        android:paddingStart="20dp"
-        android:paddingTop="8dp"
-        android:paddingEnd="20dp">
+        android:paddingStart="@dimen/space_xl"
+        android:paddingTop="@dimen/space_s"
+        android:paddingEnd="@dimen/space_xl">
 
         <ImageView
             android:id="@+id/btnBack"
@@ -43,8 +43,8 @@
         style="@style/Txt.Caption"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:paddingStart="20dp"
-        android:paddingEnd="20dp"
+        android:paddingStart="@dimen/space_xl"
+        android:paddingEnd="@dimen/space_xl"
         android:textColor="@color/text_tertiary"
         android:visibility="gone" />
 
@@ -58,10 +58,10 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:clipToPadding="false"
-            android:paddingStart="20dp"
-            android:paddingTop="8dp"
-            android:paddingEnd="20dp"
-            android:paddingBottom="16dp" />
+            android:paddingStart="@dimen/space_xl"
+            android:paddingTop="@dimen/space_s"
+            android:paddingEnd="@dimen/space_xl"
+            android:paddingBottom="@dimen/space_l" />
 
         <LinearLayout
             android:id="@+id/emptyView"
@@ -70,7 +70,7 @@
             android:layout_gravity="center"
             android:gravity="center"
             android:orientation="vertical"
-            android:padding="32dp"
+            android:padding="@dimen/space_xxxl"
             android:visibility="gone">
 
             <ImageView
@@ -85,7 +85,7 @@
                 style="@style/Txt.BodyS"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="12dp"
+                android:layout_marginTop="@dimen/space_m"
                 android:gravity="center"
                 android:textColor="@color/text_secondary" />
 
@@ -93,9 +93,9 @@
                 android:id="@+id/btnEmptyAction"
                 style="@style/Btn.Primary"
                 android:layout_width="wrap_content"
-                android:layout_marginTop="16dp"
-                android:paddingStart="24dp"
-                android:paddingEnd="24dp"
+                android:layout_marginTop="@dimen/space_l"
+                android:paddingStart="@dimen/space_xxl"
+                android:paddingEnd="@dimen/space_xxl"
                 android:visibility="gone" />
         </LinearLayout>
 

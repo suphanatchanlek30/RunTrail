@@ -18,8 +18,8 @@
         android:gravity="center_vertical"
         android:minHeight="54dp"
         android:orientation="horizontal"
-        android:paddingStart="14dp"
-        android:paddingEnd="14dp">
+        android:paddingStart="@dimen/space_14"
+        android:paddingEnd="@dimen/space_14">
 
         <LinearLayout
             android:id="@+id/urlBox"
@@ -29,12 +29,12 @@
             android:background="@drawable/bg_tile"
             android:foreground="?attr/selectableItemBackground"
             android:gravity="center_vertical"
-            android:paddingStart="14dp"
-            android:paddingEnd="14dp">
+            android:paddingStart="@dimen/space_14"
+            android:paddingEnd="@dimen/space_14">
 
             <ImageView
-                android:layout_width="14dp"
-                android:layout_height="14dp"
+                android:layout_width="@dimen/icon_xs"
+                android:layout_height="@dimen/icon_xs"
                 android:importantForAccessibility="no"
                 android:src="@drawable/ic_lock"
                 app:tint="@color/run_green_dark" />
@@ -44,7 +44,7 @@
                 style="@style/Txt.LabelM"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="@dimen/space_s"
                 android:layout_weight="1"
                 android:ellipsize="end"
                 android:maxLines="1"
@@ -55,10 +55,10 @@
             android:id="@+id/btnRefresh"
             android:layout_width="30dp"
             android:layout_height="30dp"
-            android:layout_marginStart="6dp"
+            android:layout_marginStart="@dimen/space_6"
             android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="@string/action_refresh"
-            android:padding="6dp"
+            android:padding="@dimen/space_6"
             android:src="@drawable/ic_refresh"
             app:tint="@color/text_secondary" />
     </LinearLayout>

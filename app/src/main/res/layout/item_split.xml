@@ -26,15 +26,15 @@
             style="@style/Txt.LabelL"
             android:layout_width="44dp"
             android:layout_height="wrap_content"
-            android:layout_marginStart="12dp"
+            android:layout_marginStart="@dimen/space_m"
             tools:text="6:05" />
 
         <LinearLayout
             android:id="@+id/barBox"
             android:layout_width="0dp"
             android:layout_height="20dp"
-            android:layout_marginStart="12dp"
-            android:layout_marginEnd="12dp"
+            android:layout_marginStart="@dimen/space_m"
+            android:layout_marginEnd="@dimen/space_m"
             android:layout_weight="1"
             android:gravity="center_vertical"
             android:orientation="horizontal">
@@ -50,10 +50,10 @@
                 style="@style/Txt.LabelS"
                 android:layout_width="wrap_content"
                 android:layout_height="20dp"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="@dimen/space_s"
                 android:gravity="center"
-                android:paddingStart="8dp"
-                android:paddingEnd="8dp"
+                android:paddingStart="@dimen/space_s"
+                android:paddingEnd="@dimen/space_s"
                 android:visibility="gone"
                 tools:background="@drawable/bg_pill_green_soft"
                 tools:text="เร็วสุด"

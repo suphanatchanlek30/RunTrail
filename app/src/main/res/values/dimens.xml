@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    Shared dimensions. Values were moved here unchanged from layouts, styles and drawables
+    (every token is used at least twice, or is the size a component style defines).
+    One-off sizes stay in their layout on purpose.
+-->
+<resources>
+
+    <!-- Spacing — margins and padding (4 dp scale; numbered names sit between scale steps) -->
+    <dimen name="space_xxs">2dp</dimen>
+    <dimen name="space_3">3dp</dimen>
+    <dimen name="space_xs">4dp</dimen>
+    <dimen name="space_5">5dp</dimen>
+    <dimen name="space_6">6dp</dimen>
+    <dimen name="space_s">8dp</dimen>
+    <dimen name="space_9">9dp</dimen>
+    <dimen name="space_10">10dp</dimen>
+    <dimen name="space_11">11dp</dimen>
+    <dimen name="space_m">12dp</dimen>
+    <dimen name="space_13">13dp</dimen>
+    <dimen name="space_14">14dp</dimen>
+    <dimen name="space_15">15dp</dimen>
+    <dimen name="space_l">16dp</dimen>
+    <dimen name="space_17">17dp</dimen>
+    <dimen name="space_18">18dp</dimen>
+    <dimen name="space_xl">20dp</dimen>
+    <dimen name="space_22">22dp</dimen>
+    <dimen name="space_xxl">24dp</dimen>
+    <dimen name="space_28">28dp</dimen>
+    <dimen name="space_30">30dp</dimen>
+    <dimen name="space_xxxl">32dp</dimen>
+
+    <!-- Text sizes -->
+    <dimen name="text_size_xs">11sp</dimen>
+    <dimen name="text_size_s">12sp</dimen>
+    <dimen name="text_size_13">13sp</dimen>
+    <dimen name="text_size_m">14sp</dimen>
+    <dimen name="text_size_15">15sp</dimen>
+    <dimen name="text_size_l">16sp</dimen>
+    <dimen name="text_size_xl">18sp</dimen>
+
+    <!-- Line heights -->
+    <dimen name="line_height_s">18sp</dimen>
+    <dimen name="line_height_20">20sp</dimen>
+    <dimen name="line_height_m">22sp</dimen>
+    <dimen name="line_height_l">26sp</dimen>
+
+    <!-- Icon sizes -->
+    <dimen name="icon_13">13dp</dimen>
+    <dimen name="icon_xs">14dp</dimen>
+    <dimen name="icon_s">16dp</dimen>
+    <dimen name="icon_m">18dp</dimen>
+    <dimen name="icon_l">20dp</dimen>
+    <dimen name="icon_22">22dp</dimen>
+    <dimen name="icon_xl">24dp</dimen>
+    <dimen name="icon_xxl">28dp</dimen>
+    <dimen name="icon_chip_size_s">34dp</dimen>
+    <dimen name="icon_chip_size_m">36dp</dimen>
+    <dimen name="icon_button_size">44dp</dimen>
+    <dimen name="icon_chip_size">44dp</dimen>
+
+    <!-- Component sizes -->
+    <dimen name="pill_height">28dp</dimen>
+    <dimen name="chip_height">34dp</dimen>
+    <dimen name="button_height_small">36dp</dimen>
+    <dimen name="button_height_text">40dp</dimen>
+    <dimen name="button_height_outline">48dp</dimen>
+    <dimen name="button_height_compact">52dp</dimen>
+    <dimen name="button_height">54dp</dimen>
+    <dimen name="field_height">54dp</dimen>
+
+    <!-- Corner radius (shape drawables) -->
+    <dimen name="radius_track">3dp</dimen>
+    <dimen name="radius_xs">4dp</dimen>
+    <dimen name="radius_bar">5dp</dimen>
+    <dimen name="radius_checkbox">7dp</dimen>
+    <dimen name="radius_s">10dp</dimen>
+    <dimen name="radius_m">12dp</dimen>
+    <dimen name="radius_field">14dp</dimen>
+    <dimen name="radius_button">16dp</dimen>
+    <dimen name="radius_card">20dp</dimen>
+    <dimen name="radius_sheet">28dp</dimen>
+    <dimen name="radius_pill">999dp</dimen>
+
+    <!-- Elevation -->
+    <dimen name="elevation_s">2dp</dimen>
+    <dimen name="elevation_3">3dp</dimen>
+    <dimen name="elevation_m">4dp</dimen>
+    <dimen name="elevation_8">8dp</dimen>
+    <dimen name="elevation_l">12dp</dimen>
+</resources>

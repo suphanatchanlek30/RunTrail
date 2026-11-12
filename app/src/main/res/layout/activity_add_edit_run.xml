@@ -14,10 +14,10 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:paddingStart="20dp"
-        android:paddingTop="8dp"
-        android:paddingEnd="20dp"
-        android:paddingBottom="16dp">
+        android:paddingStart="@dimen/space_xl"
+        android:paddingTop="@dimen/space_s"
+        android:paddingEnd="@dimen/space_xl"
+        android:paddingBottom="@dimen/space_l">
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -35,7 +35,7 @@
                 style="@style/Txt.H3"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="@dimen/space_m"
                 android:layout_weight="1"
                 tools:text="แก้ไขการวิ่ง" />
 
@@ -55,7 +55,7 @@
             android:id="@+id/photoPreview"
             android:layout_width="match_parent"
             android:layout_height="196dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/space_l"
             android:background="@drawable/bg_card">
 
             <com.example.runtrail.ui.widget.MapRouteView
@@ -83,11 +83,11 @@
                     android:layout_width="56dp"
                     android:layout_height="56dp"
                     android:background="@drawable/bg_icon_chip_white"
-                    android:elevation="2dp">
+                    android:elevation="@dimen/elevation_s">
 
                     <ImageView
-                        android:layout_width="24dp"
-                        android:layout_height="24dp"
+                        android:layout_width="@dimen/icon_xl"
+                        android:layout_height="@dimen/icon_xl"
                         android:layout_gravity="center"
                         android:importantForAccessibility="no"
                         android:src="@drawable/ic_image"
@@ -99,13 +99,13 @@
                     style="@style/Txt.LabelS"
                     android:layout_width="wrap_content"
                     android:layout_height="30dp"
-                    android:layout_marginTop="8dp"
+                    android:layout_marginTop="@dimen/space_s"
                     android:background="@drawable/bg_pill_ink"
-                    android:drawablePadding="6dp"
-                    android:elevation="2dp"
+                    android:drawablePadding="@dimen/space_6"
+                    android:elevation="@dimen/elevation_s"
                     android:gravity="center_vertical"
-                    android:paddingStart="12dp"
-                    android:paddingEnd="12dp"
+                    android:paddingStart="@dimen/space_m"
+                    android:paddingEnd="@dimen/space_m"
                     android:textColor="@color/white"
                     tools:text="ปรับทิศ EXIF · ย่อ 80% แล้ว" />
             </LinearLayout>
@@ -116,17 +116,17 @@
                 android:layout_width="40dp"
                 android:layout_height="40dp"
                 android:layout_gravity="top|end"
-                android:layout_margin="10dp"
+                android:layout_margin="@dimen/space_10"
                 android:background="@drawable/bg_circle_ink"
                 android:clickable="true"
                 android:contentDescription="@string/edit_photo_remove"
-                android:elevation="3dp"
+                android:elevation="@dimen/elevation_3"
                 android:focusable="true"
                 android:visibility="gone">
 
                 <ImageView
-                    android:layout_width="18dp"
-                    android:layout_height="18dp"
+                    android:layout_width="@dimen/icon_m"
+                    android:layout_height="@dimen/icon_m"
                     android:layout_gravity="center"
                     android:importantForAccessibility="no"
                     android:src="@drawable/ic_trash"
@@ -137,7 +137,7 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="48dp"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/space_l"
             android:orientation="horizontal">
 
             <LinearLayout
@@ -148,8 +148,8 @@
                 android:orientation="horizontal">
 
                 <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="@dimen/icon_l"
+                    android:layout_height="@dimen/icon_l"
                     android:importantForAccessibility="no"
                     android:src="@drawable/ic_camera"
                     app:tint="@color/text_primary" />
@@ -158,7 +158,7 @@
                     style="@style/Txt.LabelL"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="@dimen/space_s"
                     android:text="@string/edit_camera" />
             </LinearLayout>
 
@@ -166,13 +166,13 @@
                 android:id="@+id/btnGallery"
                 style="@style/Btn.Outline"
                 android:layout_width="0dp"
-                android:layout_marginStart="10dp"
+                android:layout_marginStart="@dimen/space_10"
                 android:layout_weight="1"
                 android:orientation="horizontal">
 
                 <ImageView
-                    android:layout_width="20dp"
-                    android:layout_height="20dp"
+                    android:layout_width="@dimen/icon_l"
+                    android:layout_height="@dimen/icon_l"
                     android:importantForAccessibility="no"
                     android:src="@drawable/ic_image"
                     app:tint="@color/text_primary" />
@@ -181,7 +181,7 @@
                     style="@style/Txt.LabelL"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:layout_marginStart="8dp"
+                    android:layout_marginStart="@dimen/space_s"
                     android:text="@string/edit_gallery" />
             </LinearLayout>
         </LinearLayout>
@@ -191,7 +191,7 @@
             style="@style/FieldLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/space_l"
             android:text="@string/edit_name" />
 
         <EditText
@@ -203,14 +203,14 @@
             android:importantForAutofill="no"
             android:inputType="textCapSentences"
             android:maxLength="60"
-            android:textSize="16sp" />
+            android:textSize="@dimen/text_size_l" />
 
         <!-- โน้ต -->
         <TextView
             style="@style/FieldLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/space_l"
             android:text="@string/edit_note" />
 
         <EditText
@@ -223,19 +223,19 @@
             android:hint="@string/edit_note_hint"
             android:importantForAutofill="no"
             android:inputType="textMultiLine|textCapSentences"
-            android:lineHeight="22sp"
+            android:lineHeight="@dimen/line_height_m"
             android:maxLength="300"
             android:minHeight="84dp"
-            android:paddingTop="15dp"
-            android:paddingBottom="15dp"
-            android:textSize="15sp" />
+            android:paddingTop="@dimen/space_15"
+            android:paddingBottom="@dimen/space_15"
+            android:textSize="@dimen/text_size_15" />
 
         <!-- ระยะ / เวลา (เฉพาะโหมดเพิ่มย้อนหลัง) -->
         <LinearLayout
             android:id="@+id/groupManual"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/space_l"
             android:orientation="horizontal"
             android:visibility="gone">
 
@@ -265,7 +265,7 @@
             <LinearLayout
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="12dp"
+                android:layout_marginStart="@dimen/space_m"
                 android:layout_weight="1"
                 android:orientation="vertical">
 
@@ -291,22 +291,22 @@
             style="@style/FieldLabel"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/space_l"
             android:text="@string/edit_datetime" />
 
         <LinearLayout
             android:id="@+id/fieldDate"
             android:layout_width="match_parent"
-            android:layout_height="54dp"
+            android:layout_height="@dimen/field_height"
             android:background="@drawable/bg_field"
             android:foreground="?attr/selectableItemBackground"
             android:gravity="center_vertical"
-            android:paddingStart="17dp"
-            android:paddingEnd="17dp">
+            android:paddingStart="@dimen/space_17"
+            android:paddingEnd="@dimen/space_17">
 
             <ImageView
-                android:layout_width="18dp"
-                android:layout_height="18dp"
+                android:layout_width="@dimen/icon_m"
+                android:layout_height="@dimen/icon_m"
                 android:importantForAccessibility="no"
                 android:src="@drawable/ic_calendar"
                 app:tint="@color/text_tertiary" />
@@ -316,7 +316,7 @@
                 style="@style/Txt.Body"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="8dp"
+                android:layout_marginStart="@dimen/space_s"
                 android:layout_weight="1"
                 android:fontFamily="@font/plex_medium"
                 tools:text="อา. 9 พ.ย. 2026 · 17:42" />
@@ -326,18 +326,18 @@
             android:id="@+id/rowLocked"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/space_l"
             android:background="@drawable/bg_tile"
             android:gravity="center_vertical"
             android:minHeight="42dp"
-            android:paddingStart="14dp"
-            android:paddingTop="10dp"
-            android:paddingEnd="14dp"
-            android:paddingBottom="10dp">
+            android:paddingStart="@dimen/space_14"
+            android:paddingTop="@dimen/space_10"
+            android:paddingEnd="@dimen/space_14"
+            android:paddingBottom="@dimen/space_10">
 
             <ImageView
-                android:layout_width="18dp"
-                android:layout_height="18dp"
+                android:layout_width="@dimen/icon_m"
+                android:layout_height="@dimen/icon_m"
                 android:importantForAccessibility="no"
                 android:src="@drawable/ic_lock"
                 app:tint="@color/text_tertiary" />
@@ -346,7 +346,7 @@
                 style="@style/Txt.Caption"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="10dp"
+                android:layout_marginStart="@dimen/space_10"
                 android:layout_weight="1"
                 android:text="@string/edit_locked_note" />
         </LinearLayout>
@@ -361,7 +361,7 @@
             android:id="@+id/btnSave"
             style="@style/Btn.Primary"
             android:layout_width="match_parent"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="@dimen/space_l"
             android:text="@string/edit_save_changes" />
     </LinearLayout>
 </ScrollView>
