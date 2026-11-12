@@ -30,12 +30,7 @@ class CadenceTracker(context: Context) : SensorEventListener {
     /** ก้าว/นาที หรือ 0 ถ้ายังไม่มีข้อมูล */
     fun cadence(now: Long = System.currentTimeMillis()): Int {
         while (samples.size > 2 && now - samples.first().first > WINDOW_MS) samples.removeFirst()
-        if (samples.size < 2) return 0
-        val (t0, s0) = samples.first()
-        val (t1, s1) = samples.last()
-        val minutes = (t1 - t0) / 60000.0
-        if (minutes < 0.1 || now - t1 > 5000) return 0
-        return ((s1 - s0) / minutes).toInt().coerceIn(0, 260)
+        return compute(samples, now)
     }
 
     override fun onSensorChanged(event: SensorEvent) {
@@ -45,6 +40,19 @@ class CadenceTracker(context: Context) : SensorEventListener {
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
     companion object {
-        private const val WINDOW_MS = 30_000L
+        const val WINDOW_MS = 30_000L
+
+        /**
+         * ก้าว/นาที จากค่าสะสมของ Step Counter (เวลา ms, จำนวนก้าวสะสม) — ฟังก์ชันล้วน ทดสอบบน JVM ได้
+         * 0 = ข้อมูลไม่พอ (น้อยกว่า 6 วินาที) หรือไม่มีก้าวใหม่เกิน 5 วินาที (หยุดเดิน)
+         */
+        fun compute(samples: List<Pair<Long, Float>>, now: Long): Int {
+            if (samples.size < 2) return 0
+            val (t0, s0) = samples.first()
+            val (t1, s1) = samples.last()
+            val minutes = (t1 - t0) / 60000.0
+            if (minutes < 0.1 || now - t1 > 5000) return 0
+            return ((s1 - s0) / minutes).toInt().coerceIn(0, 260)
+        }
     }
 }

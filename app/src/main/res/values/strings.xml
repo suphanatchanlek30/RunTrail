@@ -511,7 +511,6 @@
     <string name="edit_photo_removed">ลบรูปแล้ว · กดบันทึกเพื่อยืนยัน</string>
     <string name="photo_processing">กำลังเตรียมรูป…</string>
     <string name="setting_country">ประเทศ (อันดับประเทศ)</string>
-    <string name="setting_country_desc">ใช้จัดอันดับ "ประเทศของฉัน"</string>
     <string name="lb_set_country">ตั้งประเทศ</string>
     <string name="lb_country_needed">ตั้งประเทศของคุณก่อน เพื่อดูอันดับในประเทศ</string>
     <string name="server_change_logged_in">ข้อมูลของบัญชีนี้ผูกกับเซิร์ฟเวอร์ปัจจุบัน ถ้าต้องการเปลี่ยนเซิร์ฟเวอร์ ให้ซิงก์ให้ครบแล้วออกจากระบบก่อน</string>

@@ -513,7 +513,6 @@
     <string name="edit_photo_removed">Photo removed · tap Save to confirm</string>
     <string name="photo_processing">Preparing photo…</string>
     <string name="setting_country">Country (for rankings)</string>
-    <string name="setting_country_desc">Used for the "My country" leaderboard</string>
     <string name="lb_set_country">Set country</string>
     <string name="lb_country_needed">Set your country first to see your country\'s ranking</string>
     <string name="server_change_logged_in">This account\'s data belongs to the current server. To switch servers, finish syncing and sign out first.</string>
