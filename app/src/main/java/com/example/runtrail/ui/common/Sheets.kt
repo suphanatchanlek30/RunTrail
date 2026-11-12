@@ -38,6 +38,7 @@ object Sheets {
         options: List<Option>,
         selected: Int,
         columns: Int = 1,
+        alwaysPick: Boolean = false,   // true = เรียก onPick แม้แตะค่าเดิม (ค่าในเครื่องอาจไม่ตรงกับ server)
         onPick: (Int) -> Unit,
     ) {
         val b = SheetOptionsBinding.inflate(LayoutInflater.from(activity))
@@ -52,7 +53,7 @@ object Sheets {
         var selectedView: View? = null
         fun pick(index: Int) {
             dialog.dismiss()
-            if (index != selected) onPick(index)
+            if (alwaysPick || index != selected) onPick(index)
         }
 
         if (columns <= 1) {

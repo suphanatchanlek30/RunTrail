@@ -39,6 +39,8 @@ class BarChartView @JvmOverloads constructor(
         typeface = ResourcesCompat.getFont(context, R.font.plex_semibold)
     }
 
+    private val barRect = RectF()
+
     fun setData(values: FloatArray, labels: List<String>, highlightIndex: Int = -1) {
         this.values = values
         this.labels = labels
@@ -68,7 +70,7 @@ class BarChartView @JvmOverloads constructor(
                 i == highlight -> ContextCompat.getColor(context, R.color.run_lime)
                 else -> ContextCompat.getColor(context, R.color.run_green)
             }
-            canvas.drawRoundRect(RectF(left, top, left + bw, valueH + chartH), 8 * dp, 8 * dp, bar)
+            canvas.drawRoundRect(barRect.apply { set(left, top, left + bw, valueH + chartH) }, 8 * dp, 8 * dp, bar)
             if (showValues && v > 0f) {
                 valueText.color = ContextCompat.getColor(context, R.color.text_primary)
                 canvas.drawText(v.toInt().toString(), left + bw / 2, top - 6 * dp, valueText)

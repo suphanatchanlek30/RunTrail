@@ -18,6 +18,7 @@ import com.example.runtrail.ui.common.BottomNav
 import com.example.runtrail.ui.common.Dialogs
 import com.example.runtrail.ui.common.applySystemBarsPadding
 import com.example.runtrail.ui.common.setupEdgeToEdge
+import com.example.runtrail.ui.common.runAsync
 import com.example.runtrail.ui.common.toast
 import com.example.runtrail.ui.detail.RunDetailActivity
 import com.example.runtrail.ui.edit.AddEditRunActivity
@@ -32,6 +33,7 @@ class HistoryActivity : AppCompatActivity() {
     private lateinit var adapter: RunAdapter
     private var filter = Filter.ALL
     private var sort = Sort.NEWEST
+    private var all: List<com.example.runtrail.data.Run> = emptyList()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -54,7 +56,7 @@ class HistoryActivity : AppCompatActivity() {
                     RunRepository.delete(run.id, alsoServer)
             com.example.runtrail.sync.SyncManager.requestSync(this)
                     toast(getString(if (alsoServer) R.string.toast_deleted_both else R.string.toast_deleted))
-                    load()
+                    reload()
                 }
             },
         )
@@ -78,13 +80,26 @@ class HistoryActivity : AppCompatActivity() {
         binding.btnFilter.setOnClickListener { showSortMenu(it) }
     }
 
-    private val onDataChanged: () -> Unit = { load() }
+    private val onDataChanged: () -> Unit = { reload() }
 
     override fun onResume() {
         super.onResume()
         binding.navContainer.bottomNav.selectedItemId = R.id.nav_history
         RunRepository.addListener(onDataChanged)
-        load()
+        reload()
+    }
+
+    /** อ่านจาก DB เฉพาะตอนเปิดหน้า/ข้อมูลเปลี่ยน — พิมพ์ค้นหา/เปลี่ยนตัวกรองใช้รายการในหน่วยความจำ */
+    private var loadGen = 0
+
+    private fun reload() {
+        // อ่านทุกการวิ่งบน background thread (1,000 รายการใช้หลายร้อย ms) แล้วค่อยแสดงผล
+        val gen = ++loadGen
+        runAsync({ RunRepository.getAll() }) { r ->
+            if (gen != loadGen) return@runAsync
+            all = r.getOrDefault(all)
+            load()
+        }
     }
 
     override fun onPause() {
@@ -98,7 +113,7 @@ class HistoryActivity : AppCompatActivity() {
         binding.chipMonth.isSelected = filter == Filter.THIS_MONTH
         binding.chip5k.isSelected = filter == Filter.OVER_5K
 
-        val list = RunRepository.query(binding.etSearch.text.toString(), filter, sort)
+        val list = RunRepository.filterAndSort(all, binding.etSearch.text.toString(), filter, sort)
         adapter.miles = PrefsHelper(this).useMiles
         adapter.submit(list, groupByMonth = sort == Sort.NEWEST || sort == Sort.OLDEST)
         binding.emptyView.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE

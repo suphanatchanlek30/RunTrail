@@ -109,8 +109,9 @@ class MainActivity : AppCompatActivity() {
         binding.tvGreeting.text = Fmt.greeting()
         binding.tvName.text = prefs.firstName
 
-        val all = RunRepository.getAll()
-        val empty = all.isEmpty()
+        // หน้าหลักใช้แค่ 2 รายการล่าสุด + การวิ่ง 7 วันนี้ → ดึงเฉพาะที่ใช้จาก SQL (AUDIT P2)
+        val latest = RunRepository.recent(2)
+        val empty = latest.isEmpty()
         binding.groupEmpty.visibility = if (empty) View.VISIBLE else View.GONE
         binding.groupData.visibility = if (empty) View.GONE else View.VISIBLE
         binding.fabStart.visibility = if (empty) View.GONE else View.VISIBLE
@@ -121,7 +122,7 @@ class MainActivity : AppCompatActivity() {
 
         // ---- การ์ดสรุปสัปดาห์ ----
         val now = System.currentTimeMillis()
-        val week = RunRepository.thisWeek(now, all)
+        val week = RunRepository.since(RunRepository.startOfWeek(now), now)
         val weekM = week.sumOf { it.distanceM }
         val goalKm = prefs.weeklyGoalKm
         binding.tvGoalPercent.text = getString(R.string.home_goal_percent, Units.goalPercent(weekM, goalKm))
@@ -136,11 +137,11 @@ class MainActivity : AppCompatActivity() {
         // ---- กราฟ 7 วัน ----
         val weekStart = RunRepository.startOfWeek(now)
         binding.tvWeekRange.text = Fmt.weekRange(weekStart)
-        binding.chartWeek.setData(RunRepository.weekDailyKm(now, all, miles), RunRepository.weekDayLetters(now), highlightIndex = 6)
+        binding.chartWeek.setData(RunRepository.weekDailyKm(now, week, miles), RunRepository.weekDayLetters(now), highlightIndex = 6)
 
         // ---- การวิ่งล่าสุด 2 รายการ ----
         binding.recentList.removeAllViews()
-        all.take(2).forEachIndexed { index, run ->
+        latest.forEachIndexed { index, run ->
             val item = ItemRunBinding.inflate(layoutInflater, binding.recentList, false)
             RunCardBinder.bind(item, run, miles, decimals = 1)
             item.root.setOnClickListener { openRun(run) }

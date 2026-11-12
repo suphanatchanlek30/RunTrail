@@ -3,6 +3,7 @@ package com.example.runtrail.ui.history
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.recyclerview.widget.DiffUtil
 import androidx.recyclerview.widget.RecyclerView
 import com.example.runtrail.R
 import com.example.runtrail.data.Run
@@ -30,6 +31,7 @@ class RunAdapter(
 
     private var rows: List<Row> = emptyList()
     var miles = false
+        set(value) { if (field != value) unitChanged = true; field = value }
 
     fun submit(runs: List<Run>, groupByMonth: Boolean) {
         val out = mutableListOf<Row>()
@@ -44,10 +46,23 @@ class RunAdapter(
         } else {
             runs.forEach { out += Row.Item(it) }
         }
+        // อัปเดตเฉพาะแถวที่เปลี่ยน (เดิม notifyDataSetChanged ผูกการ์ดใหม่ทั้งหมดทุกตัวอักษรที่พิมพ์, AUDIT P3)
+        val old = rows
+        val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
+            override fun getOldListSize() = old.size
+            override fun getNewListSize() = out.size
+            override fun areItemsTheSame(o: Int, n: Int): Boolean = when (val a = old[o]) {
+                is Row.Header -> (out[n] as? Row.Header)?.let { monthKey(it.monthMillis) == monthKey(a.monthMillis) } == true
+                is Row.Item -> (out[n] as? Row.Item)?.run?.id == a.run.id
+            }
+            override fun areContentsTheSame(o: Int, n: Int) = old[o] == out[n] && !unitChanged
+        })
         rows = out
-        @Suppress("NotifyDataSetChanged")
-        notifyDataSetChanged()
+        unitChanged = false
+        diff.dispatchUpdatesTo(this)
     }
+
+    private var unitChanged = false
 
     private fun monthKey(millis: Long): Int {
         val c = Calendar.getInstance().apply { timeInMillis = millis }

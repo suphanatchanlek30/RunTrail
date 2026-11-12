@@ -84,9 +84,22 @@ object RunRepository {
     fun getByUuid(uuid: String, withTrack: Boolean = false): Run? =
         queryRuns("uuid = ?", arrayOf(uuid), null, withTrack).firstOrNull()
 
-    private fun queryRuns(where: String, args: Array<String>, order: String?, withTrack: Boolean): List<Run> {
+    /** การวิ่งล่าสุด n รายการ (หน้าหลักไม่ต้องโหลดทั้งหมด) */
+    fun recent(limit: Int): List<Run> {
+        val (where, args) = visibleWhere()
+        return queryRuns(where, args, "start_time DESC", withTrack = false, limit = limit.toString())
+    }
+
+    /** การวิ่งตั้งแต่เวลา start (กรองใน SQL) */
+    fun since(start: Long, until: Long = Long.MAX_VALUE): List<Run> {
+        val (where, args) = visibleWhere()
+        return queryRuns("$where AND start_time >= ? AND start_time <= ?", args + start.toString() + until.toString(),
+            "start_time DESC", withTrack = false)
+    }
+
+    private fun queryRuns(where: String, args: Array<String>, order: String?, withTrack: Boolean, limit: String? = null): List<Run> {
         val out = mutableListOf<Run>()
-        db.query("runs", null, where, args, null, null, order).use { c ->
+        db.query("runs", null, where, args, null, null, order, limit).use { c ->
             while (c.moveToNext()) out += readRun(c)
         }
         if (out.isEmpty()) return out
@@ -362,12 +375,14 @@ object RunRepository {
     // ---------------------------------------------------------------- ค้นหา / สถิติ
 
     /** ค้นหา + กรอง + เรียง */
-    fun query(text: String, filter: Filter, sort: Sort): List<Run> {
-        val now = System.currentTimeMillis()
+    fun query(text: String, filter: Filter, sort: Sort): List<Run> = filterAndSort(getAll(), text, filter, sort)
+
+    /** กรอง + เรียงจากรายการที่โหลดไว้แล้ว (หน้าประวัติใช้ตอนพิมพ์ค้นหา ไม่ต้องอ่าน DB ทุกตัวอักษร, AUDIT P3) */
+    fun filterAndSort(all: List<Run>, text: String, filter: Filter, sort: Sort, now: Long = System.currentTimeMillis()): List<Run> {
         val weekStart = startOfWeek(now)
         val monthStart = startOfMonth(now)
         val q = text.trim()
-        val filtered = getAll().filter { run ->
+        val filtered = all.filter { run ->
             val matchText = q.isEmpty() ||
                 run.title.contains(q, ignoreCase = true) ||
                 (run.note?.contains(q, ignoreCase = true) ?: false)

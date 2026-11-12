@@ -96,11 +96,13 @@ class HoldToStopView @JvmOverloads constructor(
         invalidate()
     }
 
+    private val arcRect = RectF()   // ใช้ซ้ำทุกเฟรม ไม่สร้างใหม่ใน onDraw (AUDIT P5)
+
     override fun onDraw(canvas: Canvas) {
         val cx = width / 2f
         val cy = height / 2f
         val s = ring.strokeWidth
-        val r = RectF(s / 2, s / 2, width - s / 2, height - s / 2)
+        val r = arcRect.apply { set(s / 2, s / 2, width - s / 2, height - s / 2) }
         ring.color = ContextCompat.getColor(context, R.color.bg_muted)
         canvas.drawArc(r, 0f, 360f, false, ring)
         ring.color = ContextCompat.getColor(context, R.color.run_lime)

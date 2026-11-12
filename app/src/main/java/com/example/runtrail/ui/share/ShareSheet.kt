@@ -55,6 +55,7 @@ object ShareSheet {
 
         var current = run
         var busy = false
+        var resendOptions = false   // เปลี่ยนสวิตช์ระหว่างกำลังส่ง → ส่งตัวเลือกล่าสุดซ้ำอีกรอบ (AUDIT A10)
         b.btnRemoveServer.setStartIcon(R.drawable.ic_trash, 16f, R.color.danger)
         b.swHideEnds.isChecked = run.shareHideEnds
         b.swPhoto.isChecked = run.shareShowPhoto
@@ -113,7 +114,8 @@ object ShareSheet {
 
         /** ส่งการวิ่งขึ้น (ถ้ายังไม่ได้ส่ง) แล้วสร้าง/อัปเดตลิงก์ตามตัวเลือกปัจจุบัน */
         fun createLink() {
-            if (busy) return
+            if (busy) { resendOptions = true; return }
+            resendOptions = false
             busy = true; render()
             val hide = b.swHideEnds.isChecked
             val photo = b.swPhoto.isChecked
@@ -131,6 +133,9 @@ object ShareSheet {
                     activity.toast(it.userMessage())
                 }
                 render()
+                val optionsChanged = hide != b.swHideEnds.isChecked || photo != b.swPhoto.isChecked || kcal != b.swKcal.isChecked
+                if (resendOptions && optionsChanged && current.shareUrl != null && dialog.isShowing) createLink()
+                resendOptions = false
             }
         }
 
@@ -229,7 +234,13 @@ object ShareSheet {
         val matrix = QRCodeWriter().encode(url, BarcodeFormat.QR_CODE, size, size)
         val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val dark = ContextCompat.getColor(context, R.color.run_ink)
-        for (x in 0 until size) for (y in 0 until size) bmp.setPixel(x, y, if (matrix[x, y]) dark else Color.WHITE)
+        // เขียนทีเดียวด้วย setPixels (เดิม setPixel ทีละจุด ~500,000 ครั้งบน main thread, AUDIT P4)
+        val pixels = IntArray(size * size)
+        for (y in 0 until size) {
+            val row = y * size
+            for (x in 0 until size) pixels[row + x] = if (matrix[x, y]) dark else Color.WHITE
+        }
+        bmp.setPixels(pixels, 0, size, 0, 0, size, size)
 
         val box = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL

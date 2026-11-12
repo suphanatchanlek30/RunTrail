@@ -15,6 +15,7 @@ import com.example.runtrail.domain.Fmt
 import com.example.runtrail.domain.RunCalculator
 import com.example.runtrail.ui.common.BottomNav
 import com.example.runtrail.ui.common.applySystemBarsPadding
+import com.example.runtrail.ui.common.runAsync
 import com.example.runtrail.ui.common.setupEdgeToEdge
 
 /**
@@ -40,9 +41,16 @@ class RecordsActivity : AppCompatActivity() {
         render()
     }
 
+    private var loadGen = 0
+
+    /** โหลดทุกการวิ่งบน background thread แล้วค่อยแสดงผล (AUDIT P2) */
     private fun render() {
+        val gen = ++loadGen
+        runAsync({ RunRepository.getAll() }) { r -> if (gen == loadGen) r.getOrNull()?.let { show(it) } }
+    }
+
+    private fun show(runs: List<com.example.runtrail.data.Run>) {
         val miles = PrefsHelper(this).useMiles
-        val runs = RunRepository.getAll()
         binding.tvTotal.text = Fmt.distance(runs.sumOf { it.distanceM }, miles, 1)
         binding.tvTotalUnit.text = Fmt.unit(miles)
         stat(binding.statRuns, runs.size.toString(), getString(R.string.unit_times), getString(R.string.label_runs))

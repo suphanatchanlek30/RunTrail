@@ -266,12 +266,12 @@ func (s *Server) myStats(c fiber.Ctx) error {
 		return err
 	}
 	rows, err := s.pool.Query(ctx, `WITH months AS (
-			SELECT to_char(date_trunc('month', (now() AT TIME ZONE $2)) - make_interval(months => g), 'YYYY-MM') AS m, g
+			SELECT to_char(date_trunc('month', ($3::timestamptz AT TIME ZONE $2)) - make_interval(months => g), 'YYYY-MM') AS m, g
 			FROM generate_series(0, 5) g)
 		SELECT months.m, coalesce(sum(coalesce(r.distance_m, r.client_distance_m)), 0) / 1000
 		FROM months LEFT JOIN runs r ON r.user_id = $1 AND r.deleted_at IS NULL
 			AND to_char(r.started_at AT TIME ZONE $2, 'YYYY-MM') = months.m
-		GROUP BY months.m, months.g ORDER BY months.g DESC`, uid, tz)
+		GROUP BY months.m, months.g ORDER BY months.g DESC`, uid, tz, s.now())
 	if err != nil {
 		return err
 	}

@@ -59,6 +59,8 @@ class ToggleSwitch @JvmOverloads constructor(
         setMeasuredDimension(w, h)
     }
 
+    private val trackRect = RectF()
+
     override fun onDraw(canvas: Canvas) {
         val pos = (animator?.takeIf { it.isRunning }?.animatedValue as? Float) ?: if (isChecked) 1f else 0f
         val w = width.toFloat()
@@ -66,7 +68,7 @@ class ToggleSwitch @JvmOverloads constructor(
         val r = h / 2f
 
         track.color = blend(offColor, onColor, pos)
-        canvas.drawRoundRect(RectF(0f, 0f, w, h), r, r, track)
+        canvas.drawRoundRect(trackRect.apply { set(0f, 0f, w, h) }, r, r, track)
 
         val inset = 3 * dp
         val knobR = r - inset

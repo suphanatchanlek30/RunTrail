@@ -26,9 +26,11 @@ class RingProgressView @JvmOverloads constructor(
         style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND
     }
 
+    private val arcRect = RectF()
+
     override fun onDraw(canvas: Canvas) {
         val s = strokeDp * dp
-        val r = RectF(s / 2, s / 2, width - s / 2, height - s / 2)
+        val r = arcRect.apply { set(s / 2, s / 2, width - s / 2, height - s / 2) }
         paint.strokeWidth = s
         paint.color = trackColor
         canvas.drawArc(r, 0f, 360f, false, paint)

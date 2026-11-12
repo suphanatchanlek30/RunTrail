@@ -160,6 +160,8 @@
                 <include android:id="@+id/rowSync" layout="@layout/view_setting_row" />
                 <View style="@style/Divider" />
                 <include android:id="@+id/rowLeaderboard" layout="@layout/view_setting_row" />
+                <View android:id="@+id/dividerCountry" style="@style/Divider" />
+                <include android:id="@+id/rowCountry" layout="@layout/view_setting_row" />
                 <View style="@style/Divider" />
                 <include android:id="@+id/rowUpdates" layout="@layout/view_setting_row" />
                 <View style="@style/Divider" />

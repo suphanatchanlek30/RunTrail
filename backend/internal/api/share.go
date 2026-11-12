@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v3"
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
 	"github.com/suphanatchanlek30/runtrail/backend/internal/auth"
@@ -41,7 +42,23 @@ func (s *Server) createShare(c fiber.Ctx) error {
 	}
 	ctx, uid := c.Context(), userID(c)
 	var out *runJSON
-	err = s.inTx(ctx, func(tx pgx.Tx) error {
+	// Two runs can draw the same free code at the same moment; the loser hits the UNIQUE
+	// constraint, so try again with a fresh code instead of answering 500.
+	for attempt := 0; ; attempt++ {
+		out, err = s.saveShare(ctx, uid, id, r)
+		if !isUniqueViolation(err, "runs_share_code_key") || attempt >= 3 {
+			break
+		}
+	}
+	if err != nil {
+		return err
+	}
+	return c.JSON(out.Share)
+}
+
+func (s *Server) saveShare(ctx context.Context, uid, id uuid.UUID, r shareReq) (*runJSON, error) {
+	var out *runJSON
+	err := s.inTx(ctx, func(tx pgx.Tx) error {
 		if _, err := tx.Exec(ctx, `SELECT 1 FROM runs WHERE id = $1 FOR UPDATE`, id); err != nil {
 			return err
 		}
@@ -88,10 +105,7 @@ func (s *Server) createShare(c fiber.Ctx) error {
 		out, err = s.ownRun(ctx, tx, uid, id, false)
 		return err
 	})
-	if err != nil {
-		return err
-	}
-	return c.JSON(out.Share)
+	return out, err
 }
 
 func (s *Server) deleteShare(c fiber.Ctx) error {

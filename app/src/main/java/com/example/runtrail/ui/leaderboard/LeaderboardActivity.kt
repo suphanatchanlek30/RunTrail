@@ -108,12 +108,28 @@ class LeaderboardActivity : AppCompatActivity() {
                 else load()   // ผู้ใช้เปลี่ยนตัวกรองระหว่างโหลด
             }.onFailure { e ->
                 if (key != cacheKey) { load(); return@onFailure }
+                if ((e as? com.example.runtrail.net.ApiException)?.fields?.containsKey("country") == true) {
+                    // บัญชีนี้ยังไม่มีประเทศบน server → ให้ตั้งได้ทันทีจากตรงนี้ (เดิมมีแค่ปุ่ม "ลองใหม่" ที่ไม่ช่วยอะไร, AUDIT A7)
+                    showEmpty(getString(R.string.lb_country_needed), getString(R.string.lb_set_country)) { setCountry() }
+                    return@onFailure
+                }
                 if (cached != null) {
                     render(cached, offline = true)
                     toast(getString(R.string.lb_offline))
                 } else {
                     showEmpty(e.userMessage(), getString(R.string.lb_retry)) { load() }
                 }
+            }
+        }
+    }
+
+    private fun setCountry() {
+        com.example.runtrail.ui.common.CountryPicker.show(this, App.services.prefs.countryCode) { code ->
+            App.services.prefs.countryCode = code
+            binding.progress.visibility = View.VISIBLE
+            runAsync({ App.services.api.patchMe(JSONObject().put("country_code", code)) }) { r ->
+                binding.progress.visibility = View.GONE
+                r.onSuccess { App.services.prefs.profileDirty = false; load() }.onFailure { toast(it.userMessage()) }
             }
         }
     }

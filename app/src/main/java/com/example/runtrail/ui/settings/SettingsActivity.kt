@@ -62,6 +62,7 @@ class SettingsActivity : AppCompatActivity() {
         setupRow(binding.rowSync, R.drawable.ic_cloud_up, R.string.setting_sync)
         setupRow(binding.rowLeaderboard, R.drawable.ic_globe, R.string.setting_leaderboard, toggle = true)
         setupRow(binding.rowUpdates, R.drawable.ic_bell, R.string.setting_updates, toggle = true)
+        setupRow(binding.rowCountry, R.drawable.ic_globe, R.string.setting_country)
         setupRow(binding.rowServer, R.drawable.ic_server, R.string.setting_server)
         setupRow(binding.rowPassword, R.drawable.ic_lock, R.string.setting_password)
         setupRow(binding.rowLogout, R.drawable.ic_x, R.string.setting_logout)
@@ -98,6 +99,14 @@ class SettingsActivity : AppCompatActivity() {
             }
         }
         binding.rowUpdates.root.setOnClickListener { binding.rowUpdates.swToggle.toggle() }
+        // ประเทศสำหรับอันดับ "ประเทศของฉัน" — เดิมตั้งได้เฉพาะตอนสมัคร (AUDIT A7)
+        binding.rowCountry.root.setOnClickListener {
+            com.example.runtrail.ui.common.CountryPicker.show(this, prefs.countryCode) { code ->
+                prefs.countryCode = code          // ตั้ง profileDirty → ซิงก์ส่งขึ้น server
+                SyncManager.requestSync(this)
+                render()
+            }
+        }
         binding.rowUpdates.swToggle.setOnCheckedChangeListener { _, checked -> prefs.updatesAlert = checked }
         binding.rowPassword.root.setOnClickListener { changePassword() }
         binding.rowLogout.root.setOnClickListener { confirmLogout() }
@@ -150,6 +159,9 @@ class SettingsActivity : AppCompatActivity() {
         binding.rowUpdates.root.visibility = if (session != null) View.VISIBLE else View.GONE
         binding.groupAccount.visibility = if (session != null) View.VISIBLE else View.GONE
         binding.rowLeaderboard.root.visibility = if (session != null) View.VISIBLE else View.GONE
+        binding.rowCountry.root.visibility = if (session != null) View.VISIBLE else View.GONE
+        binding.dividerCountry.visibility = if (session != null) View.VISIBLE else View.GONE
+        binding.rowCountry.tvValue.text = com.example.runtrail.ui.common.CountryPicker.label(prefs.countryCode)
         binding.rowSensors.tvValue.text = "${SensorHelper.countAvailable(this)}/${SensorHelper.specs.size}"
         binding.rowRecreate.tvValue.text = getString(R.string.setting_recreate_value, createdCount)
     }

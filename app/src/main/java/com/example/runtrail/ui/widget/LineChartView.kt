@@ -37,11 +37,22 @@ class LineChartView @JvmOverloads constructor(
     }
     private val dot = Paint(Paint.ANTI_ALIAS_FLAG)
 
+    // path/gradient สร้างใหม่เฉพาะตอนข้อมูลหรือขนาดเปลี่ยน ไม่ใช่ทุกครั้งที่วาด (AUDIT P5)
+    private val path = Path()
+    private val fillPath = Path()
+    private var builtFor = -1
+
     fun setData(values: List<Float>, invert: Boolean, color: Int) {
         this.values = values
         this.invert = invert
         this.color = color
+        builtFor = -1
         invalidate()
+    }
+
+    override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
+        super.onSizeChanged(w, h, oldw, oldh)
+        builtFor = -1
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -60,10 +71,14 @@ class LineChartView @JvmOverloads constructor(
 
         for (k in 0..2) canvas.drawLine(0f, pad + k * (h - 2 * pad) / 2f, w, pad + k * (h - 2 * pad) / 2f, grid)
 
-        val path = Path()
-        values.forEachIndexed { i, v -> if (i == 0) path.moveTo(x(i), y(v)) else path.lineTo(x(i), y(v)) }
-        val fillPath = Path(path).apply { lineTo(w, h); lineTo(0f, h); close() }
-        area.shader = LinearGradient(0f, 0f, 0f, h, (color and 0x00FFFFFF) or 0x44000000, color and 0x00FFFFFF, Shader.TileMode.CLAMP)
+        if (builtFor != values.hashCode() xor width xor (height shl 16)) {
+            builtFor = values.hashCode() xor width xor (height shl 16)
+            path.reset()
+            values.forEachIndexed { i, v -> if (i == 0) path.moveTo(x(i), y(v)) else path.lineTo(x(i), y(v)) }
+            fillPath.set(path)
+            fillPath.lineTo(w, h); fillPath.lineTo(0f, h); fillPath.close()
+            area.shader = LinearGradient(0f, 0f, 0f, h, (color and 0x00FFFFFF) or 0x44000000, color and 0x00FFFFFF, Shader.TileMode.CLAMP)
+        }
         canvas.drawPath(fillPath, area)
         line.color = color
         canvas.drawPath(path, line)

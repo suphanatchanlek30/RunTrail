@@ -35,6 +35,11 @@ class SensorCheckActivity : AppCompatActivity(), SensorEventListener {
     private val rows = mutableMapOf<String, ItemSensorBinding>()
     private val sensorKeys = mutableMapOf<Int, String>()
 
+    /** แตะแถวที่ "ต้องขอสิทธิ์" → ขอสิทธิ์ได้จากหน้านี้เลย (เดิมแตะแล้วไม่มีอะไรเกิดขึ้น, AUDIT A11) */
+    private val askPermission = registerForActivityResult(
+        androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions(),
+    ) { updateGps(); updateStepPermission() }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setupEdgeToEdge()
@@ -106,9 +111,26 @@ class SensorCheckActivity : AppCompatActivity(), SensorEventListener {
         val permitted = ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) ==
             PackageManager.PERMISSION_GRANTED
         when {
-            !permitted -> { row.tvValue.setText(R.string.sensor_gps_no_permission); setStatus(row, R.string.sensor_status_need_permission, R.color.warning, R.drawable.dot_warning) }
-            !enabled -> { row.tvValue.setText(R.string.sensor_gps_off); setStatus(row, R.string.sensor_status_off, R.color.warning, R.drawable.dot_warning) }
-            else -> { row.tvValue.setText(R.string.sensor_gps_on); setStatus(row, R.string.sensor_status_ready, R.color.run_green_dark, R.drawable.dot_green_s) }
+            !permitted -> {
+                row.tvValue.setText(R.string.sensor_gps_no_permission)
+                setStatus(row, R.string.sensor_status_need_permission, R.color.warning, R.drawable.dot_warning)
+                row.row.setOnClickListener {
+                    askPermission.launch(arrayOf(Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION))
+                }
+            }
+            !enabled -> {
+                row.tvValue.setText(R.string.sensor_gps_off)
+                setStatus(row, R.string.sensor_status_off, R.color.warning, R.drawable.dot_warning)
+                row.row.setOnClickListener {
+                    try { startActivity(android.content.Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS)) }
+                    catch (e: android.content.ActivityNotFoundException) { }
+                }
+            }
+            else -> {
+                row.tvValue.setText(R.string.sensor_gps_on)
+                setStatus(row, R.string.sensor_status_ready, R.color.run_green_dark, R.drawable.dot_green_s)
+                row.row.setOnClickListener(null)
+            }
         }
     }
 
@@ -119,6 +141,10 @@ class SensorCheckActivity : AppCompatActivity(), SensorEventListener {
             SensorHelper.isAvailable(this, SensorHelper.specs[1])
         ) {
             setStatus(row, R.string.sensor_status_need_permission, R.color.warning, R.drawable.dot_warning)
+            row.row.setOnClickListener { askPermission.launch(arrayOf(Manifest.permission.ACTIVITY_RECOGNITION)) }
+        } else if (SensorHelper.isAvailable(this, SensorHelper.specs[1])) {
+            setStatus(row, R.string.sensor_status_ready, R.color.run_green_dark, R.drawable.dot_green_s)
+            row.row.setOnClickListener(null)
         }
     }
 
