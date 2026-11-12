@@ -188,4 +188,5 @@ back up and restore the preferences and session; the preferences file was byte-i
 **Environment note.** `backend/.env` contains the Mac's LAN IP. During this session the Mac moved networks
 (172.25.83.16 → 172.20.10.2), so presigned photo URLs pointed at a dead address and the first full test round failed at
 the S3 upload step. `.env` was **not** edited; tests ran with a temporary compose override in a scratch folder.
-To fix it permanently, update `HOST_IP`, `PUBLIC_BASE_URL` and `S3_PUBLIC_ENDPOINT` in `backend/.env`, then `make up`.
+Later, at the owner's request, `.env` was rebuilt from the updated `.env.example` (secrets carried over unchanged, current IP) and a
+`make ip` target was added to refresh the three IP values after a network change; `make up` + smoke then passed 29/29 without the override.
