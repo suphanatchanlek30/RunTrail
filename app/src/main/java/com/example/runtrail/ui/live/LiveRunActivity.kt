@@ -324,8 +324,11 @@ class LiveRunActivity : AppCompatActivity() {
             val fix = st.lastFix
             if (st.track.size != drawnPoints) {
                 drawnPoints = st.track.size
-                overlay.track = st.track.toList().ifEmpty { listOfNotNull(fix) }
+                overlay.track = st.track.toList()
             }
+            // หมุด = ตำแหน่ง GPS ล่าสุด (ตามตัวเดินทุกวินาที แม้ยังไม่ผ่านตัวกรองเส้นทาง หรือกำลังหยุดชั่วคราว)
+            // ยังไม่ได้ GPS ครั้งแรก → ใช้ตำแหน่งล่าสุดที่เครื่องรู้ (วงความแม่นยำใหญ่ตามจริง) ให้เห็นหมุดทันที
+            overlay.current = fix ?: s.lastKnown?.let { TrackPoint(it.latitude, it.longitude, it.time, it.altitude, if (it.hasAccuracy()) it.accuracy else 50f) }
             if (fix != null && System.currentTimeMillis() > followUntil) {
                 binding.map.controller.animateTo(GeoPoint(fix.lat, fix.lng))
             }

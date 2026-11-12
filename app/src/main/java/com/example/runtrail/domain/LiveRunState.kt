@@ -13,6 +13,7 @@ import kotlin.math.floor
  */
 class LiveRunState(
     val startTime: Long,
+    private val smoother: PositionSmoother? = null,
     private val autoPauseEnabled: () -> Boolean = { true },
 ) {
     val track = mutableListOf<TrackPoint>()
@@ -44,6 +45,7 @@ class LiveRunState(
         movingMs = movingSeconds * 1000
         lastKm = floor(distance / 1000).toInt()
         filter.reset(points.lastOrNull())
+        smoother?.reset()
         lastFix = points.lastOrNull()
         paused = true
         autoPaused = false
@@ -65,7 +67,9 @@ class LiveRunState(
     }
 
     /** ได้ตำแหน่งใหม่ · คืนกิโลเมตรที่เพิ่งผ่าน (> 0) สำหรับแจ้งเตือน หรือ 0 */
-    fun onLocation(p: TrackPoint, speedMps: Float?, wall: Long): Int {
+    fun onLocation(raw: TrackPoint, speedMps: Float?, wall: Long): Int {
+        // ลดการสั่นของ GPS ก่อนคิดระยะ (ทั้งเส้นทาง หมุด และค่าที่ส่งขึ้น server ใช้จุดชุดเดียวกัน)
+        val p = smoother?.update(raw, speedMps) ?: raw
         lastFix = p
         if (paused && autoPaused && p.time <= pauseStartWall) {
             // จุดที่วัดได้ "ก่อน" เริ่มหยุด แต่มาถึงช้า (ตอนจอดับ Android ส่งตำแหน่งเป็นชุด)
@@ -85,13 +89,15 @@ class LiveRunState(
             }
             return 0
         }
+        // ความเร็วจาก GPS (Doppler) บอกว่ายังเคลื่อนที่ แม้จุดนี้จะไม่ถูกเพิ่มในเส้นทาง (ขยับน้อยกว่าค่าคลาดเคลื่อน)
+        // ต้องเช็กก่อนตัวกรอง — เดิมเช็กหลัง return ทำให้เดินช้า ๆ กับสัญญาณ ±15 ม. ถูกหยุดอัตโนมัติ
+        if ((speedMps ?: 0f) > STILL_SPEED && p.accuracy <= GPS_MAX_ACCURACY) lastMoveAt = maxOf(lastMoveAt, p.time)
         val added = filter.accept(p) ?: return 0
         if (track.isEmpty() || added > 0 || filter.reanchored) {
             track += p
             distanceM += added
             if (added > 0) lastMoveAt = maxOf(lastMoveAt, p.time)
         }
-        if ((speedMps ?: 0f) > STILL_SPEED) lastMoveAt = maxOf(lastMoveAt, p.time)
         val km = floor(distanceM / 1000).toInt()
         if (km > lastKm) {
             lastKm = km

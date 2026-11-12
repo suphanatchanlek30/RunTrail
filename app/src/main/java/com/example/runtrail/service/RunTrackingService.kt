@@ -29,6 +29,7 @@ import com.example.runtrail.data.RunRepository
 import com.example.runtrail.data.TrackPoint
 import com.example.runtrail.domain.Fmt
 import com.example.runtrail.domain.LiveRunState
+import com.example.runtrail.domain.PositionSmoother
 import com.example.runtrail.domain.RunCalculator
 import com.example.runtrail.domain.TrackMath
 import com.example.runtrail.sensor.CadenceTracker
@@ -108,7 +109,7 @@ class RunTrackingService : Service() {
         val existing = RunRepository.activeDraft()
         if (resume && existing != null) {
             draft = existing
-            state = LiveRunState(existing.startTime) { prefs.autoPause }
+            state = LiveRunState(existing.startTime, PositionSmoother.forRecording()) { prefs.autoPause }
             state.restore(existing.track, existing.distanceM, existing.movingTimeS, existing.pauses, System.currentTimeMillis())
             savedPoints = existing.track.size
             photoPath = existing.photoUri
@@ -116,7 +117,7 @@ class RunTrackingService : Service() {
             existing?.let { RunRepository.discardDraft(it.id) }
             val now = System.currentTimeMillis()
             draft = RunRepository.startDraft(now)
-            state = LiveRunState(now) { prefs.autoPause }
+            state = LiveRunState(now, PositionSmoother.forRecording()) { prefs.autoPause }
         }
 
         createChannels(this)

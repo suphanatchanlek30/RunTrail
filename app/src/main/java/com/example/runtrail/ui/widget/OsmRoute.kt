@@ -95,6 +95,12 @@ object OsmRoute {
             set(value) { field = value; paces = TrackMath.paces(value, 360) }
         var progress = 1f
         var showCurrent = false
+        /**
+         * ตำแหน่ง GPS ล่าสุดของเครื่อง (หน้าวิ่งสด) — หมุดวาดที่นี่ ไม่ใช่ที่จุดสุดท้ายของเส้นทาง
+         * เส้นทางเก็บเฉพาะจุดที่ผ่านตัวกรอง (ขยับเกินค่าคลาดเคลื่อน, แม่นยำพอ) หมุดจึงเคยค้างแล้วกระโดด
+         * และไม่ตรงกับกลางแผนที่ที่เลื่อนตามตำแหน่งล่าสุด
+         */
+        var current: TrackPoint? = null
         var trimFraction = 0f
         private var paces = IntArray(0)
 
@@ -105,9 +111,19 @@ object OsmRoute {
         private val p1 = Point()
         private val p2 = Point()
 
+        /** จุดที่วาดหมุดตำแหน่งปัจจุบัน (null = ไม่วาด) — ใช้ทั้งตอนวาดและใน test */
+        fun markerPoint(): TrackPoint? {
+            if (!showCurrent) return null
+            current?.let { return it }
+            if (track.isEmpty()) return null
+            if (track.size == 1) return track[0]
+            val trim = (track.size * trimFraction).toInt()
+            return track[((track.size - 1) * progress).toInt().coerceIn(trim, track.size - 1 - trim)]
+        }
+
         override fun draw(canvas: Canvas, map: MapView, shadow: Boolean) {
             if (shadow || track.size < 2) {
-                if (!shadow && track.size == 1 && showCurrent) drawCurrent(canvas, map, track[0])
+                if (!shadow) markerPoint()?.let { drawCurrent(canvas, map, it) }
                 return
             }
             val proj = map.projection
@@ -137,7 +153,7 @@ object OsmRoute {
 
             marker(canvas, map, track[from], PaceColor.FAST)
             if (progress >= 1f && !showCurrent) marker(canvas, map, track[to], 0xFF0F1412.toInt())
-            if (showCurrent) drawCurrent(canvas, map, track[reached])
+            markerPoint()?.let { drawCurrent(canvas, map, it) }
         }
 
         private fun segment(canvas: Canvas, proj: org.osmdroid.views.Projection, i: Int, paint: Paint) {
@@ -156,8 +172,10 @@ object OsmRoute {
 
         private fun drawCurrent(canvas: Canvas, map: MapView, p: TrackPoint) {
             map.projection.toPixels(GeoPoint(p.lat, p.lng), p1)
+            // วงความแม่นยำ: ใหญ่ตามค่าคลาดเคลื่อนของ GPS (เล็กสุดเท่าวงเดิม 22dp) แบบแผนที่ทั่วไป
+            val accuracyPx = if (p.accuracy > 0f) map.projection.metersToPixels(p.accuracy) else 0f
             dot.color = 0x3300D47A
-            canvas.drawCircle(p1.x.toFloat(), p1.y.toFloat(), 22 * density, dot)
+            canvas.drawCircle(p1.x.toFloat(), p1.y.toFloat(), maxOf(22 * density, accuracyPx), dot)
             dot.color = Color.WHITE
             canvas.drawCircle(p1.x.toFloat(), p1.y.toFloat(), 11 * density, dot)
             dot.color = 0xFF0F1412.toInt()

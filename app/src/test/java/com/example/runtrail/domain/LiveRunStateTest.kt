@@ -116,4 +116,22 @@ class LiveRunStateTest {
         assertEquals((60 - 1 - 4) * 3.0, s.distanceM, 4.0)   // 4 จุดแรกถูกทิ้งก่อนเริ่มอ้างอิงใหม่
         assertEquals(s.distanceM, TrackMath.cumulative(s.track).last(), 0.5)   // splits ใช้ระยะเดียวกัน
     }
+
+    /**
+     * เดินช้า + GPS แม่นยำ ±15 ม. → ตัวกรองข้ามจุดหลายจุดติดกัน (ต้องขยับ ≥ 7.5 ม.) และสัญญาณหาย 5 วินาที
+     * ความเร็วจาก GPS ยังบอกว่ากำลังเคลื่อนที่ จึงต้องไม่หยุดอัตโนมัติ (เคยหยุดเองระหว่างเดิน)
+     */
+    @Test fun slowWalkWithPoorAccuracyNeverAutoPauses() {
+        val s = LiveRunState(t0) { true }
+        val walk = TestTracks.north(90, 1.4).map { it.copy(accuracy = 15f) }
+        var pausedTicks = 0
+        walk.forEachIndexed { i, p ->
+            val t = p.time
+            s.tick(i * 1000L, t)
+            if (s.paused) pausedTicks++
+            if (i !in 40..44) s.onLocation(p, 1.4f, t)       // สัญญาณหาย 5 วินาที
+        }
+        assertEquals("auto-paused while walking", 0, pausedTicks)
+        assertTrue("distance ${s.distanceM}", s.distanceM > 100)
+    }
 }
