@@ -43,8 +43,9 @@ class CompassHelper(context: Context, private val onHeading: (degrees: Int) -> U
             Sensor.TYPE_MAGNETIC_FIELD -> { event.values.copyInto(geomagnetic); if (!fromMagAccel()) return }
         }
         SensorManager.getOrientation(matrix, orientation)
-        val deg = ((Math.toDegrees(orientation[0].toDouble()) + 360) % 360).roundToInt() % 360
-        onHeading(deg)
+        // ค่าเสื่อม (สนามแม่เหล็กขนานกับแรงโน้มถ่วง / แม่เหล็กรบกวนแรง) ได้ NaN → ข้ามเหตุการณ์นี้
+        // เดิม roundToInt() ของ NaN โยน exception ทำให้แอปเด้งทั้งแอปบนหน้าวิ่ง (AUDIT A15)
+        headingDegrees(orientation[0])?.let(onHeading)
     }
 
     private fun fromMagAccel(): Boolean = SensorManager.getRotationMatrix(matrix, null, gravity, geomagnetic)
@@ -52,6 +53,12 @@ class CompassHelper(context: Context, private val onHeading: (degrees: Int) -> U
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
     companion object {
+        /** มุม azimuth (เรเดียน) → องศา 0..359 · null ถ้าค่าใช้ไม่ได้ (NaN / อนันต์) */
+        fun headingDegrees(azimuthRad: Float): Int? {
+            if (azimuthRad.isNaN() || azimuthRad.isInfinite()) return null
+            return ((Math.toDegrees(azimuthRad.toDouble()) + 360) % 360).roundToInt() % 360
+        }
+
         private val NAMES = arrayOf("N", "NE", "E", "SE", "S", "SW", "W", "NW")
 
         fun label(deg: Int): String = "${NAMES[((deg + 22) % 360) / 45]} $deg°"

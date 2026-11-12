@@ -38,6 +38,16 @@ class SensorMathTest {
         assertEquals("3.11", Fmt.distance(5000.0, miles = true))
     }
 
+    @Test fun compassHeadingFromAzimuth() {
+        assertEquals(0, CompassHelper.headingDegrees(0f))
+        assertEquals(90, CompassHelper.headingDegrees((Math.PI / 2).toFloat()))
+        assertEquals(270, CompassHelper.headingDegrees((-Math.PI / 2).toFloat()))
+        assertEquals(0, CompassHelper.headingDegrees(Math.PI.toFloat() * 2 - 0.001f))
+        // AUDIT A15: ค่าเสื่อมจากเซนเซอร์ต้องถูกข้าม ไม่ใช่ทำให้แอปเด้ง
+        assertEquals(null, CompassHelper.headingDegrees(Float.NaN))
+        assertEquals(null, CompassHelper.headingDegrees(Float.POSITIVE_INFINITY))
+    }
+
     @Test fun compassLabels() {
         assertEquals("N 0°", CompassHelper.label(0))
         assertEquals("N 22°", CompassHelper.label(22))

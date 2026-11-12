@@ -13,6 +13,7 @@ import androidx.test.platform.app.InstrumentationRegistry
 import com.example.runtrail.sensor.CadenceTracker
 import com.example.runtrail.ui.sensor.SensorCheckActivity
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -49,14 +50,44 @@ class SensorDeviceTest {
         assertEquals(0, tracker.cadence())
     }
 
-    /** SensorEvent แบบเดียวกับที่ระบบส่ง (constructor สาธารณะมีตั้งแต่ API 34 แต่ไม่อยู่ใน stub ที่ compile) */
-    private fun stepEvent(sensor: Sensor, steps: Float): SensorEvent = try {
-        SensorEvent::class.java.getConstructor(Sensor::class.java, Int::class.javaPrimitiveType, Long::class.javaPrimitiveType, FloatArray::class.java)
-            .newInstance(sensor, SensorManager.SENSOR_STATUS_ACCURACY_HIGH, SystemClock.elapsedRealtimeNanos(), floatArrayOf(steps))
-    } catch (e: NoSuchMethodException) {
-        SensorEvent::class.java.getDeclaredConstructor(Int::class.javaPrimitiveType).apply { isAccessible = true }
-            .newInstance(1).also { it.values[0] = steps; it.sensor = sensor; it.timestamp = SystemClock.elapsedRealtimeNanos() }
+    @Test fun compassIgnoresDegenerateReadingsInsteadOfCrashing() {
+        // เคยทำให้แอปเด้งทั้งแอปบนหน้าวิ่ง: ทิศคำนวณได้ NaN → roundToInt() โยน IllegalArgumentException (AUDIT A15)
+        val sm = ctx.getSystemService(SensorManager::class.java)
+        val rotation = sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
+        val accel = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
+        val magnet = sm.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD)
+        val headings = mutableListOf<Int>()
+        val compass = com.example.runtrail.sensor.CompassHelper(ctx) { headings += it }
+        inst.runOnMainSync {
+            rotation?.let { compass.onSensorChanged(event(it, floatArrayOf(Float.NaN, Float.NaN, Float.NaN, Float.NaN, 0f))) }
+            // แรงโน้มถ่วงขนานกับสนามแม่เหล็ก (ค่าที่ทำให้ fusion ได้ NaN ในการทดสอบเต็มชุด)
+            if (accel != null && magnet != null) {
+                compass.onSensorChanged(event(accel, floatArrayOf(0f, 9.81f, 0f)))
+                compass.onSensorChanged(event(magnet, floatArrayOf(0f, 45f, 0f)))
+            }
+        }
+        assertEquals("no heading from invalid data", emptyList<Int>(), headings)
+        // ค่าปกติยังได้ทิศ: เครื่องตั้งตรง หันหน้าทิศเหนือ
+        inst.runOnMainSync {
+            compass.onSensorChanged(event(accel!!, floatArrayOf(0f, 9.81f, 0f)))
+            compass.onSensorChanged(event(magnet!!, floatArrayOf(0f, 20f, -40f)))
+        }
+        assertEquals(1, headings.size)
+        assertTrue("heading ${headings[0]}", headings[0] in 0..359)
     }
+
+    /**
+     * SensorEvent แบบเดียวกับที่ระบบส่งมา — สร้างผ่าน constructor ภายใน SensorEvent(int) แล้วใส่ค่า
+     * (constructor สาธารณะ 4 ตัวแปรไม่มีบน image นี้)
+     */
+    private fun event(sensor: Sensor, values: FloatArray): SensorEvent =
+        SensorEvent::class.java.getDeclaredConstructor(Int::class.javaPrimitiveType).apply { isAccessible = true }
+            .newInstance(values.size).also {
+                values.copyInto(it.values); it.sensor = sensor; it.timestamp = SystemClock.elapsedRealtimeNanos()
+                it.accuracy = SensorManager.SENSOR_STATUS_ACCURACY_HIGH
+            }
+
+    private fun stepEvent(sensor: Sensor, steps: Float): SensorEvent = event(sensor, floatArrayOf(steps))
 
     private fun texts(v: View, out: MutableList<String> = mutableListOf()): List<String> {
         if (v is TextView) out += v.text.toString()
