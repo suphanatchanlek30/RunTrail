@@ -66,6 +66,19 @@ class PerfTest {
         assertTrue("after ($after) should not be slower than before ($before)", after < before)
     }
 
+    @Test fun detailRecordBadgeQueriesOnlyLongRuns() {
+        val now = System.currentTimeMillis()
+        val run = Run(title = "new 10k", startTime = now, endTime = now + 3_000_000, distanceM = 10_000.0, movingTimeS = 3000)
+        val before = ms { com.example.runtrail.domain.RunCalculator.newRecordLabel(run, RunRepository.getAll()) }
+        val after = ms { com.example.runtrail.domain.RunCalculator.newRecordLabel(run, RunRepository.longRunsBefore(5000.0, run.startTime)) }
+        assertEquals(
+            com.example.runtrail.domain.RunCalculator.newRecordLabel(run, RunRepository.getAll()),
+            com.example.runtrail.domain.RunCalculator.newRecordLabel(run, RunRepository.longRunsBefore(5000.0, run.startTime)),
+        )
+        Log.i(TAG, "P6 detail record badge, 1000 runs: before %.1f ms, after %.1f ms".format(before, after))
+        assertTrue(after < before)
+    }
+
     @Test fun historyKeystrokeUsesMemory() {
         val all = RunRepository.getAll()
         val before = ms { RunRepository.query("Run 1", RunRepository.Filter.ALL, RunRepository.Sort.NEWEST) }

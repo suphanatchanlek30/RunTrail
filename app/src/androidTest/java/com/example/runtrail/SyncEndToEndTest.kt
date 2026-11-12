@@ -195,6 +195,38 @@ class SyncEndToEndTest {
         assertEquals(dist, r.serverDistanceM!!, dist * 0.02)
     }
 
+    @Test fun photoRemovedOnOneDeviceDisappearsOnAnother() {
+        // เครื่อง A: บันทึก + รูป → ซิงก์
+        val id = recordGpsRun()
+        val bmp = Bitmap.createBitmap(64, 48, Bitmap.Config.ARGB_8888).apply { eraseColor(0xFF00D47A.toInt()) }
+        RunRepository.update(RunRepository.getById(id, withTrack = false)!!.copy(photoUri = ImageStore.save(ctx, bmp), photoSync = PhotoSync.PENDING))
+        engine.sync()
+        val uuid = RunRepository.getById(id, withTrack = false)!!.uuid
+        assertNotNull(findOnServer(uuid)!!.optString("photo_url").ifBlank { null })
+
+        // เครื่อง B: ฐานข้อมูลใหม่ ดึงลงมาพร้อมรูป
+        RunRepository.init(ctx, RunDb(ctx, null))
+        RunRepository.currentUser = { uid }
+        prefs.lastPull = null
+        engine.sync()
+        val onB = RunRepository.getByUuid(uuid)!!
+        val fileOnB = onB.photoUri
+        assertNotNull("photo downloaded on B", fileOnB)
+        assertEquals(PhotoSync.SYNCED, onB.photoSync)
+
+        // เครื่อง A ลบรูป (ในแอป = แก้การวิ่ง + ส่งคำสั่งลบรูป) — จำลองด้วย API ตรง ๆ
+        api.client.call("PATCH", "/runs/$uuid", org.json.JSONObject()
+            .put("note", "ลบรูปแล้ว").put("client_updated_at", com.example.runtrail.net.RunJson.iso(System.currentTimeMillis())))
+        api.photoDelete(uuid)
+
+        // เครื่อง B ซิงก์ → รูปหายตาม และไฟล์ในเครื่องถูกลบ (AUDIT A9)
+        engine.sync()
+        val after = RunRepository.getByUuid(uuid)!!
+        assertNull("photo cleared on B", after.photoUri)
+        assertEquals(PhotoSync.NONE, after.photoSync)
+        assertTrue("local file deleted", !java.io.File(fileOnB!!).exists())
+    }
+
     private fun findOnServer(uuid: String): org.json.JSONObject? {
         val items = api.listRuns(null, null).getJSONArray("items")
         for (i in 0 until items.length()) if (items.getJSONObject(i).getString("id") == uuid) return items.getJSONObject(i)

@@ -515,5 +515,6 @@
     <string name="setting_country">Country (for rankings)</string>
     <string name="lb_set_country">Set country</string>
     <string name="lb_country_needed">Set your country first to see your country\'s ranking</string>
-    <string name="server_change_logged_in">This account\'s data belongs to the current server. To switch servers, finish syncing and sign out first.</string>
+    <string name="server_change_logged_in">This address isn\'t this account\'s server, or it can\'t be reached. To move to another server, finish syncing and sign out first.</string>
+    <string name="server_checking">Checking server…</string>
 </resources>

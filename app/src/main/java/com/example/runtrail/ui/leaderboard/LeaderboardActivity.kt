@@ -125,11 +125,17 @@ class LeaderboardActivity : AppCompatActivity() {
 
     private fun setCountry() {
         com.example.runtrail.ui.common.CountryPicker.show(this, App.services.prefs.countryCode) { code ->
+            // จำว่าก่อนหน้านี้มีโปรไฟล์ที่แก้แล้วยังไม่ได้ส่งไหม (น้ำหนัก เป้าหมาย ฯลฯ) — ห้ามล้างทิ้ง
+            val otherEditsPending = App.services.prefs.profileDirty
             App.services.prefs.countryCode = code
             binding.progress.visibility = View.VISIBLE
             runAsync({ App.services.api.patchMe(JSONObject().put("country_code", code)) }) { r ->
                 binding.progress.visibility = View.GONE
-                r.onSuccess { App.services.prefs.profileDirty = false; load() }.onFailure { toast(it.userMessage()) }
+                r.onSuccess {
+                    App.services.prefs.profileDirty = otherEditsPending
+                    if (otherEditsPending) com.example.runtrail.sync.SyncManager.requestSync(this)
+                    load()
+                }.onFailure { toast(it.userMessage()) }   // ยังเป็น dirty → การซิงก์รอบหน้าจะส่งประเทศให้
             }
         }
     }

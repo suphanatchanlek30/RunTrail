@@ -3,6 +3,7 @@ package com.example.runtrail.net
 import android.net.Uri
 import com.example.runtrail.data.Run
 import com.example.runtrail.data.TrackPoint
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 
 /** endpoint ทั้งหมดของ backend (เรียกจาก background thread) — รายละเอียดใน backend/README.md */
@@ -107,6 +108,38 @@ class RunTrailApi(val client: ApiClient) {
     fun markAllRead() { client.call("POST", "/notifications/read", JSONObject().put("all", true)) }
 
     fun userSummary(userId: String): JSONObject = client.call("GET", "/users/$userId/summary")!!
+
+    /**
+     * ที่อยู่ใหม่เป็นเซิร์ฟเวอร์เดิมของบัญชีนี้ไหม (เช่น IP ของเครื่องที่รัน backend เปลี่ยน)
+     * เรียก GET /me ด้วย token ปัจจุบัน · token หมดอายุ → refresh ที่ที่อยู่ใหม่ 1 ครั้ง
+     * คืน true เมื่อเซิร์ฟเวอร์ใหม่รู้จักผู้ใช้คนเดียวกัน (token ใหม่จาก refresh ถูกเก็บไว้ให้)
+     */
+    fun sameAccountAt(baseUrl: String): Boolean {
+        val s = client.sessions.get() ?: return false
+        val root = baseUrl.trim().trimEnd('/') + "/api/v1"
+        fun me(token: String): Int = try {
+            client.plain.newCall(okhttp3.Request.Builder().url("$root/me").header("Authorization", "Bearer $token").build())
+                .execute().use { r ->
+                    if (r.isSuccessful) { if (JSONObject(r.body.string()).optString("id") == s.userId) 200 else 409 } else r.code
+                }
+        } catch (e: Exception) { 0 }
+        when (me(s.accessToken)) {
+            200 -> return true
+            401 -> Unit
+            else -> return false
+        }
+        val refreshed = try {
+            val body = JSONObject().put("refresh_token", s.refreshToken).toString()
+                .toByteArray().toRequestBody(ApiClient.JSON)
+            client.plain.newCall(okhttp3.Request.Builder().url("$root/auth/refresh").post(body).build()).execute().use { r ->
+                if (!r.isSuccessful) null else JSONObject(r.body.string())
+            }
+        } catch (e: Exception) { null } ?: return false
+        val next = s.copy(accessToken = refreshed.getString("access_token"), refreshToken = refreshed.getString("refresh_token"))
+        if (me(next.accessToken) != 200) return false
+        client.sessions.save(next)
+        return true
+    }
 
     fun health(): Boolean = try {
         client.plain.newCall(okhttp3.Request.Builder().url(client.rootUrl("/healthz")).build())

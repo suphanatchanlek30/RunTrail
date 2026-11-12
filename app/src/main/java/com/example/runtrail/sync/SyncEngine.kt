@@ -233,11 +233,14 @@ class SyncEngine(
         if (local != null && local.updatedAt >= serverVersion) return false   // มีอยู่แล้ว (เช่น เพิ่งส่งขึ้นไปเอง)
 
         val merged = RunJson.fromServer(o, local, uid).copy(id = local?.id ?: 0)
-        val id = RunRepository.upsertFromServer(merged)
+        val photoUrl = if (o.isNull("photo_url")) null else o.optString("photo_url").ifBlank { null }
+        // เครื่องอื่นลบรูปไปแล้ว (รูปในเครื่องนี้เคยซิงก์แล้ว แต่ server ไม่มีรูป) → ลบตามด้วย (AUDIT A9)
+        val photoRemovedElsewhere = photoUrl == null && local?.photoUri != null && local.photoSync == PhotoSync.SYNCED
+        if (photoRemovedElsewhere) ImageStore.delete(context, local?.photoUri)
+        val id = RunRepository.upsertFromServer(merged, clearLocalPhoto = photoRemovedElsewhere)
         if (merged.isGps && !RunRepository.hasTrack(id)) {
             RunRepository.replaceTrack(id, api.track(uuid))
         }
-        val photoUrl = if (o.isNull("photo_url")) null else o.optString("photo_url").ifBlank { null }
         if (photoUrl != null && merged.photoUri == null) {
             api.client.download(photoUrl)?.let { bytes ->
                 ImageStore.saveBytes(context, bytes)?.let { RunRepository.setPhotoPath(id, it) }

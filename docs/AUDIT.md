@@ -35,17 +35,19 @@ Severity: **S1** crash / data loss · **S2** wrong result or a control that does
 | A6 | Weekly goal | `MainActivity.render()`, `SettingsActivity` | Goal is stored in km (`weekly_goal_km` on the server, ProfileSetup labels it km) but Home multiplies it by 1609 m and Settings labels it "mi" in miles mode → app and server disagree about when the goal is reached | S2 | fixed — `Units.goalMeters/goalText/goalPercent`, km is canonical. Test: `UnitsTest.weeklyGoalIsAlwaysKilometres` |
 | A7 | Leaderboard | `LeaderboardActivity`, profile | "My country" needs `country_code` on the server; accounts created without one get a validation error, and nothing in the app can set the country after registration → the "country" chip is a dead end | S2 | fixed — country row in Settings (synced via profile) and "Set country" action on the leaderboard error |
 | A8 | Units | `ReplayActivity.buildAxis`, `RunStatsActivity` axis, `RunCalculator.records` | Axis marks are kilometres but labelled with the selected unit (mi); "Longest run" ignores the miles setting | S2 | fixed — `Units.axisMarks`, `RunCalculator.records(miles)`, replay segment label. Test: `UnitsTest` |
-| A9 | Photos | `AddEditRunActivity` | There is no way to remove a photo, although sync supports `PhotoSync.DELETE`; replaced photos leave orphan files | S2 | fixed — remove-photo button; server photo removed through `PhotoSync.DELETE`; unused/replaced files deleted |
+| A9 | Photos | `AddEditRunActivity` | There is no way to remove a photo, although sync supports `PhotoSync.DELETE`; replaced photos leave orphan files | S2 | fixed — remove-photo button; server photo removed through `PhotoSync.DELETE`; unused/replaced files deleted; another device drops the photo on its next pull. Test: `SyncEndToEndTest.photoRemovedOnOneDeviceDisappearsOnAnother` (failed before the pull fix, passes after) |
 | A10 | Share | `ShareSheet` | Changing a privacy switch while a link request is in flight is dropped (`createLink` returns early) → server keeps old options | S2 | fixed — switch changes during a request are re-sent when it finishes |
 | A11 | Sensor check | `SensorCheckActivity` | Rows that say "needs permission" / "GPS off" do nothing when tapped | S2 | fixed — GPS row asks for permission or opens location settings; step row asks for activity permission |
 | A12 | Live run | `LiveRunActivity` back handler | When recording never started (location denied) Back needs a double press | S4 | fixed |
-| P1 | Data refresh | `RunRepository.notifyChanged()` | One main-thread post per DB write; a pull of N runs re-renders every open screen N times (each render reloads all runs) | S3 | fixed — coalesced (120 ms). Measured: 100 writes → **2** screen refreshes (was 1 per write = 100). `PerfTest` |
+| P1 | Data refresh | `RunRepository.notifyChanged()` | One main-thread post per DB write; a pull of N runs re-renders every open screen N times (each render reloads all runs) | S3 | fixed — coalesced (120 ms). Measured after: 100 writes → **2** screen refreshes. "Before" (100) is read from the old code (one post per write), not measured. `PerfTest` |
 | P2 | Home | `MainActivity.render()` | `getAll()` is executed 3× per render (`getAll`, `thisWeek`, `weekDailyKm`) | S3 | fixed — Home queries `recent(2)` + this week in SQL; Records loads on a background thread. Measured on emulator with 1,000 runs: **2026 ms → 14 ms** per Home render. `PerfTest` |
 | P3 | History | `HistoryActivity.load()` | Every keystroke re-reads all runs from SQLite and calls `notifyDataSetChanged()` | S3 | fixed — list loaded once on a background thread, keystrokes filter in memory, DiffUtil. Measured: **636 ms → 9 ms** per keystroke. `PerfTest` |
 | P4 | Share | `ShareSheet.showQr()` | ~518k `Bitmap.setPixel` calls on the main thread | S3 | fixed — `setPixels`. Measured: **155 ms → 9 ms**. `PerfTest` |
 | P5 | Charts | `LineChartView`, `BarChartView`, `RingProgressView`, `ToggleSwitch`, `HoldToStopView` | Objects allocated inside `onDraw` (lint DrawAllocation) | S3 | fixed — rects/paths/gradients reused (not timed; lint DrawAllocation check below) |
 | A13 | Lists | `SensorCheckActivity`, `NotificationsActivity` | `setOnClickListener(null)` makes a view clickable, so rows without an action looked tappable (Notifications set `isClickable` before it, so it was undone) | S4 | fixed — reset `isClickable` after the call; found by `ControlsAuditTest` |
-| K1 | Server URL | `ui/common/ServerUrl.kt` | Changing the server while logged in keeps old tokens and `SYNCED`/`onServer` flags → existing runs never upload to the new server | S2 | fixed — server address cannot be changed while signed in; the sheet explains to sync and sign out first |
+| P6 | Run summary | `RunDetailActivity.render()` | Loaded every run on each `onResume` just to decide the "new record" badge | S3 | fixed — SQL `longRunsBefore(5000 m, start)`. Measured with 1,000 runs: **125 ms → 0.1 ms**, same badge result. `PerfTest` |
+| A14 | Leaderboard | `LeaderboardActivity.setCountry()` | (introduced and fixed on this branch) setting the country cleared `profileDirty`, which would drop other unsynced profile edits | S2 | fixed — previous dirty state restored |
+| K1 | Server URL | `ui/common/ServerUrl.kt` | Changing the server while logged in keeps old tokens and `SYNCED`/`onServer` flags → existing runs never upload to the new server | S2 | fixed — changing the address while signed in first calls `GET /me` there (refreshing once on 401); same user id → accepted and sync continues (covers "same server, new IP"); otherwise the sheet explains to sync and sign out. Tests: `ServerSwitchTest` (5 cases, MockWebServer) |
 | B1 | Backend share | `api/share.go` `createShare` | Two concurrent requests can pick the same free code; the losing insert hits the UNIQUE constraint → HTTP 500 | S4 | fixed — retry with a new code on `runs_share_code_key` violation (race not reproduced in a test) |
 | B2 | Backend stats | `api/users.go` `myStats` | Monthly buckets use the database `now()` instead of the server clock (`s.now()`), so the injected test clock is ignored | S4 | fixed — uses `s.now()`. Test: `TestStatsMonthlyFollowsServerClock` (failed before, passes after) |
 
@@ -55,7 +57,8 @@ Severity: **S1** crash / data loss · **S2** wrong result or a control that does
 - Backend ownership: every run/photo/share handler goes through `ownRun` (404 for other users), PUT with another user's UUID → 409.
 - Backend SQL: all values are bound parameters; the only string-built SQL (`patchMe` SET list, leaderboard aggregate, PB column) uses fixed identifiers, never input.
 - Backend body limits: raw 6 MB, decompressed 5 MB (gzip bomb guard), 50k points, 2k pauses.
-- Track parity: app `GpsFilter` stores only accepted points; server `Clean` re-applies accuracy/teleport rules and `spansPause` drops the segment across a resume, so both sides sum the same segments.
+- Track parity: `SyncEndToEndTest` uploads a real track to the backend and asserts server distance = app distance ±1 %
+  (±2 % with a pause). App `GpsFilter` stores only accepted points; server `Clean` re-applies accuracy/teleport rules and `spansPause` drops the segment across a resume, so both sides sum the same segments.
 - Lint `InlinedApi` (`FOREGROUND_SERVICE_TYPE_LOCATION`): `ServiceCompat.startForeground` ignores the type below API 29 → false positive.
 - Lint `StaticFieldLeak` (`App.services`): it only holds the Application context → false positive.
 - Lint `HardcodedText` (13): all are sample numbers in layouts that code overwrites at runtime; no user-visible untranslated text.
@@ -107,7 +110,8 @@ Not tapped automatically, and why:
 | `8798853` | A1–A6, A8, A9, A12, P1 (crashes, photo OOM, GPS provider, pickers, km/mile, remove photo) |
 | `b6a47fd` | A7, A10, A11, K1, P2–P5, B1, B2 (dead controls, share/sync edge cases, main-thread work, backend) |
 | `6f19c5d` | A13 + `ControlsAuditTest` / `TapEverythingTest` |
-| last commit | sensor math tests (cadence extracted to a pure function), README, this report |
+| `ae7f5a0` | sensor math tests (cadence extracted to a pure function), README, this report |
+| last commit | review fixes: K1 reworked (same-account check), A9 on other devices, A14, P6 |
 
 ## 5. Test results after fixes
 
@@ -116,15 +120,15 @@ Every round had identical results — no flaky tests.
 
 | Suite | Before | After (each of 3 rounds) |
 |---|---|---|
-| App JVM unit (`testDebugUnitTest --rerun-tasks`) | 32 passed | **41 passed**, 0 skipped, 0 failed |
-| App instrumented (`am instrument`, with `e2eApiUrl`) | 12 passed | **24 passed**, 0 failed |
+| App JVM unit (`testDebugUnitTest --rerun-tasks`) | 32 passed | **41 passed** ×3 rounds; final run after review fixes **46 passed**, 0 skipped, 0 failed |
+| App instrumented (`am instrument`, with `e2eApiUrl`) | 12 passed | **24 passed** ×3 rounds; final run **26 passed**, 0 failed |
 | Backend Go (`go test -count=1 ./...`) | api/auth/track ok | **api/auth/track ok** (+ `TestStatsMonthlyFollowsServerClock`) |
 | Backend smoke (`scripts/smoke.sh`) | 29 / 29 | **29 / 29** |
-| Lint | 0 errors, 225 warnings | **0 errors, 217 warnings** (DrawAllocation 8 → 0) |
+| Lint | 0 errors, 225 warnings | **0 errors, 217 warnings** (DrawAllocation 8 → 0); unchanged in the final run |
 | `gofmt -l` / `go vet` | clean | clean |
 
-New tests: `UnitsTest`, `DeviceLogicTest`, `SensorMathTest` (JVM); `ScreenCrashTest`, `ImageStoreTest`, `PerfTest`,
-`ControlsAuditTest`, `TapEverythingTest` (instrumented); `TestStatsMonthlyFollowsServerClock` (Go).
+New tests: `UnitsTest`, `DeviceLogicTest`, `SensorMathTest`, `ServerSwitchTest` (JVM); `ScreenCrashTest`, `ImageStoreTest`, `PerfTest`,
+`ControlsAuditTest`, `TapEverythingTest`, `SyncEndToEndTest.photoRemovedOnOneDeviceDisappearsOnAnother` (instrumented); `TestStatsMonthlyFollowsServerClock` (Go).
 No existing test was removed, skipped or weakened.
 
 A first full round (before the backend config override, see §6) had 1 instrumented failure and stopped the smoke
@@ -158,6 +162,18 @@ are hidden in Guest mode, so `TapEverythingTest` did not tap them. Their server 
 **Lint warnings left on purpose:** `LockedOrientationActivity` (portrait lock is a design decision; Android 16+
 ignores it on large screens), `UnusedResources`, `Overdraw`, `UseCompoundDrawables`, `DisableBaselineAlignment`,
 `PluralsCandidate` (Thai has no plural forms) — none affect behaviour.
+
+**Not done from the request, named explicitly:**
+- *Very long runs:* the server accepts at most 50,000 points (≈ 13.9 h at 1 point/s). A longer recording gets HTTP 400,
+  is marked "sync failed" with the server's message, stays on the phone, and is not retried. Not changed.
+- *A single run with 50,000 points* was not loaded on the device; 1,000 runs were (see `PerfTest`).
+- *SyncEngine / RunRepository JVM tests with fakes* were not written. Both are covered on the device instead
+  (`RunRepositoryTest`, `SyncEndToEndTest` against the real backend).
+- *Offline and server-down screens* were reviewed in code (Leaderboard and Notifications show the cached copy with an
+  "offline" note; Login/Register show "can't reach the server"; sync retries through WorkManager) and the client error
+  path is unit-tested (`ApiClientTest.networkErrorHasStatusZero`), but they were not clicked through with the network off.
+- *Photo removal timing:* if device B syncs in the moment between device A's run update and its photo delete,
+  B keeps the photo until that run is edited again.
 
 **Environment note.** `backend/.env` contains the Mac's LAN IP. During this session the Mac moved networks
 (172.25.83.16 → 172.20.10.2), so presigned photo URLs pointed at a dead address and the first full test round failed at

@@ -102,7 +102,8 @@ class RunDetailActivity : AppCompatActivity() {
             binding.osmMap.invalidate()
         }
 
-        val record = RunCalculator.newRecordLabel(run, RunRepository.getAll())
+        // ป้ายสถิติใหม่ใช้แค่การวิ่ง ≥ 5 กม. ที่เกิดก่อนหน้า → กรองใน SQL (เดิมโหลดทุกการวิ่งทุกครั้งที่เปิดหน้า, AUDIT P6)
+        val record = RunCalculator.newRecordLabel(run, RunRepository.longRunsBefore(5000.0, run.startTime))
         binding.badgeRecord.visibility = if (record != null) View.VISIBLE else View.GONE
         binding.badgeRecord.text = record
         binding.badgeRecord.setStartIcon(R.drawable.ic_trophy, 14f, R.color.run_green_dark)

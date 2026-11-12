@@ -90,6 +90,13 @@ object RunRepository {
         return queryRuns(where, args, "start_time DESC", withTrack = false, limit = limit.toString())
     }
 
+    /** การวิ่งที่ไกลอย่างน้อย minMeters และเริ่มก่อน before — ใช้ตัดสินป้าย "สถิติใหม่" โดยไม่โหลดทุกแถว */
+    fun longRunsBefore(minMeters: Double, before: Long): List<Run> {
+        val (where, args) = visibleWhere()
+        return queryRuns("$where AND distance_m >= ? AND start_time < ?", args + minMeters.toString() + before.toString(),
+            null, withTrack = false)
+    }
+
     /** การวิ่งตั้งแต่เวลา start (กรองใน SQL) */
     fun since(start: Long, until: Long = Long.MAX_VALUE): List<Run> {
         val (where, args) = visibleWhere()
@@ -349,14 +356,15 @@ object RunRepository {
     }
 
     /** บันทึกการวิ่งที่ดึงมาจาก server (ไม่ทำเป็นการแก้ของผู้ใช้) คืน id ในเครื่อง */
-    fun upsertFromServer(run: Run): Long {
+    fun upsertFromServer(run: Run, clearLocalPhoto: Boolean = false): Long {
         val existing = getByUuid(run.uuid)
         val id: Long
         if (existing == null) {
             id = db.insertOrThrow("runs", null, values(run))
         } else {
             id = existing.id
-            db.update("runs", values(run.copy(id = id, photoUri = run.photoUri ?: existing.photoUri)), "id = ?", arrayOf(id.toString()))
+            val photo = if (clearLocalPhoto) null else run.photoUri ?: existing.photoUri
+            db.update("runs", values(run.copy(id = id, photoUri = photo)), "id = ?", arrayOf(id.toString()))
         }
         notifyChanged()
         return id
