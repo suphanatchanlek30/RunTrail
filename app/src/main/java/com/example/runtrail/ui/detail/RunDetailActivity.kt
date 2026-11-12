@@ -166,6 +166,8 @@ class RunDetailActivity : AppCompatActivity() {
     }
 
     private fun openReplay() {
+        val run = RunRepository.getById(runId, withTrack = false)
+        if (run == null || RunRepository.route(run).size < 2) { toast(getString(R.string.replay_no_route)); return }
         startActivity(Intent(this, ReplayActivity::class.java).putExtra(EXTRA_RUN_ID, runId))
     }
 

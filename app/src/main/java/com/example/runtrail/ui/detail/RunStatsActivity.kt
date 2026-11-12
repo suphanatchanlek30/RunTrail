@@ -17,12 +17,12 @@ import com.example.runtrail.databinding.ActivityRunStatsBinding
 import com.example.runtrail.databinding.ItemSplitBinding
 import com.example.runtrail.databinding.ViewConditionBinding
 import com.example.runtrail.domain.Fmt
+import com.example.runtrail.domain.Units
 import com.example.runtrail.domain.RunCalculator
 import com.example.runtrail.ui.common.applySystemBarsPadding
 import com.example.runtrail.ui.common.setupEdgeToEdge
 import com.example.runtrail.ui.replay.ReplayActivity
 import com.example.runtrail.ui.share.ShareSheet
-import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 /**
@@ -50,7 +50,7 @@ class RunStatsActivity : AppCompatActivity() {
         binding.btnBack.setOnClickListener { finish() }
         binding.btnMore.setOnClickListener { v ->
             PopupMenu(this, v).apply {
-                menu.add(0, 1, 0, R.string.action_replay)
+                if (RunRepository.route(run).size >= 2) menu.add(0, 1, 0, R.string.action_replay)
                 menu.add(0, 2, 1, R.string.action_share)
                 setOnMenuItemClickListener {
                     if (it.itemId == 1) {
@@ -98,7 +98,11 @@ class RunStatsActivity : AppCompatActivity() {
         val color = ContextCompat.getColor(this, if (showElevation) R.color.pace_moderate else R.color.run_green)
         binding.chart.setData(smooth, invert = !showElevation, color = color)
 
-        if (showElevation) {
+        if (raw.isEmpty()) {
+            // การวิ่งที่บันทึกเองไม่มีจุด GPS (เดิม raw.max() ของรายการว่างทำให้แอปเด้ง, AUDIT A2)
+            binding.tvChartTitle.setText(if (showElevation) R.string.stats_elev_chart else R.string.stats_pace_chart)
+            binding.tvChartDesc.setText(R.string.stats_no_route)
+        } else if (showElevation) {
             binding.tvChartTitle.setText(R.string.stats_elev_chart)
             binding.tvChartDesc.text = getString(R.string.stats_elev_desc, run.elevationGainM, raw.max().roundToInt())
         } else {
@@ -110,11 +114,9 @@ class RunStatsActivity : AppCompatActivity() {
             )
         }
 
-        // แกน X: 0 … N กม.
+        // แกน X: 0 … N (กม. หรือ ไมล์)
         binding.axis.removeAllViews()
-        val km = ceil(run.distanceM / 1000.0).toInt().coerceAtLeast(1)
-        val step = if (km > 6) ceil(km / 5.0).toInt() else 1
-        val marks = (0..km step step).toMutableList().apply { if (last() != km) add(km) }
+        val marks = Units.axisMarks(run.distanceM, miles)   // ตามหน่วยที่เลือก (AUDIT A8)
         marks.forEachIndexed { i, k ->
             val tv = TextView(this).apply {
                 setTextAppearance(R.style.Txt_Caption)

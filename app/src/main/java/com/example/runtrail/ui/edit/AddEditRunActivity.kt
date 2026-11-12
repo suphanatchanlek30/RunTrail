@@ -18,6 +18,7 @@ import com.example.runtrail.databinding.ActivityAddEditRunBinding
 import com.example.runtrail.domain.Fmt
 import com.example.runtrail.domain.RunCalculator
 import com.example.runtrail.ui.common.ImageStore
+import com.example.runtrail.ui.common.runAsync
 import com.example.runtrail.ui.common.applySystemBarsPadding
 import com.example.runtrail.ui.common.setStartIcon
 import com.example.runtrail.ui.common.setupEdgeToEdge
@@ -44,14 +45,23 @@ class AddEditRunActivity : AppCompatActivity() {
 
     private var pendingPhoto: java.io.File? = null
 
+    /** รูปที่สร้างขึ้นระหว่างแก้ไขหน้านี้ — ไฟล์ที่ไม่ได้ใช้จะถูกลบตอนออก (ไม่ทิ้งไฟล์ค้าง) */
+    private val sessionPhotos = mutableListOf<String>()
+
     /** กล้องแบบเต็มความละเอียดผ่าน FileProvider แล้วย่อ/แก้ทิศตาม EXIF */
     private val takePhoto = registerForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
         val file = pendingPhoto
         pendingPhoto = null
-        if (ok && file != null) {
-            ImageStore.saveFromUri(this, Uri.fromFile(file))?.let { setPhoto(it) } ?: toast(getString(R.string.edit_photo_error))
+        if (ok && file != null) importPhoto(Uri.fromFile(file), deleteAfter = file) else file?.delete()
+    }
+
+    /** ย่อ/แก้ทิศรูปบน background thread (รูปจากกล้องอาจใหญ่หลายสิบ MB, AUDIT A3) */
+    private fun importPhoto(uri: Uri, deleteAfter: java.io.File? = null) {
+        toast(getString(R.string.photo_processing))
+        runAsync({ ImageStore.saveFromUri(applicationContext, uri).also { deleteAfter?.delete() } }) { r ->
+            val path = r.getOrNull()
+            if (path != null) { sessionPhotos += path; setPhoto(path) } else toast(getString(R.string.edit_photo_error))
         }
-        file?.delete()
     }
 
     private fun openCamera() {
@@ -67,10 +77,7 @@ class AddEditRunActivity : AppCompatActivity() {
     }
 
     private val pickPhoto = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
-        if (uri != null) {
-            val path = ImageStore.saveFromUri(this, uri)
-            if (path != null) setPhoto(path) else toast(getString(R.string.edit_photo_error))
-        }
+        if (uri != null) importPhoto(uri)
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -101,6 +108,7 @@ class AddEditRunActivity : AppCompatActivity() {
             photoPath = savedInstanceState.getString(KEY_PHOTO)
             photoChanged = savedInstanceState.getBoolean(KEY_PHOTO_CHANGED)
             pendingPhoto = savedInstanceState.getString(KEY_PENDING)?.let { java.io.File(it) }
+            savedInstanceState.getStringArrayList(KEY_SESSION)?.let { sessionPhotos += it }
         } else {
             editing?.let {
                 binding.etName.setText(it.title)
@@ -115,6 +123,12 @@ class AddEditRunActivity : AppCompatActivity() {
         binding.btnCamera.setOnClickListener { openCamera() }
         binding.btnGallery.setOnClickListener { pickPhoto.launch("image/*") }
         binding.photoChip.setOnClickListener { pickPhoto.launch("image/*") }
+        binding.btnRemovePhoto.setOnClickListener {
+            photoPath = null
+            photoChanged = true
+            renderPhoto()
+            toast(getString(R.string.edit_photo_removed))
+        }
         // การวิ่งที่บันทึกด้วย GPS มีเวลาในทุกจุดอยู่แล้ว จึงแก้วันเวลาไม่ได้ (server ก็ไม่ยอมให้แก้)
         val dateLocked = editing?.isGps == true
         binding.fieldDate.alpha = if (dateLocked) 0.5f else 1f
@@ -139,6 +153,7 @@ class AddEditRunActivity : AppCompatActivity() {
         val bmp = ImageStore.load(photoPath)
         binding.ivPhoto.setImageBitmap(bmp)
         binding.ivPhoto.visibility = if (bmp != null) View.VISIBLE else View.GONE
+        binding.btnRemovePhoto.visibility = if (bmp != null) View.VISIBLE else View.GONE
         if (bmp != null) {
             binding.tvPhotoStatus.setText(if (photoChanged) R.string.edit_photo_processed else R.string.edit_photo_current)
             binding.tvPhotoStatus.setStartIcon(R.drawable.ic_check, 14f, R.color.run_lime)
@@ -182,8 +197,13 @@ class AddEditRunActivity : AppCompatActivity() {
             val photoSync = when {
                 !photoChanged -> current.photoSync
                 photoPath != null -> com.example.runtrail.data.PhotoSync.PENDING
+                // ลบรูปที่ขึ้น server แล้ว → ให้ SyncEngine ส่งคำสั่งลบรูป (AUDIT A9)
+                current.onServer && current.photoSync == com.example.runtrail.data.PhotoSync.SYNCED ->
+                    com.example.runtrail.data.PhotoSync.DELETE
                 else -> com.example.runtrail.data.PhotoSync.NONE
             }
+            if (photoChanged && current.photoUri != photoPath) ImageStore.delete(this, current.photoUri)
+            cleanupSessionPhotos(keep = photoPath)
             RunRepository.update(current.copy(title = title, note = note, startTime = startTime, photoUri = photoPath,
                 endTime = current.endTime?.let { it + (startTime - current.startTime) }, photoSync = photoSync))
             com.example.runtrail.sync.SyncManager.requestSync(this)
@@ -209,6 +229,7 @@ class AddEditRunActivity : AppCompatActivity() {
             elevationGainM = 0, photoUri = photoPath, source = com.example.runtrail.data.RunSource.MANUAL,
             photoSync = if (photoPath != null) com.example.runtrail.data.PhotoSync.PENDING else com.example.runtrail.data.PhotoSync.NONE,
         )
+        cleanupSessionPhotos(keep = photoPath)
         val id = RunRepository.insert(run)
         com.example.runtrail.sync.SyncManager.requestSync(this)
         toast(getString(R.string.toast_added))
@@ -229,12 +250,18 @@ class AddEditRunActivity : AppCompatActivity() {
     }
 
     private fun confirmClose() {
-        if (!hasChanges()) { finish(); return }
+        if (!hasChanges()) { cleanupSessionPhotos(keep = null); finish(); return }
         Sheets.confirm(
             this, R.drawable.ic_info, getString(R.string.edit_discard_title), getString(R.string.edit_discard_body),
             confirmText = getString(R.string.edit_discard), cancelText = getString(R.string.edit_keep_editing),
             tone = Sheets.Tone.DANGER,
-        ) { finish() }
+        ) { cleanupSessionPhotos(keep = null); finish() }
+    }
+
+    /** ลบรูปที่ถ่าย/เลือกในหน้านี้แต่ไม่ได้ใช้ */
+    private fun cleanupSessionPhotos(keep: String?) {
+        sessionPhotos.filter { it != keep }.forEach { ImageStore.delete(this, it) }
+        sessionPhotos.clear()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
@@ -243,6 +270,7 @@ class AddEditRunActivity : AppCompatActivity() {
         outState.putString(KEY_PHOTO, photoPath)
         outState.putBoolean(KEY_PHOTO_CHANGED, photoChanged)
         outState.putString(KEY_PENDING, pendingPhoto?.absolutePath)
+        outState.putStringArrayList(KEY_SESSION, ArrayList(sessionPhotos))
     }
 
     companion object {
@@ -250,5 +278,6 @@ class AddEditRunActivity : AppCompatActivity() {
         private const val KEY_PHOTO = "photo"
         private const val KEY_PHOTO_CHANGED = "photo_changed"
         private const val KEY_PENDING = "pending_photo"
+        private const val KEY_SESSION = "session_photos"
     }
 }

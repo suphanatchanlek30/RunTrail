@@ -30,17 +30,32 @@ class LocationTracker(
         get() = ContextCompat.checkSelfPermission(appContext, Manifest.permission.ACCESS_FINE_LOCATION) ==
             PackageManager.PERMISSION_GRANTED
 
-    val gpsEnabled: Boolean get() = lm.isProviderEnabled(LocationManager.GPS_PROVIDER)
+    /**
+     * แหล่งตำแหน่งที่ใช้: GPS ถ้าเครื่องมี · ไม่มี GPS (แท็บเล็ตบางรุ่น) → fused / network
+     * เดิมขอ GPS_PROVIDER ตรง ๆ → เครื่องที่ไม่มีจะ IllegalArgumentException และ service เด้ง (AUDIT A4)
+     */
+    val provider: String? get() = pickProvider(lm.allProviders)
+
+    val gpsEnabled: Boolean get() = provider?.let { lm.isProviderEnabled(it) } ?: false
 
     @Suppress("MissingPermission")
     fun start(): Boolean {
         if (running) return true
         if (!hasPermission) return false
-        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, INTERVAL_MS, 0f, this, Looper.getMainLooper())
+        val p = provider ?: return false
+        try {
+            lm.requestLocationUpdates(p, INTERVAL_MS, 0f, this, Looper.getMainLooper())
+        } catch (e: IllegalArgumentException) {
+            return false
+        } catch (e: SecurityException) {
+            return false   // สิทธิ์ถูกถอนระหว่างตรวจกับขอ
+        }
         running = true
         // จุดล่าสุดที่เครื่องรู้ (GPS หรือเครือข่าย อันที่ใหม่กว่า) ให้แผนที่ขยับไปตำแหน่งปัจจุบันก่อนได้สัญญาณแรก
         listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
-            .mapNotNull { p -> try { lm.getLastKnownLocation(p) } catch (e: IllegalArgumentException) { null } }
+            .mapNotNull { p ->
+                try { lm.getLastKnownLocation(p) } catch (e: IllegalArgumentException) { null } catch (e: SecurityException) { null }
+            }
             .maxByOrNull { it.time }
             ?.let { lastKnown = it }
         return true
@@ -48,7 +63,7 @@ class LocationTracker(
 
     fun stop() {
         if (!running) return
-        lm.removeUpdates(this)
+        try { lm.removeUpdates(this) } catch (e: SecurityException) { }
         running = false
     }
 
@@ -83,5 +98,9 @@ class LocationTracker(
 
     companion object {
         const val INTERVAL_MS = 1000L
+
+        /** เลือกแหล่งตำแหน่งที่ดีที่สุดที่เครื่องมี (ฟังก์ชันล้วน ทดสอบได้) */
+        fun pickProvider(available: List<String>): String? =
+            listOf(LocationManager.GPS_PROVIDER, "fused", LocationManager.NETWORK_PROVIDER).firstOrNull { it in available }
     }
 }

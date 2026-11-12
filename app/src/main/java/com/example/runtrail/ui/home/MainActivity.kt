@@ -14,6 +14,7 @@ import com.example.runtrail.databinding.ItemRunBinding
 import com.example.runtrail.databinding.ViewStatDarkBinding
 import com.example.runtrail.domain.Fmt
 import com.example.runtrail.domain.RunCalculator
+import com.example.runtrail.domain.Units
 import com.example.runtrail.ui.common.BottomNav
 import com.example.runtrail.ui.common.Sheets
 import com.example.runtrail.ui.common.Dialogs
@@ -31,7 +32,6 @@ import com.example.runtrail.ui.records.RecordsActivity
 import com.example.runtrail.ui.sensor.SensorCheckActivity
 import com.example.runtrail.service.RunTrackingService
 import com.example.runtrail.sync.SyncManager
-import kotlin.math.roundToInt
 
 /**
  * 05 / 06 · Home — สรุปสัปดาห์เทียบเป้า · กราฟ 7 วัน · การวิ่งล่าสุด · ปุ่มเริ่มวิ่ง
@@ -114,29 +114,29 @@ class MainActivity : AppCompatActivity() {
         binding.groupEmpty.visibility = if (empty) View.VISIBLE else View.GONE
         binding.groupData.visibility = if (empty) View.GONE else View.VISIBLE
         binding.fabStart.visibility = if (empty) View.GONE else View.VISIBLE
-        binding.tvEmptyGoal.text = getString(R.string.home_goal_short, prefs.weeklyGoalKm, Fmt.unit(miles))
+        // เป้าหมายเก็บเป็น กม. เสมอ (เหมือน server) — โหมดไมล์แค่แปลงเพื่อแสดง (AUDIT A6)
+        binding.tvEmptyGoal.text = getString(R.string.home_goal_short, Units.goalText(prefs.weeklyGoalKm, miles), Fmt.unit(miles))
         binding.tvEmptyUnit.text = Fmt.unit(miles)
         if (empty) return
 
         // ---- การ์ดสรุปสัปดาห์ ----
-        val week = RunRepository.thisWeek()
+        val now = System.currentTimeMillis()
+        val week = RunRepository.thisWeek(now, all)
         val weekM = week.sumOf { it.distanceM }
-        val goalM = prefs.weeklyGoalKm * if (miles) 1609.344 else 1000.0
-        val percent = if (goalM > 0) (weekM / goalM * 100).roundToInt() else 0
-        binding.tvGoalPercent.text = getString(R.string.home_goal_percent, percent)
+        val goalKm = prefs.weeklyGoalKm
+        binding.tvGoalPercent.text = getString(R.string.home_goal_percent, Units.goalPercent(weekM, goalKm))
         binding.tvWeekKm.text = Fmt.distance(weekM, miles, decimals = 1)
-        binding.tvWeekGoal.text = getString(R.string.home_goal_of, prefs.weeklyGoalKm, Fmt.unit(miles))
-        binding.progressWeek.progress = (weekM / goalM * 1000).roundToInt().coerceIn(0, 1000)
+        binding.tvWeekGoal.text = getString(R.string.home_goal_of, Units.goalText(goalKm, miles), Fmt.unit(miles))
+        binding.progressWeek.progress = (Units.goalPercent(weekM, goalKm) * 10).coerceIn(0, 1000)
 
         bindStat(binding.statRuns, week.size.toString(), getString(R.string.unit_times), getString(R.string.label_runs))
         bindStat(binding.statTime, Fmt.hours(week.sumOf { it.movingTimeS }), getString(R.string.unit_hours), getString(R.string.label_total_time))
         bindStat(binding.statKcal, Fmt.number(week.sumOf { it.calories }), getString(R.string.unit_kcal), getString(R.string.label_calories))
 
         // ---- กราฟ 7 วัน ----
-        val now = System.currentTimeMillis()
         val weekStart = RunRepository.startOfWeek(now)
         binding.tvWeekRange.text = Fmt.weekRange(weekStart)
-        binding.chartWeek.setData(RunRepository.weekDailyKm(now), RunRepository.weekDayLetters(now), highlightIndex = 6)
+        binding.chartWeek.setData(RunRepository.weekDailyKm(now, all, miles), RunRepository.weekDayLetters(now), highlightIndex = 6)
 
         // ---- การวิ่งล่าสุด 2 รายการ ----
         binding.recentList.removeAllViews()

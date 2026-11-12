@@ -139,7 +139,7 @@
 
     <!-- ===== 05 / 06 Home ===== -->
     <string name="home_this_week">สัปดาห์นี้</string>
-    <string name="home_goal_short">เป้า %1$d %2$s</string>
+    <string name="home_goal_short">เป้า %1$s %2$s</string>
     <string name="home_empty_title">ยังไม่มีการวิ่ง</string>
     <string name="home_empty_body">กดเริ่มวิ่งครั้งแรก แอปจะบันทึกเส้นทาง เพซ และแคลอรี่ให้อัตโนมัติ</string>
     <string name="home_first_run">เริ่มวิ่งครั้งแรก</string>
@@ -147,7 +147,7 @@
     <string name="home_sensor_desc">ดูว่าเครื่องของคุณรองรับอะไรบ้าง</string>
     <string name="home_week_distance">ระยะทางสัปดาห์นี้</string>
     <string name="home_goal_percent">%d%% ของเป้า</string>
-    <string name="home_goal_of">/ %1$d %2$s</string>
+    <string name="home_goal_of">/ %1$s %2$s</string>
     <string name="home_7_days">กิจกรรม 7 วัน</string>
     <string name="home_recent">การวิ่งล่าสุด</string>
     <string name="home_see_all">ดูทั้งหมด</string>
@@ -216,7 +216,7 @@
 
     <!-- ===== 11 Replay ===== -->
     <string name="replay_title">Replay · %s</string>
-    <string name="replay_segment">%1$s · กม. %2$d</string>
+    <string name="replay_segment">%1$s · %3$s %2$d</string>
     <string name="replay_segment_pace">เพซ %1$s %2$s</string>
     <string name="replay_distance_here">ระยะ ณ จุดนี้</string>
     <string name="replay_play">เล่น</string>
@@ -304,7 +304,7 @@
     <string name="records_none">ยังไม่มีข้อมูล</string>
     <string name="records_monthly">ระยะทางรายเดือน</string>
     <string name="records_6_months">6 เดือน</string>
-    <string name="records_share_head">สถิติการวิ่งของฉันบน RunTrail: รวม %1$s กม. จาก %2$d ครั้ง</string>
+    <string name="records_share_head">สถิติการวิ่งของฉันบน RunTrail: รวม %1$s จาก %2$d ครั้ง</string>
 
     <!-- ===== 17 Settings ===== -->
     <string name="settings_body">%1$d กก. · %2$d ซม. · %3$d ปี</string>
@@ -505,4 +505,9 @@
     <string name="language_en">English</string>
     <string name="live_back_again">กด Back อีกครั้งเพื่อออกจากหน้าวิ่ง (ยังบันทึกการวิ่งต่อ)</string>
     <string name="sheet_goal_per_week">%s/สัปดาห์</string>
+    <string name="replay_no_route">การวิ่งนี้ไม่มีเส้นทาง GPS (บันทึกเอง) จึงเล่นย้อนไม่ได้</string>
+    <string name="stats_no_route">ไม่มีเส้นทาง GPS สำหรับวาดกราฟ</string>
+    <string name="edit_photo_remove">ลบรูป</string>
+    <string name="edit_photo_removed">ลบรูปแล้ว · กดบันทึกเพื่อยืนยัน</string>
+    <string name="photo_processing">กำลังเตรียมรูป…</string>
 </resources>

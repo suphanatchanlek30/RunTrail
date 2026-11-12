@@ -29,6 +29,7 @@ import com.example.runtrail.domain.TrackMath
 import com.example.runtrail.sensor.CompassHelper
 import com.example.runtrail.service.RunTrackingService
 import com.example.runtrail.ui.common.ImageStore
+import com.example.runtrail.ui.common.runAsync
 import com.example.runtrail.ui.common.applySystemBarsPadding
 import com.example.runtrail.ui.common.setStartIcon
 import com.example.runtrail.ui.common.setupEdgeToEdge
@@ -66,12 +67,14 @@ class LiveRunActivity : AppCompatActivity() {
         val file = pendingPhoto
         pendingPhoto = null
         if (ok && file != null) {
-            // ย่อ + แก้ทิศตาม EXIF ก่อนเก็บ แล้วลบไฟล์ชั่วคราว
-            val path = ImageStore.saveFromUri(this, Uri.fromFile(file))
-            file.delete()
-            if (path != null) {
-                service?.photoPath = path
-                toast(getString(R.string.live_photo_saved))
+            // ย่อ + แก้ทิศตาม EXIF บน background thread (ไม่ให้หน้าวิ่งค้าง, AUDIT A3) แล้วลบไฟล์ชั่วคราว
+            runAsync({ ImageStore.saveFromUri(applicationContext, Uri.fromFile(file)).also { file.delete() } }) { r ->
+                val path = r.getOrNull()
+                val s = service ?: RunTrackingService.current
+                if (path != null && s != null) {
+                    s.photoPath = path
+                    toast(getString(R.string.live_photo_saved))
+                } else if (path == null) toast(getString(R.string.edit_photo_error))
             }
         } else file?.delete()
     }
@@ -152,6 +155,8 @@ class LiveRunActivity : AppCompatActivity() {
                 val s = service
                 when {
                     locked -> toast(getString(R.string.live_unlock_hint))
+                    // ยังไม่ได้เริ่มบันทึก (เช่น ไม่ให้สิทธิ์ตำแหน่ง) → ไม่มีอะไรให้เสีย ออกได้ทันที (AUDIT A12)
+                    s == null && !RunTrackingService.isRunning -> finish()
                     s != null && !s.state.paused -> s.pause()
                     // หยุดชั่วคราวอยู่ → ต้องกด Back ซ้ำภายใน 2 วินาทีจึงออกจากหน้าวิ่ง (CS364 เกณฑ์ 4.2)
                     android.os.SystemClock.elapsedRealtime() - lastBackAt > com.example.runtrail.ui.common.EXIT_WINDOW_MS -> {

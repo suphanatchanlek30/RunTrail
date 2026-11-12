@@ -49,12 +49,12 @@ class RecordsActivity : AppCompatActivity() {
         stat(binding.statTime, Fmt.hours(runs.sumOf { it.movingTimeS }), getString(R.string.unit_hours), getString(R.string.label_total_time))
         stat(binding.statKcal, Fmt.compact(runs.sumOf { it.calories }), getString(R.string.unit_kcal), getString(R.string.label_calories))
 
-        val records = RunCalculator.records(runs)
+        val records = RunCalculator.records(runs, miles = miles)
         listOf(binding.pr1, binding.pr2, binding.pr3, binding.pr4).forEachIndexed { i, card ->
             records.getOrNull(i)?.let { pr(card, it) }
         }
 
-        val monthly = RunRepository.monthlyKm(6)
+        val monthly = RunRepository.monthlyKm(6, all = runs, miles = miles)
         binding.chartMonthly.showValues = true
         binding.chartMonthly.barWidthDp = 34f
         binding.chartMonthly.setData(
@@ -76,10 +76,12 @@ class RecordsActivity : AppCompatActivity() {
     }
 
     private fun shareSummary() {
+        val miles = PrefsHelper(this).useMiles
         val runs = RunRepository.getAll()
-        val records = RunCalculator.records(runs)
+        val records = RunCalculator.records(runs, miles = miles)
         val text = buildString {
-            append(getString(R.string.records_share_head, Fmt.distance(runs.sumOf { it.distanceM }, decimals = 1), runs.size))
+            append(getString(R.string.records_share_head,
+                "${Fmt.distance(runs.sumOf { it.distanceM }, miles, decimals = 1)} ${Fmt.unit(miles)}", runs.size))
             records.forEach { append("\n• ${it.title}: ${it.value}") }
             append("\n#RunTrail")
         }

@@ -41,7 +41,25 @@ object RunRepository {
     /** หน้าจอที่เปิดอยู่ลงทะเบียนไว้ เพื่อรีเฟรชเมื่อการซิงก์เบื้องหลังเปลี่ยนข้อมูล */
     fun addListener(l: () -> Unit) { listeners += l }
     fun removeListener(l: () -> Unit) { listeners -= l }
-    fun notifyChanged() { main.post { listeners.forEach { it() } } }
+    /**
+     * แจ้งหน้าจอที่เปิดอยู่ว่าข้อมูลเปลี่ยน — รวมการแจ้งที่เกิดติดกันเป็นครั้งเดียว
+     * (เดิมโพสต์ทุกครั้งที่เขียน DB: ดึงการวิ่ง 100 รายการ = หน้าจอโหลดข้อมูลทั้งหมดใหม่ 100 รอบ, AUDIT P1)
+     */
+    fun notifyChanged() {
+        if (notifyPending.compareAndSet(false, true)) main.postDelayed(dispatch, NOTIFY_DELAY_MS)
+    }
+
+    private val notifyPending = java.util.concurrent.atomic.AtomicBoolean(false)
+    private val dispatch = Runnable {
+        notifyPending.set(false)
+        dispatchCount++
+        listeners.forEach { it() }
+    }
+
+    /** จำนวนครั้งที่แจ้งหน้าจอจริง (ใช้ใน test วัดผลการรวมการแจ้ง) */
+    @Volatile var dispatchCount = 0
+        private set
+    private const val NOTIFY_DELAY_MS = 120L
 
     // ---------------------------------------------------------------- อ่าน
 
@@ -370,18 +388,18 @@ object RunRepository {
     }
 
     /** การวิ่งใน 7 วันล่าสุด (รวมวันนี้) — ตรงกับ "กิจกรรม 7 วัน" ในหน้าหลัก */
-    fun thisWeek(now: Long = System.currentTimeMillis()): List<Run> {
+    fun thisWeek(now: Long = System.currentTimeMillis(), all: List<Run> = getAll()): List<Run> {
         val start = startOfWeek(now)
-        return getAll().filter { it.startTime >= start && it.startTime <= now }
+        return all.filter { it.startTime >= start && it.startTime <= now }
     }
 
     /** ระยะทางรายวัน 7 วันล่าสุด (index 6 = วันนี้) หน่วย กม. */
-    fun weekDailyKm(now: Long = System.currentTimeMillis()): FloatArray {
+    fun weekDailyKm(now: Long = System.currentTimeMillis(), all: List<Run> = getAll(), miles: Boolean = false): FloatArray {
         val start = startOfWeek(now)
         val out = FloatArray(7)
-        thisWeek(now).forEach { run ->
+        thisWeek(now, all).forEach { run ->
             val day = ((run.startTime - start) / DAY_MS).toInt().coerceIn(0, 6)
-            out[day] += (run.distanceM / 1000.0).toFloat()
+            out[day] += com.example.runtrail.domain.Units.inUnit(run.distanceM, miles).toFloat()
         }
         return out
     }
@@ -397,8 +415,7 @@ object RunRepository {
     }
 
     /** ระยะทางรวมรายเดือนย้อนหลัง n เดือน (เก่า → ใหม่) */
-    fun monthlyKm(months: Int = 6, now: Long = System.currentTimeMillis()): List<Pair<Int, Float>> {
-        val all = getAll()
+    fun monthlyKm(months: Int = 6, now: Long = System.currentTimeMillis(), all: List<Run> = getAll(), miles: Boolean = false): List<Pair<Int, Float>> {
         val cal = Calendar.getInstance().apply { timeInMillis = now }
         val result = mutableListOf<Pair<Int, Float>>()
         for (i in months - 1 downTo 0) {
@@ -409,8 +426,8 @@ object RunRepository {
             val km = all.filter {
                 val rc = Calendar.getInstance().apply { timeInMillis = it.startTime }
                 rc.get(Calendar.YEAR) == y && rc.get(Calendar.MONTH) == m
-            }.sumOf { it.distanceM } / 1000.0
-            result += m to km.toFloat()
+            }.sumOf { it.distanceM }
+            result += m to com.example.runtrail.domain.Units.inUnit(km, miles).toFloat()
         }
         return result
     }
@@ -419,7 +436,12 @@ object RunRepository {
 
     fun route(run: Run): List<RoutePoint> = RouteGenerator.route(run)
 
-    fun pendingCount(): Int = getAll().count { it.syncStatus != SyncStatus.SYNCED }
+    /** จำนวนการวิ่งที่ยังไม่ได้ซิงก์ (นับใน SQL ไม่ต้องโหลดทุกแถว) */
+    fun pendingCount(): Int {
+        val (where, args) = visibleWhere()
+        return db.rawQuery("SELECT count(*) FROM runs WHERE $where AND sync_status != ?", args + SyncStatus.SYNCED.name)
+            .use { if (it.moveToFirst()) it.getInt(0) else 0 }
+    }
 
     fun startOfWeek(now: Long): Long = Periods.startOfWeek(now)
 

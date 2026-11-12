@@ -109,6 +109,29 @@
                     android:textColor="@color/white"
                     tools:text="ปรับทิศ EXIF · ย่อ 80% แล้ว" />
             </LinearLayout>
+
+            <!-- ลบรูปออกจากการวิ่ง (แสดงเมื่อมีรูป) -->
+            <FrameLayout
+                android:id="@+id/btnRemovePhoto"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:layout_gravity="top|end"
+                android:layout_margin="10dp"
+                android:background="@drawable/bg_circle_ink"
+                android:clickable="true"
+                android:contentDescription="@string/edit_photo_remove"
+                android:elevation="3dp"
+                android:focusable="true"
+                android:visibility="gone">
+
+                <ImageView
+                    android:layout_width="18dp"
+                    android:layout_height="18dp"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_trash"
+                    app:tint="@color/white" />
+            </FrameLayout>
         </FrameLayout>
 
         <LinearLayout

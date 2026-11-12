@@ -27,7 +27,7 @@ object RunCalculator {
     }
 
     /** สถิติดีที่สุดจากทุกการวิ่ง */
-    fun records(runs: List<Run>, now: Long = System.currentTimeMillis()): List<PersonalRecord> {
+    fun records(runs: List<Run>, now: Long = System.currentTimeMillis(), miles: Boolean = false): List<PersonalRecord> {
         val recent = now - 7 * Periods.DAY_MS
         val out = mutableListOf<PersonalRecord>()
 
@@ -56,7 +56,7 @@ object RunCalculator {
         bestFor(10.0, Lang.t("10 กม. เร็วสุด", "Fastest 10 km"))
 
         runs.maxByOrNull { it.distanceM }?.let {
-            out += PersonalRecord(Lang.t("วิ่งไกลสุด", "Longest run"), "${Fmt.distance(it.distanceM, decimals = 1)} ${Fmt.unit(false)}", it.startTime, it.startTime >= recent)
+            out += PersonalRecord(Lang.t("วิ่งไกลสุด", "Longest run"), "${Fmt.distance(it.distanceM, miles, decimals = 1)} ${Fmt.unit(miles)}", it.startTime, it.startTime >= recent)
         }
         return out
     }

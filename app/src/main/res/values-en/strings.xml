@@ -141,7 +141,7 @@
 
     <!-- ===== 05 / 06 Home ===== -->
     <string name="home_this_week">This week</string>
-    <string name="home_goal_short">Goal %1$d %2$s</string>
+    <string name="home_goal_short">Goal %1$s %2$s</string>
     <string name="home_empty_title">No runs yet</string>
     <string name="home_empty_body">Start your first run. The app records route, pace and calories automatically.</string>
     <string name="home_first_run">Start first run</string>
@@ -149,7 +149,7 @@
     <string name="home_sensor_desc">See what your device supports</string>
     <string name="home_week_distance">Distance this week</string>
     <string name="home_goal_percent">%d%% of goal</string>
-    <string name="home_goal_of">/ %1$d %2$s</string>
+    <string name="home_goal_of">/ %1$s %2$s</string>
     <string name="home_7_days">Last 7 days</string>
     <string name="home_recent">Recent runs</string>
     <string name="home_see_all">See all</string>
@@ -218,7 +218,7 @@
 
     <!-- ===== 11 Replay ===== -->
     <string name="replay_title">Replay · %s</string>
-    <string name="replay_segment">%1$s · km %2$d</string>
+    <string name="replay_segment">%1$s · %3$s %2$d</string>
     <string name="replay_segment_pace">Pace %1$s %2$s</string>
     <string name="replay_distance_here">Distance here</string>
     <string name="replay_play">Play</string>
@@ -306,7 +306,7 @@
     <string name="records_none">No data yet</string>
     <string name="records_monthly">Monthly distance</string>
     <string name="records_6_months">6 months</string>
-    <string name="records_share_head">My running stats on RunTrail: %1$s km total over %2$d runs</string>
+    <string name="records_share_head">My running stats on RunTrail: %1$s total over %2$d runs</string>
 
     <!-- ===== 17 Settings ===== -->
     <string name="settings_body">%1$d kg · %2$d cm · %3$d yrs</string>
@@ -507,4 +507,9 @@
     <string name="language_en">English</string>
     <string name="live_back_again">Press Back again to leave the run screen (recording continues)</string>
     <string name="sheet_goal_per_week">%s/week</string>
+    <string name="replay_no_route">This run has no GPS route (manual entry), so it can\'t be replayed</string>
+    <string name="stats_no_route">No GPS route to chart</string>
+    <string name="edit_photo_remove">Remove photo</string>
+    <string name="edit_photo_removed">Photo removed · tap Save to confirm</string>
+    <string name="photo_processing">Preparing photo…</string>
 </resources>

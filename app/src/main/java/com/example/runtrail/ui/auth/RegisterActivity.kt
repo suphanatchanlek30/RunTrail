@@ -50,7 +50,7 @@ class RegisterActivity : AppCompatActivity() {
         Sheets.choose(
             this, R.drawable.ic_globe, getString(R.string.auth_country), getString(R.string.auth_country_desc),
             COUNTRIES.map { Sheets.Option(it.second, it.first) },
-            selected = COUNTRIES.indexOfFirst { it.first == country }.coerceAtLeast(0),
+            selected = COUNTRIES.indexOfFirst { it.first == country },
         ) { which ->
             country = COUNTRIES[which].first
             renderCountry()

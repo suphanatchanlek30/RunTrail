@@ -20,6 +20,7 @@ import com.example.runtrail.ui.home.MainActivity
 import com.example.runtrail.databinding.ActivitySettingsBinding
 import com.example.runtrail.databinding.ViewSettingRowBinding
 import com.example.runtrail.domain.Fmt
+import com.example.runtrail.domain.Units
 import com.example.runtrail.sensor.SensorHelper
 import com.example.runtrail.ui.common.BottomNav
 import com.example.runtrail.ui.common.applySystemBarsPadding
@@ -126,8 +127,9 @@ class SettingsActivity : AppCompatActivity() {
         binding.tvName.text = prefs.name.ifBlank { getString(R.string.settings_name_empty) }
         binding.tvBody.text = getString(R.string.settings_body, prefs.weightKg, prefs.heightCm, prefs.age)
         binding.rowUnit.tvValue.text = Fmt.unit(miles)
-        binding.rowGoal.tvValue.text = "${prefs.weeklyGoalKm} ${Fmt.unit(miles)}"
-        binding.rowPace.tvValue.text = Fmt.pace(prefs.targetPaceSec)
+        // เป้าหมาย/เพซเป้าหมายเก็บเป็นหน่วย กม. (เหมือน server) — โหมดไมล์แปลงเพื่อแสดง (AUDIT A6)
+        binding.rowGoal.tvValue.text = "${Units.goalText(prefs.weeklyGoalKm, miles)} ${Fmt.unit(miles)}"
+        binding.rowPace.tvValue.text = "${Fmt.pace(prefs.targetPaceSec.toDouble(), miles)}${Fmt.paceUnit(miles)}"
         binding.rowTheme.tvValue.text = getString(THEME_LABELS[THEME_MODES.indexOf(prefs.themeMode).coerceAtLeast(0)])
         binding.rowLanguage.tvValue.text = getString(LANGUAGE_LABELS[currentLanguageIndex()])
         binding.rowAutoPause.swToggle.isChecked = prefs.autoPause
@@ -197,11 +199,12 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun chooseGoal() {
         val values = (5..50 step 5).toList()
-        val unit = Fmt.unit(prefs.useMiles)
+        val unit = Fmt.unit(false)   // ตัวเลือกเป็น กม. เสมอ
         Sheets.choose(
             this, R.drawable.ic_target, getString(R.string.setting_weekly_goal), getString(R.string.sheet_goal_sub),
             values.map { Sheets.Option(it.toString(), getString(R.string.sheet_goal_per_week, unit)) },
-            selected = values.indexOf(prefs.weeklyGoalKm).coerceAtLeast(0),
+            // ค่าปัจจุบันไม่อยู่ในรายการ (เช่น 23 จากหน้าโปรไฟล์) → -1 ไม่มีช่องไหนถูกเลือกไว้ จึงกดได้ทุกช่อง (AUDIT A5)
+            selected = values.indexOf(prefs.weeklyGoalKm),
             columns = 3,
         ) { which ->
             prefs.weeklyGoalKm = values[which]
@@ -214,7 +217,7 @@ class SettingsActivity : AppCompatActivity() {
         Sheets.choose(
             this, R.drawable.ic_gauge, getString(R.string.setting_target_pace), getString(R.string.sheet_pace_sub),
             values.map { Sheets.Option(Fmt.pace(it), paceLevel(it)) },
-            selected = values.indexOf(prefs.targetPaceSec).coerceAtLeast(0),
+            selected = values.indexOf(prefs.targetPaceSec),
             columns = 3,
         ) { which ->
             prefs.targetPaceSec = values[which]

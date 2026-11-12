@@ -48,11 +48,18 @@ class ShareImageActivity : AppCompatActivity() {
     /** การวิ่งไม่มีรูป → ให้เลือกรูปจากแกลเลอรีมาใช้เป็นพื้นหลัง (ใช้แค่ในภาพนี้) */
     private val pickPhoto = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         if (uri == null) return@registerForActivityResult
-        val path = ImageStore.saveFromUri(this, uri)
-        if (path == null) { toast(getString(R.string.edit_photo_error)); return@registerForActivityResult }
-        photoPath = path
-        usePhoto = true
-        update()
+        binding.progress.visibility = View.VISIBLE
+        runAsync({ ImageStore.saveFromUri(applicationContext, uri) }) { r ->
+            val path = r.getOrNull()
+            if (path == null) {
+                binding.progress.visibility = View.GONE
+                toast(getString(R.string.edit_photo_error))
+            } else {
+                photoPath = path
+                usePhoto = true
+                update()
+            }
+        }
     }
 
     private val askStorage = registerForActivityResult(ActivityResultContracts.RequestPermission()) { ok ->

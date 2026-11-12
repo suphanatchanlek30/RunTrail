@@ -17,13 +17,14 @@ import com.example.runtrail.data.RunRepository
 import com.example.runtrail.databinding.ActivityReplayBinding
 import com.example.runtrail.databinding.ViewStatLargeBinding
 import com.example.runtrail.domain.Fmt
+import com.example.runtrail.ui.common.toast
+import com.example.runtrail.domain.Units
 import com.example.runtrail.domain.PaceColor
 import com.example.runtrail.ui.common.applySystemBarsPadding
 import com.example.runtrail.ui.common.setStartIcon
 import com.example.runtrail.ui.common.setupEdgeToEdge
 import com.example.runtrail.ui.detail.RunDetailActivity
 import com.example.runtrail.ui.widget.OsmRoute
-import kotlin.math.ceil
 import kotlin.math.roundToInt
 
 /**
@@ -63,6 +64,12 @@ class ReplayActivity : AppCompatActivity() {
 
         run = RunRepository.getById(intent.getLongExtra(RunDetailActivity.EXTRA_RUN_ID, 0)) ?: run { finish(); return }
         route = RunRepository.route(run)
+        // การวิ่งที่บันทึกเองไม่มีเส้นทาง → ไม่มีอะไรให้เล่น (เดิม route[0] ของรายการว่างทำให้แอปเด้ง, AUDIT A1)
+        if (route.size < 2) {
+            toast(getString(R.string.replay_no_route))
+            finish()
+            return
+        }
         miles = PrefsHelper(this).useMiles
 
         progress = savedInstanceState?.getFloat(KEY_PROGRESS) ?: 0.0f
@@ -121,9 +128,7 @@ class ReplayActivity : AppCompatActivity() {
     }
 
     private fun buildAxis() {
-        val km = ceil(run.distanceM / 1000.0).toInt().coerceAtLeast(1)
-        val step = if (km > 6) ceil(km / 5.0).toInt() else 1
-        val marks = (0..km step step).toMutableList().apply { if (last() != km) add(km) }
+        val marks = Units.axisMarks(run.distanceM, miles)   // ตามหน่วยที่เลือก (AUDIT A8)
         marks.forEachIndexed { i, k ->
             val tv = TextView(this).apply {
                 setTextAppearance(R.style.Txt_Caption)
@@ -162,9 +167,9 @@ class ReplayActivity : AppCompatActivity() {
         binding.statTime.tvValue.text = Fmt.duration(elapsed)
         binding.statPace.tvValue.text = Fmt.pace(point.paceSecPerKm.toDouble(), miles)
 
-        val km = (distance / 1000.0).toInt() + 1
+        val unitIndex = Units.inUnit(distance, miles).toInt() + 1
         val color = PaceColor.forPace(point.paceSecPerKm)
-        binding.tvSegment.text = getString(R.string.replay_segment, PaceColor.label(point.paceSecPerKm), km)
+        binding.tvSegment.text = getString(R.string.replay_segment, PaceColor.label(point.paceSecPerKm), unitIndex, Fmt.unit(miles))
         binding.tvSegmentPace.text = getString(R.string.replay_segment_pace, Fmt.pace(point.paceSecPerKm.toDouble(), miles), Fmt.paceUnit(miles))
         (binding.segmentDot.background.mutate() as? GradientDrawable)?.setColor(color)
     }
@@ -172,6 +177,7 @@ class ReplayActivity : AppCompatActivity() {
     override fun onResume() {
         super.onResume()
         binding.osmMap.onResume()
+        handler.removeCallbacks(frame)
         handler.postDelayed(frame, FRAME_MS.toLong())
     }
 
