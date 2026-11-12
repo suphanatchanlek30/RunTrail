@@ -168,8 +168,9 @@ class NotificationsActivity : AppCompatActivity() {
                 b.tvTime.text = try { Fmt.cardDate(RunJson.millis(n.getString("created_at"))) } catch (e: Exception) { "" }
                 b.dotUnread.visibility = if (n.optBoolean("read")) View.INVISIBLE else View.VISIBLE
                 val tappable = type == "rank_passed" || !n.isNull("run_id")
-                b.row.isClickable = tappable
                 b.row.setOnClickListener(if (tappable) View.OnClickListener { open(n) } else null)
+                // ต้องตั้งหลัง setOnClickListener: การส่ง null ทำให้ view กลายเป็น clickable เอง
+                b.row.isClickable = tappable
             }
         }
     }

@@ -129,7 +129,7 @@ class SensorCheckActivity : AppCompatActivity(), SensorEventListener {
             else -> {
                 row.tvValue.setText(R.string.sensor_gps_on)
                 setStatus(row, R.string.sensor_status_ready, R.color.run_green_dark, R.drawable.dot_green_s)
-                row.row.setOnClickListener(null)
+                row.row.setOnClickListener(null); row.row.isClickable = false   // setOnClickListener(null) ตั้ง clickable = true ให้เอง
             }
         }
     }
@@ -144,7 +144,7 @@ class SensorCheckActivity : AppCompatActivity(), SensorEventListener {
             row.row.setOnClickListener { askPermission.launch(arrayOf(Manifest.permission.ACTIVITY_RECOGNITION)) }
         } else if (SensorHelper.isAvailable(this, SensorHelper.specs[1])) {
             setStatus(row, R.string.sensor_status_ready, R.color.run_green_dark, R.drawable.dot_green_s)
-            row.row.setOnClickListener(null)
+            row.row.setOnClickListener(null); row.row.isClickable = false   // setOnClickListener(null) ตั้ง clickable = true ให้เอง
         }
     }
 
@@ -188,7 +188,7 @@ class SensorCheckActivity : AppCompatActivity(), SensorEventListener {
         } else {
             row.tvValue.setTextColor(getColor(R.color.text_primary))
             setStatus(row, R.string.sensor_status_ready, R.color.run_green_dark, R.drawable.dot_green_s)
-            row.row.setOnClickListener(null)
+            row.row.setOnClickListener(null); row.row.isClickable = false   // setOnClickListener(null) ตั้ง clickable = true ให้เอง
         }
     }
 }
