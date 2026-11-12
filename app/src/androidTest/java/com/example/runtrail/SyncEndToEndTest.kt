@@ -195,6 +195,24 @@ class SyncEndToEndTest {
         assertEquals(dist, r.serverDistanceM!!, dist * 0.02)
     }
 
+    @Test fun veryLongRunStillSyncs() {
+        // 60,000 จุด ≈ 16.7 ชม. ที่ 1 จุด/วินาที — เกินเพดาน 50,000 จุดของ server (เดิมได้ 400 ทุกรอบ ซิงก์ไม่ได้เลย)
+        val n = 60_000
+        val start = System.currentTimeMillis() - n * 1000L - 3_600_000
+        val track = List(n) { i -> TrackPoint(13.0 + i * 3.0 / 111_194.93, 100.5, start + i * 1000L, 5.0, 5f) }
+        val dist = (n - 1) * 3.0
+        val id = RunRepository.insert(Run(title = "อัลตร้า", startTime = start, endTime = track.last().time,
+            distanceM = dist, movingTimeS = n.toLong(), track = track))
+        val done = engine.sync() as SyncEngine.Outcome.Done
+        assertEquals(1, done.pushed)
+        val r = RunRepository.getById(id, withTrack = false)!!
+        assertEquals("sync error: ${r.syncError}", SyncStatus.SYNCED, r.syncStatus)
+        assertEquals("server distance ≈ app distance", dist, r.serverDistanceM!!, dist * 0.01)
+        assertEquals(n, RunRepository.loadTrack(id).size)                  // ในเครื่องยังครบทุกจุด
+        val onServer = api.track(r.uuid)
+        assertEquals("server keeps 50,000 points", 50_000, onServer.size)
+    }
+
     @Test fun photoRemovedOnOneDeviceDisappearsOnAnother() {
         // เครื่อง A: บันทึก + รูป → ซิงก์
         val id = recordGpsRun()

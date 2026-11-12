@@ -110,19 +110,20 @@ class SyncEngine(
 
     /** คืน true ถ้าส่งสำเร็จ · ข้อผิดพลาดที่ลองใหม่ได้จะโยนต่อให้ยกเลิกทั้งรอบ */
     private fun pushRun(run: Run, rethrow: Boolean = false): Boolean {
-        val track = if (run.isGps) RunRepository.loadTrack(run.id) else emptyList()
+        // วิ่งยาวเกินที่ server รับ → ลดจำนวนจุดก่อนส่ง (เส้นทางในเครื่องยังครบทุกจุด)
+        val track = if (run.isGps) SyncRules.thinForUpload(RunRepository.loadTrack(run.id)) else emptyList()
         val resp = try {
             api.putRun(run, track)
         } catch (e: ApiException) {
-            when {
-                e.isNetwork || e.isServerError || e.status == 401 || e.code == "concurrent_upload" -> throw e
-                e.code == "run_id_taken" -> {
+            when (SyncRules.onPushError(e.status, e.code)) {
+                SyncRules.PushFailure.ABORT_ROUND -> throw e
+                SyncRules.PushFailure.NEW_UUID -> {
                     // ชน UUID กับคนอื่น (แทบเป็นไปไม่ได้) → เปลี่ยนรหัสแล้วส่งรอบหน้า
                     RunRepository.update(run.copy(uuid = java.util.UUID.randomUUID().toString()), touch = false)
                     return false
                 }
-                e.code == "run_deleted" -> { RunRepository.hardDelete(run.id); return true }
-                else -> {
+                SyncRules.PushFailure.DROP_LOCAL -> { RunRepository.hardDelete(run.id); return true }
+                SyncRules.PushFailure.MARK_FAILED -> {
                     RunRepository.setSyncState(run.id, SyncStatus.FAILED, e.message)
                     if (rethrow) throw e
                     return false
@@ -131,8 +132,7 @@ class SyncEngine(
         }
         val merged = RunJson.fromServer(resp, run, run.ownerUserId).copy(
             id = run.id, photoUri = run.photoUri, thumb = run.thumb, pauses = run.pauses,
-            photoSync = if (run.photoSync == PhotoSync.PENDING || run.photoSync == PhotoSync.DELETE) run.photoSync
-            else RunJson.fromServer(resp, run, null).photoSync,
+            photoSync = SyncRules.photoStateAfterPush(run.photoSync, serverHasPhoto = !resp.isNull("photo_url") && resp.optString("photo_url").isNotBlank()),
         )
         if (!RunRepository.updateIfUnchanged(merged, run.updatedAt)) {
             RunRepository.markOnServer(run.id)   // ผู้ใช้แก้ระหว่างส่ง → ยังรอซิงก์อยู่ รอบหน้าจะส่งค่าล่าสุด
@@ -155,7 +155,7 @@ class SyncEngine(
                 try {
                     api.uploadPhoto(run.uuid, file.readBytes())
                 } catch (e: ApiException) {
-                    if (e.isNetwork || e.isServerError || e.status == 401) throw e
+                    if (SyncRules.photoErrorAbortsRound(e.status)) throw e
                     Log.w(TAG, "photo rejected for ${run.uuid}: ${e.message}")
                 }
                 RunRepository.setPhotoSync(run.id, PhotoSync.SYNCED)
@@ -164,7 +164,7 @@ class SyncEngine(
                 try {
                     api.photoDelete(run.uuid)
                 } catch (e: ApiException) {
-                    if (e.isNetwork || e.isServerError || e.status == 401) throw e
+                    if (SyncRules.photoErrorAbortsRound(e.status)) throw e
                 }
                 RunRepository.setPhotoSync(run.id, PhotoSync.NONE)
             }
@@ -203,39 +203,29 @@ class SyncEngine(
         prefs.notificationsCache = page.toString()
         prefs.unreadNotifications = page.optInt("unread_count")
         val items = page.getJSONArray("items")
-        val shown = prefs.notifiedIds.toMutableSet()
-        val firstFetch = shown.isEmpty()
-        for (i in items.length() - 1 downTo 0) {
-            val n = items.getJSONObject(i)
-            val id = n.getString("id")
-            if (id in shown) continue
-            shown += id
-            // ครั้งแรกหลังล็อกอินไม่เด้งของเก่าทั้งหมด
-            if (!firstFetch && !n.optBoolean("read") && prefs.updatesAlert) Notifier.show(context, n)
-        }
-        shown += INIT_MARK   // จำว่าดึงครั้งแรกแล้ว แม้ยังไม่มีการแจ้งเตือนเลย
-        prefs.notifiedIds = if (shown.size > 400) shown.take(300).toSet() + INIT_MARK else shown
+        val byId = (0 until items.length()).map { items.getJSONObject(it) }.associateBy { it.getString("id") }
+        val notes = byId.values.map { SyncRules.Note(it.getString("id"), it.optBoolean("read")) }
+        val (show, remembered) = SyncRules.notificationsToShow(notes, prefs.notifiedIds, prefs.updatesAlert)
+        show.forEach { Notifier.show(context, byId.getValue(it.id)) }
+        prefs.notifiedIds = remembered
     }
 
     private fun applyPulled(o: JSONObject, uid: String): Boolean {
         val uuid = o.getString("id")
         val local = RunRepository.getByUuid(uuid)
-        if (o.optBoolean("deleted")) {
-            if (local != null && local.syncStatus == SyncStatus.SYNCED) {
-                RunRepository.hardDelete(local.id)
-                return true
-            }
-            return false
+        val state = local?.let { SyncRules.Local(it.syncStatus, it.deleted, it.finished, it.updatedAt, it.photoUri, it.photoSync) }
+        val serverDeleted = o.optBoolean("deleted")
+        val serverVersion = if (serverDeleted) 0L else RunJson.millis(o.getString("client_updated_at"))
+        when (SyncRules.onPulled(state, serverDeleted, serverVersion)) {
+            SyncRules.PullAction.IGNORE -> return false
+            SyncRules.PullAction.DELETE_LOCAL -> { RunRepository.hardDelete(local!!.id); return true }
+            SyncRules.PullAction.APPLY -> Unit
         }
-        // แก้ในเครื่องแล้วยังไม่ได้ส่ง → ฝั่งเครื่องชนะ (จะถูกส่งขึ้นไปรอบหน้า)
-        if (local != null && (local.syncStatus != SyncStatus.SYNCED || local.deleted || local.endTime == null)) return false
-        val serverVersion = RunJson.millis(o.getString("client_updated_at"))
-        if (local != null && local.updatedAt >= serverVersion) return false   // มีอยู่แล้ว (เช่น เพิ่งส่งขึ้นไปเอง)
 
         val merged = RunJson.fromServer(o, local, uid).copy(id = local?.id ?: 0)
         val photoUrl = if (o.isNull("photo_url")) null else o.optString("photo_url").ifBlank { null }
-        // เครื่องอื่นลบรูปไปแล้ว (รูปในเครื่องนี้เคยซิงก์แล้ว แต่ server ไม่มีรูป) → ลบตามด้วย (AUDIT A9)
-        val photoRemovedElsewhere = photoUrl == null && local?.photoUri != null && local.photoSync == PhotoSync.SYNCED
+        // เครื่องอื่นลบรูปไปแล้ว → ลบตามด้วย (AUDIT A9)
+        val photoRemovedElsewhere = SyncRules.photoRemovedElsewhere(state, serverHasPhoto = photoUrl != null)
         if (photoRemovedElsewhere) ImageStore.delete(context, local?.photoUri)
         val id = RunRepository.upsertFromServer(merged, clearLocalPhoto = photoRemovedElsewhere)
         if (merged.isGps && !RunRepository.hasTrack(id)) {
@@ -253,6 +243,5 @@ class SyncEngine(
         private const val TAG = "SyncEngine"
         /** lock เดียวทั้งแอป: WorkManager กับปุ่มซิงก์ในหน้าจอจะไม่ทำงานซ้อนกัน */
         val LOCK = Any()
-        private const val INIT_MARK = "_init"
     }
 }
