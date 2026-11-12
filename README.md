@@ -323,8 +323,8 @@ iPhone (Safari) → Cloudflare Tunnel (HTTPS) → bridge.py → adb emu geo fix 
 
 | ชุด | คำสั่ง | ครอบคลุม |
 |---|---|---|
-| แอป · JVM (41 ข้อ) | `./gradlew testDebugUnitTest` | สูตร TrackMath/RunCalculator · สถานะการวิ่งสด (auto-pause, ช่วงหยุด, จุด GPS มาเป็นชุด, จุดแรกค้าง) · JSON · HTTP client (refresh token พร้อมกันแล้ว refresh ครั้งเดียว, gzip) · ตำแหน่งในภาพแชร์ · หน่วย กม./ไมล์ · cadence/แคลอรี่/เข็มทิศ · เลือกแหล่ง GPS · ย่อรูป |
-| แอป · บนเครื่อง (24 ข้อ) | `./gradlew connectedDebugAndroidTest -Pe2eApiUrl=http://10.0.2.2:8080` | SQLite · **บันทึกต่อเนื่องตอนปิดจอ** · วาดภาพแชร์ · **ซิงก์กับ backend จริงทั้งวงจร** (ออฟไลน์ → ซิงก์ครั้งเดียว → รูปขึ้น S3 → ลิงก์แชร์ → แก้/ลบ → เครื่องใหม่ดึงคืน) · **ตรวจทุกปุ่มทุกหน้า** (ไม่มีปุ่มตาย · กดแล้วไม่เด้ง) · วัดความเร็วกับข้อมูล 1,000 รอบ |
+| แอป · JVM (61 ข้อ) | `./gradlew testDebugUnitTest` | สูตร TrackMath/RunCalculator · สถานะการวิ่งสด (auto-pause, ช่วงหยุด, จุด GPS มาเป็นชุด, จุดแรกค้าง) · JSON · HTTP client (refresh token พร้อมกันแล้ว refresh ครั้งเดียว, gzip) · ตำแหน่งในภาพแชร์ · หน่วย กม./ไมล์ · cadence/แคลอรี่/เข็มทิศ · เลือกแหล่ง GPS · ย่อรูป |
+| แอป · บนเครื่อง (33 ข้อ) | `./gradlew connectedDebugAndroidTest -Pe2eApiUrl=http://10.0.2.2:8080` | SQLite · **บันทึกต่อเนื่องตอนปิดจอ** · วาดภาพแชร์ · **ซิงก์กับ backend จริงทั้งวงจร** (ออฟไลน์ → ซิงก์ครั้งเดียว → รูปขึ้น S3 → ลิงก์แชร์ → แก้/ลบ → เครื่องใหม่ดึงคืน) · **ตรวจทุกปุ่มทุกหน้า** (ไม่มีปุ่มตาย · กดแล้วไม่เด้ง) · วัดความเร็วกับข้อมูล 1,000 รอบ · **บันทึกการวิ่งผ่านหน้าจอด้วย GPS ของ emulator** · เซนเซอร์ที่ตั้งค่าจาก Mac · ปุ่มเฉพาะบัญชีกับ backend จริง · หน้าจอตอนออฟไลน์ · การวิ่ง 60,000 จุด |
 | Backend · Go | `cd backend && make test` | unit + integration กับ PostgreSQL จริง: auth, last-write-wins, UUID ของคนอื่น, gzip bomb, sync cursor, รูป, อันดับ, แชร์ซ่อนบ้าน, การแจ้งเตือน, ลบบัญชี |
 | Backend · smoke (29 ข้อ) | `cd backend && make smoke` | ทั้ง flow ผ่าน HTTP กับ Docker จริง |
 

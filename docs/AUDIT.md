@@ -124,6 +124,7 @@ Every round had identical results — no flaky tests.
 | App instrumented (`am instrument`, with `e2eApiUrl`) | 12 passed | **24 passed** ×3 rounds; final run **26 passed**, 0 failed |
 | Backend Go (`go test -count=1 ./...`) | api/auth/track ok | **api/auth/track ok** (+ `TestStatsMonthlyFollowsServerClock`) |
 | Backend smoke (`scripts/smoke.sh`) | 29 / 29 | **29 / 29** |
+| **Follow-up round (§7), full run** | — | JVM **61/61** · instrumented **33/33** (with `e2eApiUrl` and host-driven sensors) · Go ok · smoke 29/29 — one complete round; rounds 2–3 were stopped at the owner's request |
 | Lint | 0 errors, 225 warnings | **0 errors, 217 warnings** (DrawAllocation 8 → 0); unchanged in the final run |
 | `gofmt -l` / `go vet` | clean | clean |
 
@@ -141,39 +142,47 @@ because it uninstalls the app and would wipe the owner's data on this emulator.
 
 ## 6. Not verified / remaining risk
 
-Stated plainly so nobody reads this audit as "zero bugs, proven". It is not.
+Stated plainly so nobody reads this audit as "zero bugs, proven". It is not. Section 7 covers the follow-up round
+that closed most of the gaps listed in the first version of this section.
 
-**Not checked on a real phone (emulator only).** The emulator has no step counter, barometer or ambient-temperature
-sensor, and its GPS is simulated. Code paths for "sensor missing" were exercised; real readings were not.
-How to check on a device: run 1 km outdoors → Cadence shows 150–190 spm while running and `--` when standing;
-Sensor check lists Step Counter as Ready after granting "Physical activity"; screen-off for 5 min during a run
-keeps distance growing (the service test covers this logic, not a real Doze cycle).
-
-**Not run end-to-end by hand on this emulator:** a real GPS recording through the UI (start → pause → hold-to-stop).
-Reason: the emulator holds the owner's own app data and a test recording would be saved into it.
-Covered instead by `RunTrackingServiceTest` (service, screen off), `LiveRunStateTest` (auto-pause, batched fixes)
-and `SyncEndToEndTest` (offline → sync → photo → share → edit/delete → pull on a new device).
-
-**Account-only controls** (change password, logout, delete account, country, leaderboard opt-in, updates alerts)
-are hidden in Guest mode, so `TapEverythingTest` did not tap them. Their server side is covered by Go tests and smoke.
+**Still only on the emulator, not on a real phone.**
+- *Step counter:* the emulator has none. `SensorDeviceTest` feeds step events in real time through the same
+  listener the hardware uses (cadence 170 ± 4 spm, 0 after 5 s still), but real hardware batching was not observed.
+- *Ambient temperature:* the emulator's sensor always reports −1e30 whatever the console sets; the app correctly
+  hides it ("—"). A real reading was not observed.
+- *GPS:* exercised through the emulator's own GPS fed by `adb emu geo fix` and through a test provider, never a
+  real satellite fix; screen-off for minutes and Doze on a real device were not observed.
+- How to check on a phone: run 1 km outdoors → cadence 150–190 spm while running and `--` when standing; Sensor
+  check shows Step Counter "Ready" after granting Physical activity; lock the screen for 5 min mid-run and the
+  distance keeps growing.
 
 **Share-code race (B1)** is fixed by reasoning; the race was not reproduced in a test.
 
-**Lint warnings left on purpose:** `LockedOrientationActivity` (portrait lock is a design decision; Android 16+
-ignores it on large screens), `UnusedResources`, `Overdraw`, `UseCompoundDrawables`, `DisableBaselineAlignment`,
-`PluralsCandidate` (Thai has no plural forms) — none affect behaviour.
+**Photo removal timing:** if device B syncs in the moment between device A's run update and its photo delete,
+B keeps the photo until that run is edited again.
 
-**Not done from the request, named explicitly:**
-- *Very long runs:* the server accepts at most 50,000 points (≈ 13.9 h at 1 point/s). A longer recording gets HTTP 400,
-  is marked "sync failed" with the server's message, stays on the phone, and is not retried. Not changed.
-- *A single run with 50,000 points* was not loaded on the device; 1,000 runs were (see `PerfTest`).
-- *SyncEngine / RunRepository JVM tests with fakes* were not written. Both are covered on the device instead
-  (`RunRepositoryTest`, `SyncEndToEndTest` against the real backend).
-- *Offline and server-down screens* were reviewed in code (Leaderboard and Notifications show the cached copy with an
-  "offline" note; Login/Register show "can't reach the server"; sync retries through WorkManager) and the client error
-  path is unit-tested (`ApiClientTest.networkErrorHasStatusZero`), but they were not clicked through with the network off.
-- *Photo removal timing:* if device B syncs in the moment between device A's run update and its photo delete,
-  B keeps the photo until that run is edited again.
+**Lint warnings left on purpose:** `LockedOrientationActivity`/`DiscouragedApi` (portrait lock is a design decision;
+Android 16+ ignores it on large screens), `UnusedResources`, `Overdraw`, `UseCompoundDrawables`,
+`DisableBaselineAlignment`, `PluralsCandidate` (Thai has no plural forms) — none affect behaviour.
+
+**Tests that touch the owner's emulator install:** `ControlsAuditTest`/`TapEverythingTest` set `onboarded`, and
+`AccountFlowTest`/`OfflineScreensTest` change the server address and session for the duration of the test. All of them
+back up and restore the preferences and session; the preferences file was byte-identical (same MD5) before and after.
+`LiveRunFlowTest` grants location/notification permission to the app and temporarily allows mock locations
+(reset to default afterwards).
+
+## 7. Follow-up round (after "make it complete")
+
+| # | Gap from §6 (first version) | What was done | Evidence |
+|---|---|---|---|
+| G1 | Runs over 50,000 points never synced (HTTP 400 on every sync; the first version of this file wrongly said "not retried" — FAILED runs are retried each sync and failed again) | `SyncRules.thinForUpload` samples the upload to exactly 50,000 points; the phone keeps every point | `SyncRulesTest`; `SyncEndToEndTest.veryLongRunStillSyncs` (60,000 points → server stores 50,000, distance within 1 %) |
+| G2 | No JVM tests for sync | Every SyncEngine decision moved to pure `SyncRules` (push errors, pull conflicts, photo state, notification de-dup); SyncEngine only executes them | `SyncRulesTest` (14 cases) |
+| G3 | (bug found while extracting) notification de-dup trimmed an unordered set with `take(300)` and could forget IDs still on the server page → the same notification popped again | trim keeps the current page | `SyncRulesTest.trimmingNeverForgetsWhatTheServerStillShows` |
+| G4 | Live recording never driven through the UI | start → distance on screen → pause (distance frozen) → resume → pause → real 1.5 s touch on hold-to-stop → run saved with track and 2 pauses → summary opens; in-memory DB | `LiveRunFlowTest`, run with a test GPS provider **and** with the emulator's GPS fed from the Mac (`-e gpsSource host`) |
+| G5 | Sensors only checked by reading code | step events through `CadenceTracker`'s listener; pressure/light/accelerometer/magnetometer set from the Mac with `adb emu sensor set` and read on the Sensor check screen | `SensorDeviceTest` (`-e hostSensors 1`) |
+| **A15** | **(crash found by G5)** | Compass heading NaN (magnetic field parallel to gravity, strong interference) → `roundToInt()` threw → **whole app crashed on the live-run screen**. Seen in logcat during the full suite (`IllegalArgumentException: Cannot round NaN value` at CompassHelper.kt:46); reproduced, then fixed with `headingDegrees()` returning null | `SensorDeviceTest.compassIgnoresDegenerateReadingsInsteadOfCrashing` (failed before, passes after), `SensorMathTest.compassHeadingFromAzimuth` |
+| G6 | Signed-in controls never tapped | throw-away account registered through the UI; country, leaderboard opt-out, update alerts, change password (dialog), logout, login with the new password, delete account — each result checked on the server | `AccountFlowTest` |
+| G7 | Offline / server-down screens only reviewed | server unreachable: Leaderboard and Notifications show cached data (+ offline note), Home opens, sync returns Retry and keeps the run pending, Login shows the network error and stops the spinner | `OfflineScreensTest` |
 
 **Environment note.** `backend/.env` contains the Mac's LAN IP. During this session the Mac moved networks
 (172.25.83.16 → 172.20.10.2), so presigned photo URLs pointed at a dead address and the first full test round failed at
