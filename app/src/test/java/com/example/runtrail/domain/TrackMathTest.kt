@@ -7,7 +7,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** สูตรในแอปต้องได้ผลเท่ากับ backend (backend/internal/track ใช้ตัวเลขชุดเดียวกัน) */
+/** The app's formulas must match the backend (backend/internal/track uses the same cases). */
 class TrackMathTest {
 
     @Test fun haversineMatchesBackend() {

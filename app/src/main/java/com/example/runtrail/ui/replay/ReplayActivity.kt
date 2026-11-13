@@ -27,9 +27,7 @@ import com.example.runtrail.ui.detail.RunDetailActivity
 import com.example.runtrail.ui.widget.OsmRoute
 import kotlin.math.roundToInt
 
-/**
- * 11 · Replay — เล่นย้อนการวิ่งบนแผนที่ (เส้นที่ยังไม่ถึงเป็นสีเทา) ปรับความเร็ว 1× / 2× / 4× / 8×
- */
+/** Replays a run on the map at 1×, 2×, 4× or 8× speed. */
 class ReplayActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityReplayBinding
@@ -64,7 +62,7 @@ class ReplayActivity : AppCompatActivity() {
 
         run = RunRepository.getById(intent.getLongExtra(RunDetailActivity.EXTRA_RUN_ID, 0)) ?: run { finish(); return }
         route = RunRepository.route(run)
-        // การวิ่งที่บันทึกเองไม่มีเส้นทาง → ไม่มีอะไรให้เล่น (เดิม route[0] ของรายการว่างทำให้แอปเด้ง, AUDIT A1)
+        // Manual runs have no route to replay.
         if (route.size < 2) {
             toast(getString(R.string.replay_no_route))
             finish()
@@ -83,7 +81,7 @@ class ReplayActivity : AppCompatActivity() {
         binding.map.routeBottom = 0.62f
         binding.map.showCurrent = true
 
-        // การวิ่งจาก GPS จริง → เล่นบนแผนที่ OpenStreetMap
+        // GPS runs replay on the OpenStreetMap view.
         if (run.track.size >= 2) {
             OsmRoute.setup(binding.osmMap, interactive = true)
             overlay.track = run.track
@@ -128,7 +126,7 @@ class ReplayActivity : AppCompatActivity() {
     }
 
     private fun buildAxis() {
-        val marks = Units.axisMarks(run.distanceM, miles)   // ตามหน่วยที่เลือก (AUDIT A8)
+        val marks = Units.axisMarks(run.distanceM, miles)
         marks.forEachIndexed { i, k ->
             val tv = TextView(this).apply {
                 setTextAppearance(R.style.Txt_Caption)
@@ -196,7 +194,7 @@ class ReplayActivity : AppCompatActivity() {
 
     companion object {
         private const val FRAME_MS = 40f
-        private const val BASE_DURATION_MS = 60_000f   // 1× เล่นจบใน 60 วินาที
+        private const val BASE_DURATION_MS = 60_000f   // 1× plays the whole run in 60 s
         private const val KEY_PROGRESS = "progress"
         private const val KEY_SPEED = "speed"
         private const val KEY_PLAYING = "playing"

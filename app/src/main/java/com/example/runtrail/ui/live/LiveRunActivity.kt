@@ -42,10 +42,10 @@ import kotlin.math.abs
 import kotlin.math.roundToInt
 
 /**
- * 07 · Live Run / 08 · Paused — หน้าจอแสดงผลของการวิ่งสด
+ * Live run screen, also used while paused.
  *
- * ตัวบันทึกจริงคือ [RunTrackingService] (foreground service) จึงปิดจอ สลับแอป หรือออกจากหน้านี้ได้
- * โดย GPS และเวลายังเดินต่อ หน้านี้แค่อ่านค่ามาแสดง และสั่ง หยุด / วิ่งต่อ / จบ / ถ่ายรูป
+ * [RunTrackingService] does the recording, so the screen can be closed without stopping the run.
+ * This activity displays the state and sends pause, resume, finish and photo actions.
  */
 class LiveRunActivity : AppCompatActivity() {
 
@@ -67,7 +67,7 @@ class LiveRunActivity : AppCompatActivity() {
         val file = pendingPhoto
         pendingPhoto = null
         if (ok && file != null) {
-            // ย่อ + แก้ทิศตาม EXIF บน background thread (ไม่ให้หน้าวิ่งค้าง, AUDIT A3) แล้วลบไฟล์ชั่วคราว
+            // Process off the main thread, then delete the temporary file.
             runAsync({ ImageStore.saveFromUri(applicationContext, Uri.fromFile(file)).also { file.delete() } }) { r ->
                 val path = r.getOrNull()
                 val s = service ?: RunTrackingService.current
@@ -86,7 +86,7 @@ class LiveRunActivity : AppCompatActivity() {
         }
     }
 
-    /** ต่อกับ service ทันทีที่มันพร้อม (start ทำงานแบบ async) */
+    /** Polls until the service has started, then attaches to it. */
     private val attachLoop = object : Runnable {
         override fun run() {
             if (service == null) attach()
@@ -115,7 +115,7 @@ class LiveRunActivity : AppCompatActivity() {
             if (e.action == MotionEvent.ACTION_DOWN) followUntil = System.currentTimeMillis() + 10_000
             false
         }
-        binding.map.controller.setCenter(GeoPoint(13.7563, 100.5018))   // ก่อนได้ตำแหน่ง: กรุงเทพฯ
+        binding.map.controller.setCenter(GeoPoint(13.7563, 100.5018))   // Bangkok until the first fix
         setupTiles()
         binding.map.setDarkIfNeeded()
 
@@ -155,10 +155,10 @@ class LiveRunActivity : AppCompatActivity() {
                 val s = service
                 when {
                     locked -> toast(getString(R.string.live_unlock_hint))
-                    // ยังไม่ได้เริ่มบันทึก (เช่น ไม่ให้สิทธิ์ตำแหน่ง) → ไม่มีอะไรให้เสีย ออกได้ทันที (AUDIT A12)
+                    // Nothing recorded yet (e.g. location denied): just leave.
                     s == null && !RunTrackingService.isRunning -> finish()
                     s != null && !s.state.paused -> s.pause()
-                    // หยุดชั่วคราวอยู่ → ต้องกด Back ซ้ำภายใน 2 วินาทีจึงออกจากหน้าวิ่ง (CS364 เกณฑ์ 4.2)
+                    // While paused, a second Back press is needed to leave.
                     android.os.SystemClock.elapsedRealtime() - lastBackAt > com.example.runtrail.ui.common.EXIT_WINDOW_MS -> {
                         lastBackAt = android.os.SystemClock.elapsedRealtime()
                         toast(getString(R.string.live_back_again))
@@ -210,7 +210,7 @@ class LiveRunActivity : AppCompatActivity() {
         return s.state.lastFix ?: s.lastKnown?.let { TrackPoint(it.latitude, it.longitude, 0, 0.0, 0f) }
     }
 
-    /** ใช้กล้องแบบเต็มความละเอียด (เดิมใช้ภาพ preview เล็ก ๆ) ผ่าน FileProvider */
+    /** Full-resolution camera capture through FileProvider. */
     private fun openCamera() {
         val dir = File(cacheDir, "camera").apply { mkdirs() }
         val file = File(dir, "live_${System.currentTimeMillis()}.jpg")
@@ -229,7 +229,7 @@ class LiveRunActivity : AppCompatActivity() {
         binding.topFade.visibility = if (mapDark) View.INVISIBLE else View.VISIBLE
     }
 
-    /** ให้ตำแหน่งนักวิ่งอยู่กลางพื้นที่แผนที่ที่มองเห็น (เหนือ bottom sheet) */
+    /** Keeps the runner centred in the part of the map not covered by the sheet. */
     private fun updateMapOffset(paused: Boolean) {
         val sheet = if (paused) binding.sheetPaused else binding.sheetRunning
         sheet.post {
@@ -305,7 +305,7 @@ class LiveRunActivity : AppCompatActivity() {
         binding.pausedTime.tvValue.text = Fmt.duration(moving)
         binding.pausedPace.tvValue.text = if (distance >= 20) Fmt.pace(avg, miles) else "--:--"
 
-        // ป้ายเทียบเพซเป้าหมาย
+        // Badge comparing current pace with the target.
         val target = prefs.targetPaceSec
         if (now > 0) {
             val diff = target - now.roundToInt()
@@ -319,15 +319,15 @@ class LiveRunActivity : AppCompatActivity() {
             binding.tvPaceBanner.setCompoundDrawablesRelativeWithIntrinsicBounds(R.drawable.dot_lime, 0, 0, 0)
         }
 
-        // เส้นทางบนแผนที่ (วาดใหม่เฉพาะเมื่อมีจุดเพิ่ม)
+        // Redraw the route only when points were added.
         if (st != null) {
             val fix = st.lastFix
             if (st.track.size != drawnPoints) {
                 drawnPoints = st.track.size
                 overlay.track = st.track.toList()
             }
-            // หมุด = ตำแหน่ง GPS ล่าสุด (ตามตัวเดินทุกวินาที แม้ยังไม่ผ่านตัวกรองเส้นทาง หรือกำลังหยุดชั่วคราว)
-            // ยังไม่ได้ GPS ครั้งแรก → ใช้ตำแหน่งล่าสุดที่เครื่องรู้ (วงความแม่นยำใหญ่ตามจริง) ให้เห็นหมุดทันที
+            // The marker follows the latest fix every second, even if the point was filtered out or the run is paused.
+            // Before the first fix, use the last known location so the marker appears at once.
             overlay.current = fix ?: s.lastKnown?.let { TrackPoint(it.latitude, it.longitude, it.time, it.altitude, if (it.hasAccuracy()) it.accuracy else 50f) }
             if (fix != null && System.currentTimeMillis() > followUntil) {
                 binding.map.controller.animateTo(GeoPoint(fix.lat, fix.lng))
@@ -337,7 +337,7 @@ class LiveRunActivity : AppCompatActivity() {
         renderGpsChip()
     }
 
-    /** ป้ายสถานะ GPS มุมซ้ายบน */
+    /** GPS status chip in the top-left corner. */
     private fun renderGpsChip() {
         val s = service
         val (text, dot) = when {
@@ -396,7 +396,7 @@ class LiveRunActivity : AppCompatActivity() {
         super.onPause()
         binding.map.onPause()
         compass.stop()
-        service?.listener = null   // ไม่ต้องวาดหน้าจอขณะมองไม่เห็น service ยังบันทึกต่อ
+        service?.listener = null   // no UI updates while hidden; the service keeps recording
     }
 
     override fun onDestroy() {

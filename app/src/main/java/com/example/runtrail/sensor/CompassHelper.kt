@@ -7,10 +7,7 @@ import android.hardware.SensorEventListener
 import android.hardware.SensorManager
 import kotlin.math.roundToInt
 
-/**
- * เข็มทิศจาก rotation vector (ถ้าไม่มี ใช้ magnetometer + accelerometer) — MA12
- * register ใน onResume / unregister ใน onPause
- */
+/** Compass heading from the rotation vector, falling back to magnetometer + accelerometer. */
 class CompassHelper(context: Context, private val onHeading: (degrees: Int) -> Unit) : SensorEventListener {
 
     private val sm = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
@@ -43,8 +40,7 @@ class CompassHelper(context: Context, private val onHeading: (degrees: Int) -> U
             Sensor.TYPE_MAGNETIC_FIELD -> { event.values.copyInto(geomagnetic); if (!fromMagAccel()) return }
         }
         SensorManager.getOrientation(matrix, orientation)
-        // ค่าเสื่อม (สนามแม่เหล็กขนานกับแรงโน้มถ่วง / แม่เหล็กรบกวนแรง) ได้ NaN → ข้ามเหตุการณ์นี้
-        // เดิม roundToInt() ของ NaN โยน exception ทำให้แอปเด้งทั้งแอปบนหน้าวิ่ง (AUDIT A15)
+        // Degenerate readings (strong interference) give NaN; skip them.
         headingDegrees(orientation[0])?.let(onHeading)
     }
 
@@ -53,7 +49,7 @@ class CompassHelper(context: Context, private val onHeading: (degrees: Int) -> U
     override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) {}
 
     companion object {
-        /** มุม azimuth (เรเดียน) → องศา 0..359 · null ถ้าค่าใช้ไม่ได้ (NaN / อนันต์) */
+        /** Azimuth in radians to degrees 0..359, or null for NaN/infinite input. */
         fun headingDegrees(azimuthRad: Float): Int? {
             if (azimuthRad.isNaN() || azimuthRad.isInfinite()) return null
             return ((Math.toDegrees(azimuthRad.toDouble()) + 360) % 360).roundToInt() % 360

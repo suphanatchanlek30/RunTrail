@@ -11,14 +11,12 @@ import kotlin.math.roundToInt
 import kotlin.math.sin
 import kotlin.math.sqrt
 
-/**
- * คำนวณจากจุด GPS จริง (Kotlin ล้วน ทดสอบบน JVM ได้)
- */
+/** Distance, pace, splits and elevation from GPS tracks. Mirrors the backend's track package. */
 object TrackMath {
 
     private const val EARTH_R = 6_371_000.0
 
-    /** ระยะทางระหว่าง 2 จุด (เมตร) — สูตร Haversine */
+    /** Haversine distance in metres. */
     fun distance(a: TrackPoint, b: TrackPoint): Double = distance(a.lat, a.lng, b.lat, b.lng)
 
     fun distance(lat1: Double, lng1: Double, lat2: Double, lng2: Double): Double {
@@ -29,13 +27,10 @@ object TrackMath {
         return 2 * EARTH_R * asin(sqrt(h.coerceIn(0.0, 1.0)))
     }
 
-    /** ความเร็วสูงสุดที่ยังนับเป็นการวิ่ง (ม./วิ) — เหมือน backend */
+    /** Fastest plausible running speed (m/s); same limit as the backend. */
     const val MAX_SPEED_MPS = 9.0
 
-    /**
-     * ระยะสะสมของแต่ละจุด (เมตร)
-     * ช่วงที่ "กระโดด" เร็วเกินคนวิ่ง (GPS เพิ่งจับตำแหน่งใหม่ได้) ไม่นับระยะ — backend ใช้กฎเดียวกัน
-     */
+    /** Cumulative distance in metres at each point. Jumps faster than [MAX_SPEED_MPS] add nothing. */
     fun cumulative(track: List<TrackPoint>): DoubleArray {
         val out = DoubleArray(track.size)
         for (i in 1 until track.size) out[i] = out[i - 1] + segment(track[i - 1], track[i])
@@ -48,7 +43,7 @@ object TrackMath {
         return if (dt > 0 && d / dt > MAX_SPEED_MPS) 0.0 else d
     }
 
-    /** เพซของแต่ละจุด (วินาที/กม.) เฉลี่ยในหน้าต่างประมาณ 60 ม. เพื่อลดความแกว่งของ GPS */
+    /** Pace (s/km) at each point, averaged over about 60 m to damp GPS noise. */
     fun paces(track: List<TrackPoint>, fallback: Int): IntArray {
         val cum = cumulative(track)
         return IntArray(track.size) { i ->
@@ -62,7 +57,7 @@ object TrackMath {
         }
     }
 
-    /** split รายกิโลเมตรจากเวลาที่ผ่านแต่ละหลักกิโลเมตร (ประมาณเชิงเส้นระหว่างจุด) */
+    /** Per-km splits, interpolating the time each kilometre mark was passed. */
     fun splits(track: List<TrackPoint>): List<Split> {
         if (track.size < 2) return emptyList()
         val cum = cumulative(track)
@@ -92,7 +87,7 @@ object TrackMath {
         return out
     }
 
-    /** ความสูงสะสม (ขึ้นอย่างเดียว) ตัดการแกว่งต่ำกว่า 2 ม. */
+    /** Total climb in metres, ignoring changes under 2 m. */
     fun elevationGain(track: List<TrackPoint>): Int {
         var gain = 0.0
         var ref = track.firstOrNull()?.altitude ?: return 0
@@ -103,7 +98,7 @@ object TrackMath {
         return gain.roundToInt()
     }
 
-    /** แปลงพิกัดจริงเป็น 0..1 (รักษาสัดส่วน) สำหรับวาดภาพย่อ/กราฟ */
+    /** Projects the track to 0..1 coordinates, keeping its aspect ratio. */
     fun normalize(track: List<TrackPoint>, fallbackPace: Int): List<RoutePoint> {
         if (track.size < 2) return emptyList()
         val lat0 = track.map { it.lat }.average()
@@ -127,9 +122,7 @@ object TrackMath {
     }
 }
 
-/**
- * กรองจุด GPS ขณะวิ่ง: ตัดจุดที่คลาดเคลื่อนสูง / กระโดดเร็วเกินคนวิ่ง / ขยับน้อยกว่าระยะความคลาดเคลื่อน
- */
+/** Live GPS filter: drops inaccurate fixes, impossible jumps and moves smaller than the accuracy. */
 class GpsFilter(
     private val maxAccuracyM: Float = 25f,
     private val maxSpeedMps: Double = 9.0,
@@ -137,12 +130,12 @@ class GpsFilter(
     var last: TrackPoint? = null
         private set
 
-    /** true = จุดล่าสุดที่รับเป็นการย้ายจุดอ้างอิง (GPS เพิ่งจับตำแหน่งใหม่) ไม่มีระยะ แต่ต้องเก็บจุดไว้ */
+    /** True when the last accepted point re-anchored the filter: it is kept but adds no distance. */
     var reanchored = false
         private set
     private var fastRejects = 0
 
-    /** คืนระยะที่เพิ่มขึ้น (เมตร) หรือ null ถ้าจุดนี้ไม่ควรเก็บ */
+    /** Returns the distance added in metres, or null if the point should be dropped. */
     fun accept(p: TrackPoint): Double? {
         reanchored = false
         if (p.accuracy > maxAccuracyM) return null
@@ -152,7 +145,7 @@ class GpsFilter(
         val dt = (p.time - prev.time) / 1000.0
         if (dt <= 0) return null
         if (d / dt > maxSpeedMps) {
-            // จุดอ้างอิงเดิมอาจผิด (เช่น ตำแหน่งเก่าค้างตอนเปิด GPS) — ถ้าเร็วเกินติดกัน 5 จุดให้เริ่มจุดอ้างอิงใหม่
+            // The anchor may be a stale fix from GPS start-up; after several fast rejects in a row, start over.
             if (++fastRejects < REANCHOR_AFTER) return null
             fastRejects = 0
             last = p

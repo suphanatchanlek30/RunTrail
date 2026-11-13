@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 09 · Run Summary — แผนที่ไล่สีตามเพซด้านบน + Summary sheet -->
+<!-- Run summary: pace-coloured map above a summary sheet -->
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -9,7 +9,7 @@
     android:background="@color/bg_surface"
     tools:context=".ui.detail.RunDetailActivity">
 
-    <!-- แผนที่: การวิ่งจาก GPS ใช้แผนที่จริง (osmMap) · ข้อมูลตัวอย่างใช้แผนที่จำลอง (map) -->
+    <!-- GPS runs use the real map (osmMap); manual runs the stylised one (map) -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="360dp">
@@ -37,7 +37,7 @@
             android:layout_height="wrap_content"
             android:orientation="vertical">
 
-            <!-- Map space (แตะเพื่อดู Replay) -->
+            <!-- Map area; tap to open replay -->
             <View
                 android:id="@+id/mapSpace"
                 android:layout_width="match_parent"
@@ -81,7 +81,7 @@
                             android:layout_marginTop="@dimen/space_xxs"
                             tools:text="อา. 9 พ.ย. 2026 · 17:42 – 18:15" />
 
-                        <!-- ความรู้สึกหลังวิ่ง: RatingBar แบบแสดงผลอย่างเดียว (isIndicator) -->
+                        <!-- Rating, display only -->
                         <LinearLayout
                             android:id="@+id/rowFeel"
                             android:layout_width="wrap_content"
@@ -208,7 +208,7 @@
                         android:layout_weight="1" />
                 </LinearLayout>
 
-                <!-- รูปจากการวิ่ง -->
+                <!-- Run photo -->
                 <LinearLayout
                     android:id="@+id/cardPhoto"
                     android:layout_width="match_parent"

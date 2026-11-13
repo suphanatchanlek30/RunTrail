@@ -9,7 +9,7 @@ import android.view.View
 import androidx.core.content.ContextCompat
 import com.example.runtrail.R
 
-/** วงแหวนความคืบหน้า (เช่น เซนเซอร์ 6/8) */
+/** Circular progress ring, e.g. sensors available out of total. */
 class RingProgressView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,

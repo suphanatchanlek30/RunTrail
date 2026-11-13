@@ -20,10 +20,8 @@ import com.example.runtrail.ui.common.userMessage
 import com.example.runtrail.ui.onboarding.ProfileSetupActivity
 
 /**
- * 20 · เข้าสู่ระบบ
- * - ล็อกอินครั้งแรกต้องใช้เน็ต หลังจากนั้นเปิดแอปออฟไลน์ได้ตลอด
- * - "ใช้งานแบบออฟไลน์ก่อน" = Guest: วิ่งและบันทึกได้ครบ อัปโหลดให้เมื่อล็อกอินภายหลัง
- * - เปิดจากขั้นตอนเริ่มใช้งาน (EXTRA_ONBOARDING) → ไปหน้าโปรไฟล์ต่อ, เปิดจากที่อื่น → กลับหน้าเดิม
+ * Sign-in. "Continue offline" uses the app as a guest; guest runs upload after a later sign-in.
+ * Opened from onboarding ([EXTRA_ONBOARDING]) it continues to profile setup, otherwise it returns.
  */
 class LoginActivity : AppCompatActivity() {
 
@@ -57,7 +55,7 @@ class LoginActivity : AppCompatActivity() {
         binding.btnServer.setOnClickListener { editServerUrl { renderServer(); askLocalNetworkIfNeeded() } }
         renderServer()
         askLocalNetworkIfNeeded()
-        App.services.wakeServer()   // ระหว่างผู้ใช้พิมพ์อีเมล/รหัสผ่าน เซิร์ฟเวอร์ที่หลับอยู่จะได้ตื่น
+        App.services.wakeServer()   // wake a sleeping server while the user types
     }
 
     private fun askLocalNetworkIfNeeded() {

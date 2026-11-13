@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 17 · Settings -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -82,7 +81,7 @@
                     app:tint="@color/text_disabled" />
             </LinearLayout>
 
-            <!-- การวิ่ง -->
+            <!-- Running -->
             <TextView
                 style="@style/Txt.Overline"
                 android:layout_width="wrap_content"
@@ -114,7 +113,7 @@
                 <include android:id="@+id/rowReminder" layout="@layout/view_setting_row" />
             </LinearLayout>
 
-            <!-- การแสดงผล: ธีม + ภาษา (CS364 เกณฑ์ 3.3 / 3.4) -->
+            <!-- Display: theme and language -->
             <TextView
                 style="@style/Txt.Overline"
                 android:layout_width="wrap_content"
@@ -138,7 +137,7 @@
                 <include android:id="@+id/rowLanguage" layout="@layout/view_setting_row" />
             </LinearLayout>
 
-            <!-- ข้อมูลและการซิงก์ -->
+            <!-- Data and sync -->
             <TextView
                 style="@style/Txt.Overline"
                 android:layout_width="wrap_content"
@@ -174,7 +173,7 @@
                 <include android:id="@+id/rowImport" layout="@layout/view_setting_row" />
             </LinearLayout>
 
-            <!-- บัญชี (แสดงเมื่อล็อกอิน) -->
+            <!-- Account (signed in only) -->
             <LinearLayout
                 android:id="@+id/groupAccount"
                 android:layout_width="match_parent"
@@ -194,7 +193,7 @@
                 <include android:id="@+id/rowDeleteAccount" layout="@layout/view_setting_row" />
             </LinearLayout>
 
-            <!-- ระบบ -->
+            <!-- System -->
             <TextView
                 style="@style/Txt.Overline"
                 android:layout_width="wrap_content"

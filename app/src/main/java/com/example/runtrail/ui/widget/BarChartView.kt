@@ -11,9 +11,7 @@ import androidx.core.content.res.ResourcesCompat
 import com.example.runtrail.R
 import kotlin.math.max
 
-/**
- * กราฟแท่ง (กิจกรรม 7 วัน / ระยะทางรายเดือน) วาดด้วย Canvas
- */
+/** Canvas bar chart for the 7-day activity and monthly distance charts. */
 class BarChartView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -24,7 +22,7 @@ class BarChartView @JvmOverloads constructor(
     private var labels: List<String> = emptyList()
     private var highlight = -1
 
-    /** แสดงตัวเลขบนแท่ง (กราฟรายเดือน) */
+    /** Draws each bar's value above it. */
     var showValues = false
     var barWidthDp = 30f
     var minBarDp = 6f

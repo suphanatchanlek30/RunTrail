@@ -30,8 +30,8 @@ type Config struct {
 	S3Bucket   string `env:"S3_BUCKET" envDefault:"runtrail-photos"`
 	S3Region   string `env:"S3_REGION" envDefault:"ap-southeast-1"`
 	S3Endpoint string `env:"S3_ENDPOINT"` // empty = real AWS S3
-	// Endpoint used when signing URLs for phones. MinIO in Docker needs the Mac's LAN IP here,
-	// because the signature covers the host and the phone cannot resolve "minio".
+	// Endpoint used when signing URLs for phones. With a local S3 server in Docker this must be the
+	// host's LAN IP: the signature covers the host, and phones cannot resolve the container name.
 	S3PublicEndpoint string `env:"S3_PUBLIC_ENDPOINT"`
 	S3AccessKey      string `env:"S3_ACCESS_KEY"` // empty = default AWS chain (IAM role on EC2)
 	S3SecretKey      string `env:"S3_SECRET_KEY"`

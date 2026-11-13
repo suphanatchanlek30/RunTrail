@@ -42,12 +42,9 @@ import org.json.JSONObject
 import java.util.Calendar
 
 /**
- * 13 · Share & Sync — สร้างลิงก์แชร์จริงจาก server
- *
- * - ยังไม่ล็อกอิน → ชวนเข้าสู่ระบบ (การวิ่งยังอยู่ในเครื่อง ไม่หาย)
- * - ยังไม่ได้ซิงก์ → ส่งการวิ่ง (+รูป) ขึ้นก่อน แล้วขอลิงก์
- * - ตัวเลือกความเป็นส่วนตัวถูกส่งไปที่ server (ตัด 200 ม. แรก/สุดท้ายที่ server ไม่ใช่แค่ในหน้าเว็บ)
- * - ต้องใช้เน็ต: ถ้าออฟไลน์จะแจ้งให้ลองใหม่ ส่วนการซิงก์ปกติจะเกิดเองเมื่อมีเน็ต
+ * Share sheet: uploads the run if needed, then creates a public link with the chosen privacy options.
+ * Privacy (e.g. hiding the first and last 200 m) is applied by the server, not just the web page.
+ * Requires a connection; normal sync still happens on its own.
  */
 object ShareSheet {
 
@@ -60,7 +57,7 @@ object ShareSheet {
 
         var current = run
         var busy = false
-        var resendOptions = false   // เปลี่ยนสวิตช์ระหว่างกำลังส่ง → ส่งตัวเลือกล่าสุดซ้ำอีกรอบ (AUDIT A10)
+        var resendOptions = false   // options changed during a request: send them again afterwards
         b.btnRemoveServer.setStartIcon(R.drawable.ic_trash, 16f, R.color.danger)
         b.swHideEnds.isChecked = run.shareHideEnds
         b.swPhoto.isChecked = run.shareShowPhoto
@@ -117,7 +114,7 @@ object ShareSheet {
             onChanged()
         }
 
-        /** ส่งการวิ่งขึ้น (ถ้ายังไม่ได้ส่ง) แล้วสร้าง/อัปเดตลิงก์ตามตัวเลือกปัจจุบัน */
+        /** Uploads the run if needed, then creates or updates its link with the current options. */
         fun createLink() {
             if (busy) { resendOptions = true; return }
             resendOptions = false
@@ -137,14 +134,13 @@ object ShareSheet {
                 if (resendOptions && optionsChanged && current.shareUrl != null && dialog.isShowing) createLink()
                 resendOptions = false
             }
-            // 1) ส่งการวิ่งขึ้น server ก่อน (ใช้ตัวซิงก์เดิม ซึ่งเรียกแบบรอผลบน background thread)
+            // Upload first (blocking sync call on a background thread).
             activity.runAsync({
                 val synced = App.services.sync.pushNow(current.id) ?: error(activity.getString(R.string.share_run_missing))
                 if (!synced.onServer) error(synced.syncError ?: activity.getString(R.string.share_failed_title))
                 synced
             }) { pushed ->
                 val synced = pushed.getOrElse { done(null, it); return@runAsync }
-                // 2) MA11: POST /runs/{uuid}/share ผ่าน Volley → ได้ code + url ของลิงก์
                 val q = ApiRequest(
                     Request.Method.POST, ApiConfig.share(synced.uuid), shareBody(hide, photo, kcal),
                     { o ->
@@ -169,7 +165,7 @@ object ShareSheet {
                 activity.startActivity(Intent(activity, LoginActivity::class.java))
             } else createLink()
         }
-        // เปลี่ยนตัวเลือก: เก็บในเครื่อง และถ้ามีลิงก์อยู่แล้วให้อัปเดตที่ server ทันที
+        // Save option changes locally and update an existing link right away.
         listOf(b.swHideEnds, b.swPhoto, b.swKcal).forEach { sw ->
             sw.setOnCheckedChangeListener { _, _ ->
                 current = current.copy(shareHideEnds = b.swHideEnds.isChecked, shareShowPhoto = b.swPhoto.isChecked,
@@ -212,7 +208,6 @@ object ShareSheet {
                 cancelText = activity.getString(R.string.action_cancel), tone = Sheets.Tone.DANGER,
             ) {
                 busy = true; render()
-                // MA11: DELETE /runs/{uuid}/share (server ตอบ 204 ไม่มี body)
                 val q = ApiRequest(
                     Request.Method.DELETE, ApiConfig.share(current.uuid), null,
                     {
@@ -236,7 +231,7 @@ object ShareSheet {
         render()
         dialog.show()
 
-        // มีลิงก์อยู่แล้ว → ขอลิงก์ล่าสุดจาก server (ที่อยู่ server อาจเปลี่ยน หรือถูกยกเลิกจากเครื่องอื่น) · ออฟไลน์ก็ใช้ของเดิม
+        // Refresh an existing link (the server address may have changed or it was revoked elsewhere); keep the cached one offline.
         if (Accounts.isLoggedIn && current.shareUrl != null && current.onServer) {
             val r = current
             val q = ApiRequest(
@@ -247,13 +242,13 @@ object ShareSheet {
                         render()
                     }
                 },
-                { /* ออฟไลน์: ใช้ลิงก์เดิม */ },
+                { /* offline: keep the cached link */ },
             )
             VolleyApi.getQueue(activity).add(q)
         }
     }
 
-    /** body ของ POST /runs/{uuid}/share — ตัวเลือกความเป็นส่วนตัว */
+    /** Body of `POST /runs/{uuid}/share`. */
     private fun shareBody(hideEnds: Boolean, showPhoto: Boolean, showKcal: Boolean) = JSONObject().apply {
         put("hide_ends", hideEnds); put("show_photo", showPhoto); put("show_kcal", showKcal)
     }
@@ -264,13 +259,13 @@ object ShareSheet {
         return "${c.get(Calendar.DAY_OF_MONTH)} ${Fmt.monthShort(c.get(Calendar.MONTH))} ${Fmt.time(t)}"
     }
 
-    /** QR Code ของลิงก์ (สร้างในเครื่องด้วย ZXing) */
+    /** QR code for the link, generated on the device. */
     private fun showQr(context: Context, url: String) {
         val size = context.dp(240f)
         val matrix = QRCodeWriter().encode(url, BarcodeFormat.QR_CODE, size, size)
         val bmp = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
         val dark = ContextCompat.getColor(context, R.color.run_ink)
-        // เขียนทีเดียวด้วย setPixels (เดิม setPixel ทีละจุด ~500,000 ครั้งบน main thread, AUDIT P4)
+        // Fill all pixels at once; per-pixel setPixel is far slower.
         val pixels = IntArray(size * size)
         for (y in 0 until size) {
             val row = y * size

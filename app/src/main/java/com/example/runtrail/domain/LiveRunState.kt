@@ -5,11 +5,10 @@ import com.example.runtrail.data.TrackPoint
 import kotlin.math.floor
 
 /**
- * สถานะการวิ่งสด (Kotlin ล้วน ไม่ผูก Android → ทดสอบบน JVM ได้)
+ * State of a run being recorded.
  *
- * - เวลาเคลื่อนที่นับจากนาฬิกาแบบ monotonic (SystemClock.elapsedRealtime) ไม่ใช่การนับจำนวน tick
- *   จึงไม่เพี้ยนเมื่อเครื่องช้าหรือหน้าจอดับ
- * - ช่วงหยุดบันทึกเป็นเวลา epoch เหมือนเวลาของจุด GPS เพื่อให้ server ตัดระยะช่วงนั้นออกได้ตรงกัน
+ * Moving time comes from a monotonic clock, so it stays correct when the device is slow or the
+ * screen is off. Pauses use wall-clock time like GPS points, so the server can cut the same intervals.
  */
 class LiveRunState(
     val startTime: Long,
@@ -37,7 +36,7 @@ class LiveRunState(
 
     val movingS: Long get() = movingMs / 1000
 
-    /** ฟื้นสถานะจาก draft ที่บันทึกไว้ (แอปถูกปิดกลางคัน) — กลับมาในสถานะหยุดชั่วคราว */
+    /** Restores a saved draft after the app was killed; the run resumes in the paused state. */
     fun restore(points: List<TrackPoint>, distance: Double, movingSeconds: Long, savedPauses: List<Pause>, wallNow: Long) {
         track.clear(); track += points
         pauses.clear(); pauses += savedPauses
@@ -52,7 +51,7 @@ class LiveRunState(
         pauseStartWall = maxOf(points.lastOrNull()?.time ?: wallNow, savedPauses.lastOrNull()?.end ?: 0L)
     }
 
-    /** เรียกทุกวินาที: สะสมเวลาเคลื่อนที่ + ตรวจ auto-pause · คืน true ถ้าเพิ่งหยุดอัตโนมัติ */
+    /** Called every second. Adds moving time and checks auto-pause; returns true if it just auto-paused. */
     fun tick(mono: Long, wall: Long): Boolean {
         val prev = lastMono
         lastMono = mono
@@ -66,14 +65,14 @@ class LiveRunState(
         return false
     }
 
-    /** ได้ตำแหน่งใหม่ · คืนกิโลเมตรที่เพิ่งผ่าน (> 0) สำหรับแจ้งเตือน หรือ 0 */
+    /** Handles a new location. Returns the km just completed (for the split alert), or 0. */
     fun onLocation(raw: TrackPoint, speedMps: Float?, wall: Long): Int {
-        // ลดการสั่นของ GPS ก่อนคิดระยะ (ทั้งเส้นทาง หมุด และค่าที่ส่งขึ้น server ใช้จุดชุดเดียวกัน)
+        // Smooth first so the track, the map marker and the uploaded points all agree.
         val p = smoother?.update(raw, speedMps) ?: raw
         lastFix = p
         if (paused && autoPaused && p.time <= pauseStartWall) {
-            // จุดที่วัดได้ "ก่อน" เริ่มหยุด แต่มาถึงช้า (ตอนจอดับ Android ส่งตำแหน่งเป็นชุด)
-            // → การหยุดอัตโนมัติครั้งนี้ผิด ยกเลิกและคืนเวลาเคลื่อนที่ที่หายไป
+            // A fix taken before the auto-pause arrived late (Android batches locations with the screen off):
+            // the pause was wrong, so undo it and restore the moving time.
             movingMs += (wall - pauseStartWall).coerceAtLeast(0)
             paused = false
             autoPaused = false
@@ -89,8 +88,8 @@ class LiveRunState(
             }
             return 0
         }
-        // ความเร็วจาก GPS (Doppler) บอกว่ายังเคลื่อนที่ แม้จุดนี้จะไม่ถูกเพิ่มในเส้นทาง (ขยับน้อยกว่าค่าคลาดเคลื่อน)
-        // ต้องเช็กก่อนตัวกรอง — เดิมเช็กหลัง return ทำให้เดินช้า ๆ กับสัญญาณ ±15 ม. ถูกหยุดอัตโนมัติ
+        // Doppler speed proves movement even when the point is dropped as jitter below.
+        // Check it before the filter so slow walking with poor accuracy is not auto-paused.
         if ((speedMps ?: 0f) > STILL_SPEED && p.accuracy <= GPS_MAX_ACCURACY) lastMoveAt = maxOf(lastMoveAt, p.time)
         val added = filter.accept(p) ?: return 0
         if (track.isEmpty() || added > 0 || filter.reanchored) {
@@ -119,14 +118,14 @@ class LiveRunState(
         paused = false
         autoPaused = false
         lastMoveAt = wall
-        filter.reset(lastFix)   // ไม่นับระยะช่วงที่หยุด
+        filter.reset(lastFix)   // distance during a pause is not counted
     }
 
-    /** รายการช่วงหยุดทั้งหมด รวมช่วงที่ยังหยุดค้างอยู่ (ใช้ตอนบันทึก/จบการวิ่ง) */
+    /** All pauses, including one still in progress. */
     fun allPauses(wall: Long): List<Pause> =
         if (paused) pauses + Pause(pauseStartWall, maxOf(wall, pauseStartWall)) else pauses.toList()
 
-    /** เพซปัจจุบันจากระยะที่วิ่งใน 30 วินาทีล่าสุด (วินาที/กม.) 0 = ยังไม่มีข้อมูล */
+    /** Pace over the last 30 seconds in s/km, or 0 when there is not enough data. */
     fun currentPace(): Double {
         if (track.size < 2) return 0.0
         val cutoff = track.last().time - 30_000
@@ -138,7 +137,7 @@ class LiveRunState(
         return if (d < 10 || t <= 0) 0.0 else t / (d / 1000.0)
     }
 
-    /** เพซของกิโลเมตรที่เพิ่งวิ่งครบ (แจ้งเตือนทุก 1 กม.) */
+    /** Pace of a completed kilometre, in s/km. */
     fun splitPace(km: Int): Int? = TrackMath.splits(track).firstOrNull { it.km == km }?.paceSecPerKm
 
     companion object {

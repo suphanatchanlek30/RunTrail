@@ -7,9 +7,7 @@ import android.hardware.SensorManager
 import com.example.runtrail.R
 import com.example.runtrail.domain.Lang
 
-/**
- * รายการเซนเซอร์ที่แอปใช้ และตรวจว่าเครื่องมีหรือไม่ (getDefaultSensor() != null) — MA12
- */
+/** Sensors the app uses and whether this device has them. */
 object SensorHelper {
 
     enum class Group { MOTION, ENVIRONMENT }
@@ -48,7 +46,7 @@ object SensorHelper {
             sensor(context, spec) != null
         }
 
-    /** ชนิด: Hardware / Software (เซนเซอร์ที่คำนวณจากตัวอื่น) */
+    /** "Hardware" or "Software" (computed from other sensors). */
     fun kind(context: Context, spec: Spec): String {
         if (spec.sensorType == null) return "Location · Hardware"
         val s = sensor(context, spec) ?: return Lang.t("ไม่มีในเครื่องนี้", "Not on this device")

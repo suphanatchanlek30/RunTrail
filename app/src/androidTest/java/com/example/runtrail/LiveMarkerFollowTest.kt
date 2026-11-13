@@ -30,13 +30,10 @@ import kotlin.math.hypot
 import kotlin.math.sin
 
 /**
- * เดินจริงแบบจำลอง: หมุดบนแผนที่ต้องตามตำแหน่ง GPS ทุกวินาที และแผนที่ต้องเลื่อนตามหมุด
+ * Simulated walk with realistic GPS: the marker must follow every fix and the map must follow the marker.
  *
- * สัญญาณแบบที่มือถือจริงให้ (ไม่ใช่เส้นตรงสะอาด):
- *  - เดิน 1.4 ม./วิ รอบบล็อก 4 ด้าน (มีเลี้ยว)
- *  - ตำแหน่งคลาดเคลื่อนแบบสุ่ม σ = ครึ่งหนึ่งของค่าความแม่นยำ · ความแม่นยำขึ้นลง 5–15 ม.
- *  - จุดกระโดด 2 ครั้ง (ความแม่นยำ 40 ม. คลาด 35 ม. เช่น สะท้อนตึก) · สัญญาณหาย 5 วินาที
- * วัดสิ่งที่วาดบนจอจริง (OsmRoute.RouteOverlay.markerPoint) ทุกวินาที · ฐานข้อมูลในหน่วยความจำ
+ * Walk at 1.4 m/s around a block with turns; noise σ = half the reported accuracy (5–15 m);
+ * two 35 m outliers and a 5 s signal gap. Measures what is actually drawn (RouteOverlay.markerPoint).
  */
 @RunWith(AndroidJUnit4::class)
 class LiveMarkerFollowTest {
@@ -66,9 +63,9 @@ class LiveMarkerFollowTest {
         inst.uiAutomation.executeShellCommand("appops set ${ctx.packageName} android:mock_location default").close()
     }
 
-    /** ตำแหน่งจริงบนเส้นทางรอบบล็อก 120 × 80 ม. ณ ระยะ d เมตร */
+    /** True position at [d] metres along the 120 × 80 m loop. */
     private fun truth(d: Double): Pair<Double, Double> {
-        val corners = listOf(0.0 to 0.0, 120.0 to 0.0, 120.0 to 80.0, 0.0 to 80.0, 0.0 to 0.0)   // (เหนือ, ตะวันออก) เมตร
+        val corners = listOf(0.0 to 0.0, 120.0 to 0.0, 120.0 to 80.0, 0.0 to 80.0, 0.0 to 0.0)   // (north, east) metres
         var left = d % 400.0
         for (i in 1 until corners.size) {
             val (n0, e0) = corners[i - 1]; val (n1, e1) = corners[i]
@@ -85,9 +82,9 @@ class LiveMarkerFollowTest {
         val rnd = Random(42)
         val seconds = 90
         val walkSpeed = 1.4
-        val lagToFix = mutableListOf<Double>()       // หมุด ↔ ตำแหน่งล่าสุดที่แอปรู้ (GPS หลังลดการสั่น)
-        val lagToTruth = mutableListOf<Double>()     // หมุด ↔ ตำแหน่งจริงของคนเดิน
-        val offFocusDp = mutableListOf<Double>()     // หมุด ↔ จุดกึ่งกลางที่แผนที่ควรตามไว้ (dp)
+        val lagToFix = mutableListOf<Double>()       // marker ↔ latest smoothed fix
+        val lagToTruth = mutableListOf<Double>()     // marker ↔ true position
+        val offFocusDp = mutableListOf<Double>()     // marker ↔ map focus point (dp)
         var pausedSeconds = 0
         var distanceRatio = 0.0
 
@@ -139,15 +136,15 @@ class LiveMarkerFollowTest {
             " · marker↔map focus median ${"%.0f".format(pct(offFocusDp, .5))} dp p95 ${"%.0f".format(pct(offFocusDp, .95))} dp · paused ${pausedSeconds}s")
 
         assertTrue("collected samples", lagToFix.size >= seconds - 10)
-        // 1) หมุดอยู่ที่ตำแหน่ง GPS ล่าสุดทุกครั้ง (ไม่ค้างรอให้ผ่านตัวกรองเส้นทาง)
+        // 1) The marker sits on the latest fix every time.
         assertTrue("marker follows every fix: $within1m% within 1 m", within1m >= 95)
-        // 5) ระยะที่บันทึกใกล้ระยะจริง แม้สัญญาณสั่นแบบสุ่มทุกวินาที (ก่อนลดการสั่น: นับเกินจริงหลายเท่า)
+        // 5) Recorded distance stays close to the truth despite per-second noise.
         assertTrue("distance ratio $distanceRatio", distanceRatio in 0.85..1.2)
-        // 2) แผนที่เลื่อนตามหมุด: หมุดอยู่ใกล้จุดโฟกัสของแผนที่ (เหนือ bottom sheet) เกือบตลอดเวลา
+        // 2) The map keeps the marker near its focus point (above the sheet).
         assertTrue("map keeps the marker in focus (p95 ${pct(offFocusDp, .95)} dp)", pct(offFocusDp, .95) < 48)
-        // 3) หมุดไม่หลุดจากตำแหน่งจริงเกินระดับความคลาดเคลื่อนของ GPS (ยกเว้นจุดกระโดด)
+        // 3) The marker stays within GPS error of the walker (outliers aside).
         assertTrue("marker near the walker (median ${pct(lagToTruth, .5)} m)", pct(lagToTruth, .5) < 12)
-        // 4) เดินต่อเนื่องต้องไม่ถูกหยุดอัตโนมัติ (สัญญาณหาย 5 วิ < เกณฑ์ 8 วิ)
+        // 4) Continuous walking is never auto-paused (the 5 s gap is below the 8 s threshold).
         assertTrue("no auto-pause while walking ($pausedSeconds s)", pausedSeconds == 0)
     }
 

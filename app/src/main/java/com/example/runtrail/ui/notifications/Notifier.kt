@@ -10,7 +10,7 @@ import com.example.runtrail.R
 import com.example.runtrail.service.RunTrackingService
 import org.json.JSONObject
 
-/** ขึ้นการแจ้งเตือนจาก server (สถิติใหม่ ถึงเป้า มีคนแซง มีคนดูลิงก์) ในแถบแจ้งเตือนของเครื่อง */
+/** Posts server notifications to the system tray. */
 object Notifier {
 
     fun icon(type: String): Int = when (type) {

@@ -6,8 +6,8 @@ import android.os.Looper
 import com.example.runtrail.R
 
 /**
- * ถ้ายังรอเซิร์ฟเวอร์อยู่หลัง [delayMs] → บอกผู้ใช้ว่าเซิร์ฟเวอร์กำลังตื่น (โฮสต์ฟรีใช้ ~1 นาที) จะได้ไม่คิดว่าแอปค้าง
- * เรียกตอนเริ่มรอ แล้วส่ง [stillWaiting] ที่คืน true ระหว่างที่ยังรอ
+ * Shows a "server is waking up" hint if [stillWaiting] is still true after [delayMs],
+ * so a cold free-tier server doesn't look like a frozen app.
  */
 fun Activity.showWakeHintIfSlow(delayMs: Long = WAKE_HINT_DELAY_MS, stillWaiting: () -> Boolean) {
     Handler(Looper.getMainLooper()).postDelayed({

@@ -19,10 +19,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * เซนเซอร์บนเครื่อง (AUDIT §6)
- *  - Step counter: emulator ไม่มี → ส่ง SensorEvent เข้า listener ของ CadenceTracker ตามเวลาจริง (เส้นทางเดียวกับฮาร์ดแวร์)
- *  - เซนเซอร์ที่ emulator มี: Mac สั่งค่าด้วย `adb emu sensor set …` (ดู scripts ใน AUDIT) แล้วตรวจว่าหน้าตรวจเซนเซอร์แสดงค่านั้น
- *    รันเมื่อส่ง `-e hostSensors 1` เท่านั้น
+ * On-device sensors.
+ *
+ * The emulator has no step counter, so SensorEvents are fed to CadenceTracker's listener in real time.
+ * Sensors the emulator does have are set from the host with `adb emu sensor set …` and checked on the
+ * sensor screen; that part runs only with `-e hostSensors 1`.
  */
 @RunWith(AndroidJUnit4::class)
 class SensorDeviceTest {
@@ -34,8 +35,8 @@ class SensorDeviceTest {
         val sm = ctx.getSystemService(SensorManager::class.java)
         val any: Sensor = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER) ?: sm.getSensorList(Sensor.TYPE_ALL).first()
         val tracker = CadenceTracker(ctx)
-        // 170 ก้าว/นาที เป็นเวลา 8 วินาที (ค่าสะสมแบบ Step Counter จริง: เริ่มจากก้าวตั้งแต่เปิดเครื่อง)
-        // จำนวนก้าวคิดจากเวลาที่ผ่านไปจริง (เหมือนตัวนับก้าวจริง) ไม่ขึ้นกับว่า sleep ของ test คลาดไปเท่าไร
+        // 170 steps/min for 8 s, as a cumulative counter starting from steps since boot.
+        // Steps follow elapsed real time, so sleep jitter in the test does not matter.
         val t0 = System.currentTimeMillis()
         repeat(17) {
             val steps = 12_345f + 170f * (System.currentTimeMillis() - t0) / 60_000f
@@ -45,13 +46,13 @@ class SensorDeviceTest {
         }
         val cadence = tracker.cadence()
         assertEquals("cadence $cadence", 170.0, cadence.toDouble(), 4.0)
-        // หยุดเดินเกิน 5 วินาที → 0 (หน้าวิ่งแสดง "--")
+        // No step for more than 5 s → 0 (shown as "--").
         Thread.sleep(5_500)
         assertEquals(0, tracker.cadence())
     }
 
     @Test fun compassIgnoresDegenerateReadingsInsteadOfCrashing() {
-        // เคยทำให้แอปเด้งทั้งแอปบนหน้าวิ่ง: ทิศคำนวณได้ NaN → roundToInt() โยน IllegalArgumentException (AUDIT A15)
+        // A NaN heading must be skipped, not crash the live screen.
         val sm = ctx.getSystemService(SensorManager::class.java)
         val rotation = sm.getDefaultSensor(Sensor.TYPE_ROTATION_VECTOR)
         val accel = sm.getDefaultSensor(Sensor.TYPE_ACCELEROMETER)
@@ -60,14 +61,14 @@ class SensorDeviceTest {
         val compass = com.example.runtrail.sensor.CompassHelper(ctx) { headings += it }
         inst.runOnMainSync {
             rotation?.let { compass.onSensorChanged(event(it, floatArrayOf(Float.NaN, Float.NaN, Float.NaN, Float.NaN, 0f))) }
-            // แรงโน้มถ่วงขนานกับสนามแม่เหล็ก (ค่าที่ทำให้ fusion ได้ NaN ในการทดสอบเต็มชุด)
+            // Gravity parallel to the magnetic field makes sensor fusion return NaN.
             if (accel != null && magnet != null) {
                 compass.onSensorChanged(event(accel, floatArrayOf(0f, 9.81f, 0f)))
                 compass.onSensorChanged(event(magnet, floatArrayOf(0f, 45f, 0f)))
             }
         }
         assertEquals("no heading from invalid data", emptyList<Int>(), headings)
-        // ค่าปกติยังได้ทิศ: เครื่องตั้งตรง หันหน้าทิศเหนือ
+        // A normal reading still gives a heading: device upright, facing north.
         inst.runOnMainSync {
             compass.onSensorChanged(event(accel!!, floatArrayOf(0f, 9.81f, 0f)))
             compass.onSensorChanged(event(magnet!!, floatArrayOf(0f, 20f, -40f)))
@@ -76,10 +77,7 @@ class SensorDeviceTest {
         assertTrue("heading ${headings[0]}", headings[0] in 0..359)
     }
 
-    /**
-     * SensorEvent แบบเดียวกับที่ระบบส่งมา — สร้างผ่าน constructor ภายใน SensorEvent(int) แล้วใส่ค่า
-     * (constructor สาธารณะ 4 ตัวแปรไม่มีบน image นี้)
-     */
+    /** Builds a SensorEvent through the hidden SensorEvent(int) constructor; the public one is missing on this image. */
     private fun event(sensor: Sensor, values: FloatArray): SensorEvent =
         SensorEvent::class.java.getDeclaredConstructor(Int::class.javaPrimitiveType).apply { isAccessible = true }
             .newInstance(values.size).also {
@@ -98,8 +96,7 @@ class SensorDeviceTest {
     @Test fun sensorScreenShowsValuesSetFromTheHost() {
         assumeTrue("run with -e hostSensors 1 while the host sets emulator sensors",
             InstrumentationRegistry.getArguments().getString("hostSensors") == "1")
-        // อุณหภูมิไม่อยู่ในรายการ: เซนเซอร์อุณหภูมิของ emulator ส่ง -1e30 เสมอ (ไม่รับค่าจาก console)
-        // → ตรวจแทนว่าแอปกรองค่าผิดปกติทิ้ง ไม่แสดงตัวเลขเพี้ยนบนจอ
+        // Temperature is excluded: the emulator always reports -1e30, which the app must filter out.
         val expected = listOf("1005.5 hPa", "321 lux", "9.81 m/s²", "45 μT")
         ActivityScenario.launch(SensorCheckActivity::class.java).use { s ->
             val end = SystemClock.uptimeMillis() + 15_000

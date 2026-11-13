@@ -32,9 +32,8 @@ import com.example.runtrail.ui.leaderboard.LeaderboardActivity
 import org.json.JSONObject
 
 /**
- * 24 · การแจ้งเตือน — เหตุการณ์จริงจาก server: นับในอันดับแล้ว / ไม่นับ (เพราะอะไร) · สถิติใหม่ ·
- * ถึงเป้ารายสัปดาห์ · มีคนแซงในอันดับ · มีคนเปิดดูลิงก์แชร์
- * เปิดหน้านี้ = อ่านทั้งหมด · ออฟไลน์แสดงรายการล่าสุดที่เก็บไว้ · แตะรายการเพื่อเปิดการวิ่งนั้น
+ * Server notifications: run verification results, records, weekly goals, rank changes and link views.
+ * Opening the screen marks everything read; the last page is cached for offline viewing.
  */
 class NotificationsActivity : AppCompatActivity() {
 
@@ -78,7 +77,7 @@ class NotificationsActivity : AppCompatActivity() {
             { page ->
                 loading = false
                 binding.progress.visibility = View.GONE
-                // อ่านแล้วทั้งหมดเมื่อเปิดหน้านี้ (ตัวที่ยังไม่อ่านยังมีจุดสีเขียวให้เห็นในรอบนี้)
+                // Mark all read; unread dots stay visible until the next refresh.
                 if (page.optInt("unread_count") > 0) markAllRead()
                 val cached = JSONObject(page.toString()).apply {
                     val items = getJSONArray("items")
@@ -100,11 +99,11 @@ class NotificationsActivity : AppCompatActivity() {
         VolleyApi.getQueue(this).add(q)
     }
 
-    /** POST /notifications/read {"all":true} — ไม่สำเร็จก็ไม่เป็นไร เปิดหน้านี้ครั้งหน้าจะส่งใหม่ */
+    /** Best effort; retried the next time the screen opens. */
     private fun markAllRead() {
         val body = JSONObject().put("all", true)
         val q = ApiRequest(Request.Method.POST, ApiConfig.NOTIFICATIONS_READ, body, {}, {})
-        VolleyApi.getQueue(this).add(q)   // ไม่ผูก tag กับหน้านี้: ปิดหน้าแล้วก็ยังส่งต่อ
+        VolleyApi.getQueue(this).add(q)   // untagged so it completes after the screen closes
     }
 
     override fun onDestroy() {
@@ -139,7 +138,7 @@ class NotificationsActivity : AppCompatActivity() {
         binding.btnEmptyAction.setOnClickListener { onAction() }
     }
 
-    /** แตะรายการ: เปิดการวิ่ง (ถ้ายังไม่อยู่ในเครื่องจะซิงก์ลงมาก่อน) หรือเปิดหน้าอันดับ */
+    /** Opens the related run (syncing it first if needed) or the leaderboard. */
     private fun open(n: JSONObject) {
         if (n.optString("type") == "rank_passed") {
             startActivity(Intent(this, LeaderboardActivity::class.java))
@@ -188,7 +187,7 @@ class NotificationsActivity : AppCompatActivity() {
                 b.dotUnread.visibility = if (n.optBoolean("read")) View.INVISIBLE else View.VISIBLE
                 val tappable = type == "rank_passed" || !n.isNull("run_id")
                 b.row.setOnClickListener(if (tappable) View.OnClickListener { open(n) } else null)
-                // ต้องตั้งหลัง setOnClickListener: การส่ง null ทำให้ view กลายเป็น clickable เอง
+                // Set after setOnClickListener, which makes the view clickable even when passed null.
                 b.row.isClickable = tappable
             }
         }

@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  debug เท่านั้น: Android 17 บล็อกการเชื่อมต่อไปเครื่องในวงเครือข่ายเดียวกัน (รวม 10.0.2.2 ของ emulator)
-  ถ้าไม่ได้สิทธิ์นี้ → ต่อ backend ที่รันใน Docker บน Mac ไม่ได้ · release ใช้ HTTPS โดเมนจริงจึงไม่ต้องใช้
--->
+<!-- Debug only: Android 17 needs this permission to reach a backend on the LAN or the emulator host (10.0.2.2). -->
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.ACCESS_LOCAL_NETWORK" />
 </manifest>

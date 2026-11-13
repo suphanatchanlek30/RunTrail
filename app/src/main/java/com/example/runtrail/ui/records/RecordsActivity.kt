@@ -18,9 +18,7 @@ import com.example.runtrail.ui.common.applySystemBarsPadding
 import com.example.runtrail.ui.common.runAsync
 import com.example.runtrail.ui.common.setupEdgeToEdge
 
-/**
- * 16 · Personal Records — ผลรวมตลอดการใช้งาน (SUM) · PR 1/5/10 กม. (MIN) · วิ่งไกลสุด (MAX) · กราฟรายเดือน (GROUP BY)
- */
+/** Personal records: lifetime totals, best 1/5/10 km, longest run and monthly distance. */
 class RecordsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityRecordsBinding
@@ -43,7 +41,7 @@ class RecordsActivity : AppCompatActivity() {
 
     private var loadGen = 0
 
-    /** โหลดทุกการวิ่งบน background thread แล้วค่อยแสดงผล (AUDIT P2) */
+    /** Loads all runs off the main thread, then renders. */
     private fun render() {
         val gen = ++loadGen
         runAsync({ RunRepository.getAll() }) { r -> if (gen == loadGen) r.getOrNull()?.let { show(it) } }

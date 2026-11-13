@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 22 · อันดับโลก — แข่งกับนักวิ่งทั่วโลก (เฉพาะการวิ่ง GPS ที่ server ตรวจแล้ว) -->
+<!-- Leaderboard (server-verified GPS runs only) -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -180,7 +180,7 @@
             android:visibility="gone" />
     </FrameLayout>
 
-    <!-- อันดับของฉัน (ติดล่าง) -->
+    <!-- My rank, pinned to the bottom -->
     <LinearLayout
         android:id="@+id/myCard"
         android:layout_width="match_parent"

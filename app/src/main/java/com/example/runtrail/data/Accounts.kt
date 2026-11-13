@@ -7,13 +7,11 @@ import com.example.runtrail.sync.SyncManager
 import org.json.JSONObject
 
 /**
- * สมัคร / ล็อกอิน / ออกจากระบบ (เรียกจาก background thread)
+ * Sign-up, sign-in and sign-out. Call from a background thread.
  *
- * กติกาโปรไฟล์:
- * - สมัครใหม่ (ผู้ใช้ Guest ที่ตั้งโปรไฟล์ไว้แล้ว) → ส่งโปรไฟล์ในเครื่องขึ้น server
- * - ล็อกอินบัญชีเดิม → ใช้โปรไฟล์จาก server
- * - การวิ่งที่บันทึกตอนเป็น Guest จะถูกผูกกับบัญชีที่ล็อกอินแล้วอัปโหลดให้
- * - ล็อกอินบัญชีอื่นบนเครื่องที่มีข้อมูลของบัญชีเดิม → ล้างข้อมูลบัญชีเดิมออกก่อน
+ * - Sign-up uploads the local profile; sign-in replaces it with the server profile.
+ * - Runs recorded as a guest are claimed by the account and synced.
+ * - Signing in as a different account wipes the previous account's local data first.
  */
 object Accounts {
 
@@ -64,10 +62,10 @@ object Accounts {
         )
     }
 
-    /** จำนวนรายการที่ยังไม่ได้ส่งขึ้น server (เตือนก่อนออกจากระบบ) */
+    /** Runs not yet uploaded; shown as a warning before sign-out. */
     fun unsyncedCount(): Int = RunRepository.pendingCount()
 
-    /** ออกจากระบบ: หยุดซิงก์ → ยกเลิก token บน server (ถ้ามีเน็ต) → ล้างข้อมูลในเครื่อง */
+    /** Stops sync, revokes the refresh token when online, then clears local account data. */
     fun logout(context: Context) {
         SyncManager.cancelAll(context)
         synchronized(com.example.runtrail.sync.SyncEngine.LOCK) {

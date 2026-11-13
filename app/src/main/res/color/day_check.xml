@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- กล่องติ๊ก CheckBox วันในหน้าต่างเตือนไปวิ่ง (ปิดการเตือน = จางลง) -->
+<!-- Reminder day checkbox; faded while the reminder is off -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:color="@color/border" android:state_enabled="false" />
     <item android:color="@color/run_green" android:state_checked="true" />

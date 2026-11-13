@@ -11,10 +11,7 @@ import android.os.SystemClock
 import androidx.core.content.ContextCompat
 import com.example.runtrail.data.TrackPoint
 
-/**
- * อ่านตำแหน่งจริงจาก GPS ด้วย LocationManager ทุก 1 วินาที (MA12)
- * เรียก start() ใน onResume/ตอนเริ่มวิ่ง และ stop() เมื่อจบ
- */
+/** Delivers location fixes every second via [LocationManager]. */
 class LocationTracker(
     context: Context,
     private val onPoint: (TrackPoint, speedMps: Float?) -> Unit,
@@ -30,10 +27,7 @@ class LocationTracker(
         get() = ContextCompat.checkSelfPermission(appContext, Manifest.permission.ACCESS_FINE_LOCATION) ==
             PackageManager.PERMISSION_GRANTED
 
-    /**
-     * แหล่งตำแหน่งที่ใช้: GPS ถ้าเครื่องมี · ไม่มี GPS (แท็บเล็ตบางรุ่น) → fused / network
-     * เดิมขอ GPS_PROVIDER ตรง ๆ → เครื่องที่ไม่มีจะ IllegalArgumentException และ service เด้ง (AUDIT A4)
-     */
+    /** Provider in use: GPS when present, otherwise fused or network (some tablets have no GPS). */
     val provider: String? get() = pickProvider(lm.allProviders)
 
     val gpsEnabled: Boolean get() = provider?.let { lm.isProviderEnabled(it) } ?: false
@@ -48,10 +42,10 @@ class LocationTracker(
         } catch (e: IllegalArgumentException) {
             return false
         } catch (e: SecurityException) {
-            return false   // สิทธิ์ถูกถอนระหว่างตรวจกับขอ
+            return false   // permission revoked meanwhile
         }
         running = true
-        // จุดล่าสุดที่เครื่องรู้ (GPS หรือเครือข่าย อันที่ใหม่กว่า) ให้แผนที่ขยับไปตำแหน่งปัจจุบันก่อนได้สัญญาณแรก
+        // Show the last known position (newest of GPS and network) before the first fix arrives.
         listOf(LocationManager.GPS_PROVIDER, LocationManager.NETWORK_PROVIDER)
             .mapNotNull { p ->
                 try { lm.getLastKnownLocation(p) } catch (e: IllegalArgumentException) { null } catch (e: SecurityException) { null }
@@ -83,9 +77,9 @@ class LocationTracker(
     }
 
     /**
-     * เวลาที่ GPS วัดตำแหน่งนี้ได้จริง (ไม่ใช่เวลาที่แอปได้รับ)
-     * ตอนจอดับ Android ส่งตำแหน่งมาเป็นชุด ถ้าใช้เวลาที่ได้รับ จุดในชุดเดียวกันจะดูเหมือนกระโดดเร็วผิดปกติแล้วถูกตัดทิ้ง
-     * ใช้นาฬิกา elapsedRealtime (ไม่เพี้ยนตามการตั้งเวลาเครื่อง) แปลงเป็น epoch
+     * When the fix was measured, not when it was delivered. With the screen off Android batches
+     * locations; delivery time would make a batch look like an impossible jump. Uses elapsedRealtime,
+     * which is immune to wall-clock changes.
      */
     private fun fixTime(location: Location): Long {
         val ageMs = (SystemClock.elapsedRealtimeNanos() - location.elapsedRealtimeNanos) / 1_000_000
@@ -99,7 +93,7 @@ class LocationTracker(
     companion object {
         const val INTERVAL_MS = 1000L
 
-        /** เลือกแหล่งตำแหน่งที่ดีที่สุดที่เครื่องมี (ฟังก์ชันล้วน ทดสอบได้) */
+        /** Best available location provider. */
         fun pickProvider(available: List<String>): String? =
             listOf(LocationManager.GPS_PROVIDER, "fused", LocationManager.NETWORK_PROVIDER).firstOrNull { it in available }
     }

@@ -9,7 +9,7 @@ import com.example.runtrail.databinding.ItemRunBinding
 import com.example.runtrail.domain.Fmt
 import com.example.runtrail.domain.RunCalculator
 
-/** ผูกข้อมูลการวิ่งลงการ์ด (ใช้ทั้งหน้าหลักและหน้าประวัติ) */
+/** Binds a run to the run card used on Home and History. */
 object RunCardBinder {
 
     fun bind(b: ItemRunBinding, run: Run, miles: Boolean, decimals: Int) {

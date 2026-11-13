@@ -5,10 +5,9 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 /**
- * ไฟล์สำรองประวัติการวิ่ง (JSON) สำหรับส่งออก/นำเข้าผ่าน SAF (MA09 Shared Storage)
+ * JSON backup of the run history.
  *
- * รูปแบบแต่ละการวิ่งเหมือน body ของ PUT /runs/{uuid} + "id" (uuid) → นำเข้าแล้วซิงก์ขึ้น server ได้ทันที
- * Kotlin ล้วน ใช้ org.json → ทดสอบบน JVM ได้
+ * Each run uses the `PUT /runs/{uuid}` body plus `id`, so imported runs can be uploaded as-is.
  */
 object RunBackup {
 
@@ -28,8 +27,8 @@ object RunBackup {
     }
 
     /**
-     * อ่านไฟล์สำรอง → รายการการวิ่ง (สถานะ "รอซิงก์" ยังไม่มีเจ้าของ: ตอนบันทึกจะผูกกับบัญชีปัจจุบัน)
-     * ไฟล์ผิดรูปแบบ → IllegalArgumentException
+     * Parses a backup into pending, unowned runs (the owner is set on insert).
+     * @throws IllegalArgumentException if the text is not a RunTrail backup.
      */
     fun parse(text: String): List<Run> {
         val root = try { JSONObject(text) } catch (e: Exception) { throw IllegalArgumentException("not json", e) }

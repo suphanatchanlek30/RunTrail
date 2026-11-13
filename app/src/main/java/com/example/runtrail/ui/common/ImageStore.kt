@@ -10,20 +10,15 @@ import java.io.File
 import kotlin.math.max
 
 /**
- * เก็บรูปของการวิ่งลงพื้นที่ส่วนตัวของแอป (MA10 Image)
- * - อ่านขนาดก่อน แล้ว decode แบบย่อ (inSampleSize) → ไม่โหลดรูป 50 MP เต็มขนาดเข้าหน่วยความจำ (AUDIT A3)
- * - แก้ทิศตาม EXIF → ย่อด้านยาวไม่เกิน 1280 px → บีบอัด JPEG 80%
- * - งานนี้ช้า (หลายร้อย ms) ต้องเรียกจาก background thread
+ * Saves run photos in app-private storage: decodes downsampled, fixes EXIF rotation, scales the
+ * long side to 1280 px and compresses to JPEG 80%. Slow; call from a background thread.
  */
 object ImageStore {
 
     const val MAX_SIDE = 1280
     private const val QUALITY = 80
 
-    /**
-     * ค่า inSampleSize (ยกกำลังของ 2) ที่ทำให้ด้านยาวยังไม่ต่ำกว่า [target]
-     * เช่น 8000 px → 4 (ได้ 2000 px แล้วค่อยย่อละเอียดให้เหลือ 1280)
-     */
+    /** Largest power-of-two sample size that keeps the long side at least [target] px. */
     fun sampleSize(width: Int, height: Int, target: Int = MAX_SIDE): Int {
         var sample = 1
         val longest = max(width, height)
@@ -44,7 +39,7 @@ object ImageStore {
         decodeScaled(context, uri)?.let { save(context, it) }
     } catch (e: Exception) {
         android.util.Log.w("ImageStore", "cannot import $uri", e)
-        null        // ไฟล์เสีย / ไม่ใช่รูป / ถูกลบระหว่างอ่าน
+        null        // unreadable, not an image, or deleted meanwhile
     } catch (e: OutOfMemoryError) {
         android.util.Log.w("ImageStore", "out of memory importing $uri", e)
         null
@@ -52,7 +47,7 @@ object ImageStore {
 
     private fun decodeScaled(context: Context, uri: Uri): Bitmap? {
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
-        // โหมดอ่านขนาดอย่างเดียว decodeStream คืน null เสมอ → ตรวจผลจาก outWidth/outHeight แทน
+        // In bounds-only mode decodeStream always returns null, so check outWidth/outHeight instead.
         val opened = context.contentResolver.openInputStream(uri)?.use { BitmapFactory.decodeStream(it, null, bounds); true }
         if (opened != true) return null
         if (bounds.outWidth <= 0 || bounds.outHeight <= 0) return null
@@ -72,7 +67,7 @@ object ImageStore {
         return rotated
     }
 
-    /** รูปที่ดาวน์โหลดจาก server (การวิ่งที่บันทึกจากเครื่องอื่น) */
+    /** Saves a photo downloaded from the server. Returns its path, or null on failure. */
     fun saveBytes(context: Context, bytes: ByteArray): String? = try {
         val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeByteArray(bytes, 0, bytes.size, bounds)
@@ -87,7 +82,7 @@ object ImageStore {
 
     fun load(path: String?): Bitmap? = path?.let { if (File(it).exists()) BitmapFactory.decodeFile(it) else null }
 
-    /** ลบไฟล์รูปที่แอปเก็บไว้เอง (ไม่แตะไฟล์นอกโฟลเดอร์ photos) */
+    /** Deletes a photo the app saved; paths outside the photos folder are ignored. */
     fun delete(context: Context, path: String?) {
         if (path == null) return
         val f = File(path)

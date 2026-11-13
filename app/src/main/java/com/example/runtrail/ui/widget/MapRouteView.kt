@@ -16,11 +16,10 @@ import kotlin.math.max
 import kotlin.math.min
 
 /**
- * แผนที่จำลอง + เส้นทางไล่สีตามเพซ (วาดด้วย Canvas)
- * ช่วง UI ใช้แทน osmdroid MapView เพื่อให้หน้าตาตรงกับ Figma และใช้งานได้แบบออฟไลน์
+ * Offline stylised map with the route coloured by pace, used for thumbnails and runs without a GPS track.
  *
- * - routeTop / routeBottom: ช่วงความสูง (0..1) ที่ใช้วางเส้นทาง เผื่อส่วนที่ถูก bottom sheet บัง
- * - progress: 0..1 สำหรับ Replay (ส่วนที่ยังไม่ถึงเป็นสีเทา) / การวิ่งสด
+ * [routeTop]/[routeBottom] bound the route vertically (0..1) to leave room for overlapping sheets;
+ * [progress] (0..1) greys out the part not yet reached during replay.
  */
 class MapRouteView @JvmOverloads constructor(
     context: Context,
@@ -41,7 +40,7 @@ class MapRouteView @JvmOverloads constructor(
         set(value) { field = value; invalidate() }
     var showCurrent = false
         set(value) { field = value; invalidate() }
-    /** ซ่อนต้น/ปลายเส้นทาง (ความเป็นส่วนตัว) เป็นสัดส่วนของเส้นทาง */
+    /** Fraction of the route hidden at each end for privacy. */
     var privacyTrim = 0f
         set(value) { field = value; invalidate() }
     var seed = 1
@@ -72,12 +71,11 @@ class MapRouteView @JvmOverloads constructor(
         if (points.size > 1) drawRoute(canvas, w, h)
     }
 
-    // ---------- พื้นแผนที่ ----------
+    // ---------- Base map ----------
     private fun drawBaseMap(canvas: Canvas, w: Float, h: Float) {
         canvas.drawColor(c(if (dark) R.color.map_dark_land else R.color.map_land))
         val unit = max(w, h)
 
-        // บล็อกอาคาร
         fill.color = c(if (dark) R.color.map_dark_block else R.color.map_block)
         val cell = if (thumbnail) unit / 4f else 64f * dp
         var y = -cell * 0.3f
@@ -93,7 +91,7 @@ class MapRouteView @JvmOverloads constructor(
             row++
         }
 
-        // สวน (พื้นที่สีเขียวรอบเส้นทาง)
+        // Park area around the route.
         fill.color = c(if (dark) R.color.map_dark_park else R.color.map_park)
         val top = h * routeTop
         val bottom = h * routeBottom
@@ -104,7 +102,6 @@ class MapRouteView @JvmOverloads constructor(
             canvas.drawCircle(w * 0.9f, h * 0.86f, 42 * dp, fill)
         }
 
-        // แม่น้ำ
         fill.color = c(if (dark) R.color.map_dark_water else R.color.map_water)
         road.color = fill.color
         road.strokeWidth = if (thumbnail) 7 * dp else 22 * dp
@@ -114,7 +111,6 @@ class MapRouteView @JvmOverloads constructor(
         }
         canvas.drawPath(river, road)
 
-        // ถนนหลัก / ถนนรอง
         road.color = c(if (dark) R.color.map_dark_road else R.color.map_road)
         road.strokeWidth = if (thumbnail) 3 * dp else 9 * dp
         canvas.drawLine(-10f, h * 0.30f, w + 10f, h * 0.24f, road)
@@ -127,7 +123,7 @@ class MapRouteView @JvmOverloads constructor(
         canvas.drawLine(-10f, h * 0.92f, w + 10f, h * 0.90f, road)
     }
 
-    // ---------- เส้นทาง ----------
+    // ---------- Route ----------
     private fun map(p: RoutePoint, w: Float, h: Float): Pair<Float, Float> {
         val top = h * routeTop
         val bottom = h * routeBottom
@@ -144,7 +140,7 @@ class MapRouteView @JvmOverloads constructor(
         val reached = ((n - 1) * progress).toInt()
         val width = if (thumbnail) 3f * dp else 6f * dp
 
-        // เส้นขอบขาวให้เส้นทางเด่นจากพื้นแผนที่
+        // White casing so the route stands out from the map.
         line.strokeWidth = width + (if (thumbnail) 2f else 4f) * dp
         line.color = if (dark) 0x66000000 else Color.WHITE
         val outline = Path()
@@ -154,7 +150,7 @@ class MapRouteView @JvmOverloads constructor(
         }
         canvas.drawPath(outline, line)
 
-        // ส่วนที่ยังไม่ถึง (Replay) สีเทา
+        // Not yet reached (replay).
         line.strokeWidth = width
         if (reached < trimEnd) {
             line.color = if (dark) 0xFF3A4540.toInt() else 0xFFC4CCD4.toInt()
@@ -166,7 +162,7 @@ class MapRouteView @JvmOverloads constructor(
             canvas.drawPath(rest, line)
         }
 
-        // ส่วนที่วิ่งแล้ว ไล่สีตามเพซ
+        // Covered part, coloured by pace.
         var i = trimStart
         while (i < min(reached, trimEnd)) {
             val color = PaceColor.forPace(points[i].paceSecPerKm)
@@ -209,7 +205,7 @@ class MapRouteView @JvmOverloads constructor(
         canvas.drawCircle(x, y, r, fill)
     }
 
-    /** ตำแหน่งปัจจุบันบนจอ (ใช้วางป้ายบน Replay) */
+    /** Current replay position in normalised coordinates. */
     fun currentPoint(): RoutePoint? =
         if (points.isEmpty()) null else points[((points.size - 1) * progress).toInt()]
 }

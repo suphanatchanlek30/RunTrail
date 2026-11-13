@@ -24,10 +24,7 @@ import com.example.runtrail.ui.common.toast
 import com.example.runtrail.ui.detail.RunDetailActivity
 import com.example.runtrail.ui.edit.AddEditRunActivity
 
-/**
- * 15 · History — RecyclerView + RunAdapter, ค้นหาชื่อ/โน้ต, กรอง, เรียง
- * กดค้างที่การ์ด → 19 · ยืนยันการลบ
- */
+/** Run history with search, filters and sorting. Long-press a card to delete it. */
 class HistoryActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityHistoryBinding
@@ -78,7 +75,6 @@ class HistoryActivity : AppCompatActivity() {
         binding.chipWeek.setOnClickListener { filter = Filter.THIS_WEEK; load() }
         binding.chipMonth.setOnClickListener { filter = Filter.THIS_MONTH; load() }
         binding.chip5k.setOnClickListener { filter = Filter.OVER_5K; load() }
-        // ปุ่ม + = เพิ่มการวิ่งย้อนหลัง (เดิมอยู่ในเมนูเรียงลำดับ)
         binding.btnFilter.setOnClickListener { startActivity(Intent(this, AddEditRunActivity::class.java)) }
         setupSortSpinner()
     }
@@ -92,11 +88,11 @@ class HistoryActivity : AppCompatActivity() {
         reload()
     }
 
-    /** อ่านจาก DB เฉพาะตอนเปิดหน้า/ข้อมูลเปลี่ยน — พิมพ์ค้นหา/เปลี่ยนตัวกรองใช้รายการในหน่วยความจำ */
+    /** Reloads from the database on open or data change; search and filters work on the in-memory list. */
     private var loadGen = 0
 
     private fun reload() {
-        // อ่านทุกการวิ่งบน background thread (1,000 รายการใช้หลายร้อย ms) แล้วค่อยแสดงผล
+        // Loading every run can take a few hundred ms, so read off the main thread.
         val gen = ++loadGen
         runAsync({ RunRepository.getAll() }) { r ->
             if (gen != loadGen) return@runAsync
@@ -122,15 +118,12 @@ class HistoryActivity : AppCompatActivity() {
         binding.emptyView.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
     }
 
-    /**
-     * MA08 Spinner: ใช้ layout 2 ตัว — item_spinner_sort (ตอนปิด) และ item_dropdown (ตอนเปิดรายการ)
-     * ลำดับใน R.array.sort_options ตรงกับ enum Sort (NEWEST, OLDEST, LONGEST, FASTEST)
-     */
+    /** Sort options; the order of R.array.sort_options matches [Sort]. */
     private fun setupSortSpinner() {
         val sortAdapter = ArrayAdapter.createFromResource(this, R.array.sort_options, R.layout.item_spinner_sort)
         sortAdapter.setDropDownViewResource(R.layout.item_dropdown)
         binding.spinnerSort.adapter = sortAdapter
-        binding.spinnerSort.setSelection(sort.ordinal, false)   // ค่าที่กู้คืนจาก onSaveInstanceState
+        binding.spinnerSort.setSelection(sort.ordinal, false)   // restored from saved state; no callback
         binding.spinnerSort.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                 val picked = Sort.entries[position]

@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  Night theme (CS364 เกณฑ์ 3.4) — override เฉพาะสีเชิงความหมาย (พื้นหลัง · ตัวอักษร · เส้นขอบ)
-  สีแบรนด์ (run_green / run_lime / run_ink) คงเดิม เพราะใช้เป็นสีตัวอักษรบนปุ่มเขียว
--->
+<!-- Night theme: overrides semantic colours only. Brand colours stay, as they are also text colours on green buttons. -->
 <resources>
     <color name="bg_surface">#161C19</color>
     <color name="bg_canvas">#0B0F0D</color>

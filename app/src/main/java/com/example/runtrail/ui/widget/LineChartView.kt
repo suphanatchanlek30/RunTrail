@@ -12,9 +12,7 @@ import android.view.View
 import androidx.core.content.ContextCompat
 import com.example.runtrail.R
 
-/**
- * กราฟเส้นเพซ/ความสูงตลอดเส้นทาง (Canvas) — โหมดเพซจะกลับแกน ให้ "เร็ว" อยู่ด้านบน
- */
+/** Canvas line chart of pace or elevation along a route. Pace is drawn inverted so faster is higher. */
 class LineChartView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -37,7 +35,7 @@ class LineChartView @JvmOverloads constructor(
     }
     private val dot = Paint(Paint.ANTI_ALIAS_FLAG)
 
-    // path/gradient สร้างใหม่เฉพาะตอนข้อมูลหรือขนาดเปลี่ยน ไม่ใช่ทุกครั้งที่วาด (AUDIT P5)
+    // Rebuilt only when data or size changes, not on every draw.
     private val path = Path()
     private val fillPath = Path()
     private var builtFor = -1
@@ -83,7 +81,7 @@ class LineChartView @JvmOverloads constructor(
         line.color = color
         canvas.drawPath(path, line)
 
-        // จุดที่ดีที่สุด (เพซเร็วสุด / จุดสูงสุด)
+        // Highlight the best point: fastest pace or highest elevation.
         val bestIndex = if (invert) values.indexOf(min) else values.indexOf(max)
         dot.color = ContextCompat.getColor(context, R.color.white)
         canvas.drawCircle(x(bestIndex), y(values[bestIndex]), 6 * dp, dot)

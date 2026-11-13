@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- token ถูกเข้ารหัสด้วยกุญแจใน Android Keystore ซึ่งไม่ถูกสำรอง จึงไม่สำรองไฟล์ session (กู้คืนมาก็ถอดรหัสไม่ได้) -->
+<!-- The session file is excluded: its Keystore key is not backed up, so a restored copy could not be decrypted. -->
 <full-backup-content>
     <exclude domain="sharedpref" path="runtrail_session.xml" />
 </full-backup-content>

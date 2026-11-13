@@ -2,15 +2,10 @@ package com.example.runtrail.net
 
 import android.net.Uri
 
-/**
- * รวม URL ของ API ที่หน้าจอเรียกผ่าน Volley ไว้ที่เดียว (MA11: ApiConfig)
- *
- * ต่างจากสไลด์ตรงที่ BASE_URL ไม่ใช่ค่าคงที่ — ผู้ใช้เปลี่ยนที่อยู่เซิร์ฟเวอร์ได้ในหน้าเข้าสู่ระบบ
- * จึงอ่านค่าล่าสุดทุกครั้งที่สร้าง URL ([baseUrl] ถูกตั้งตอนเปิดแอป)
- */
+/** API endpoint URLs for Volley requests. Built on each call because the server address can change at runtime. */
 object ApiConfig {
 
-    /** ที่อยู่เซิร์ฟเวอร์ปัจจุบัน เช่น http://10.0.2.2:8080 (ตั้งใน Services) */
+    /** Current server base URL, e.g. http://10.0.2.2:8080; set at startup. */
     @Volatile var baseUrl: () -> String = { "" }
 
     val BASE_URL: String get() = baseUrl().trimEnd('/') + "/api/v1"

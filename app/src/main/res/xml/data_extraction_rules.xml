@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- token ถูกเข้ารหัสด้วยกุญแจใน Android Keystore ซึ่งย้ายเครื่องไม่ได้ จึงไม่สำรองไฟล์ session -->
+<!-- The session file is excluded: its Keystore key does not move to a new device. -->
 <data-extraction-rules>
     <cloud-backup>
         <exclude domain="sharedpref" path="runtrail_session.xml" />

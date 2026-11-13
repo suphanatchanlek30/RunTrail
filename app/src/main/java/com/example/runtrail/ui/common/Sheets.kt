@@ -24,16 +24,14 @@ import com.example.runtrail.databinding.SheetOptionsBinding
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 
-/**
- * ตัวเลือก / ช่องกรอก / ยืนยัน ในสไตล์ของแอป (แทน AlertDialog ของระบบ)
- */
+/** App-styled bottom sheets and dialogs: single choice, text input and confirmation. */
 object Sheets {
 
     data class Option(val label: String, val hint: String? = null)
 
     /**
-     * Bottom sheet ให้เลือก 1 ค่า
-     * @param columns 1 = รายการพร้อมคำอธิบาย · มากกว่า 1 = ตารางช่องตัวเลข
+     * Single-choice bottom sheet.
+     * @param columns 1 = list with descriptions; more = grid of compact cells
      */
     fun choose(
         activity: Activity,
@@ -43,7 +41,7 @@ object Sheets {
         options: List<Option>,
         selected: Int,
         columns: Int = 1,
-        alwaysPick: Boolean = false,   // true = เรียก onPick แม้แตะค่าเดิม (ค่าในเครื่องอาจไม่ตรงกับ server)
+        alwaysPick: Boolean = false,   // call onPick even for the current value (it may differ from the server)
         onPick: (Int) -> Unit,
     ) {
         val b = SheetOptionsBinding.inflate(LayoutInflater.from(activity))
@@ -62,7 +60,6 @@ object Sheets {
         }
 
         if (columns <= 1) {
-            // MA08: RadioGroup + RadioButton — เลือกได้ทีละ 1 ค่า อ่านค่าด้วย getCheckedRadioButtonId()
             val group = RadioGroup(activity).apply { orientation = RadioGroup.VERTICAL }
             val ids = IntArray(options.size) { View.generateViewId() }
             val hintSize = activity.resources.getDimensionPixelSize(R.dimen.text_size_s)
@@ -71,7 +68,7 @@ object Sheets {
                 rb.id = ids[i]
                 rb.text = optionText(activity, opt, checked = i == selected, hintSize)
                 group.addView(rb, RadioGroup.LayoutParams(-1, -2).apply { if (i > 0) topMargin = gap })
-                // แตะ = เลือกแล้วปิด sheet (แตะค่าเดิมก็ปิดได้ จึงใช้ OnClick ไม่ใช่ OnCheckedChange)
+                // OnClick rather than OnCheckedChange so tapping the current option also closes the sheet.
                 rb.setOnClickListener { pick(ids.indexOf(group.checkedRadioButtonId)) }
                 if (i == selected) selectedView = rb
             }
@@ -101,7 +98,7 @@ object Sheets {
             }
         }
 
-        // จำกัดความสูงไม่เกิน 60% ของจอ แล้วเลื่อนไปยังค่าที่เลือกอยู่
+        // Cap the height at 60% of the screen and scroll to the selected option.
         val maxH = (activity.resources.displayMetrics.heightPixels * 0.6f).toInt()
         b.scroll.post {
             if (b.scroll.height > maxH) b.scroll.layoutParams = b.scroll.layoutParams.apply { height = maxH }
@@ -110,7 +107,7 @@ object Sheets {
         dialog.show()
     }
 
-    /** ชื่อตัวเลือก + คำอธิบายบรรทัดล่าง (ตัวเล็ก สีรอง) ใน RadioButton เดียว */
+    /** Option label with its hint as a smaller second line. */
     private fun optionText(activity: Activity, opt: Option, checked: Boolean, hintSize: Int): CharSequence {
         if (opt.hint.isNullOrEmpty()) return opt.label
         val hintColor = ContextCompat.getColor(activity, if (checked) R.color.run_green_dark else R.color.text_tertiary)
@@ -122,7 +119,7 @@ object Sheets {
         }
     }
 
-    /** Bottom sheet กรอกข้อความ 1 ช่อง — validate คืนข้อความ error หรือ null ถ้าผ่าน */
+    /** Single text-field bottom sheet. [validate] returns an error message, or null when valid. */
     fun input(
         activity: Activity,
         icon: Int,
@@ -163,7 +160,7 @@ object Sheets {
 
     enum class Tone { NEUTRAL, DANGER, INFO }
 
-    /** Dialog ยืนยัน — cancelText = null จะแสดงปุ่มเดียว */
+    /** Confirmation dialog; a null [cancelText] shows a single button. */
     fun confirm(
         activity: Activity,
         icon: Int,
@@ -203,7 +200,7 @@ object Sheets {
         var confirmed = false
         b.btnCancel.setOnClickListener { dialog.dismiss() }
         b.btnConfirm.setOnClickListener { confirmed = true; dialog.dismiss(); onConfirm() }
-        // ยกเลิกด้วยปุ่ม / Back / แตะนอกกล่อง → onCancel
+        // Cancel button, Back and tapping outside all count as cancel.
         dialog.setOnDismissListener { if (!confirmed) onCancel() }
         dialog.show()
     }

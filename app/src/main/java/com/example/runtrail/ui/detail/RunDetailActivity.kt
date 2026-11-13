@@ -28,9 +28,7 @@ import com.example.runtrail.ui.edit.AddEditRunActivity
 import com.example.runtrail.ui.replay.ReplayActivity
 import com.example.runtrail.ui.share.ShareSheet
 
-/**
- * 09 · Run Summary — เปิดทันทีหลังจบการวิ่ง / แตะการ์ดจากหน้าหลักหรือประวัติ
- */
+/** Run summary, shown after finishing a run or when a run card is tapped. */
 class RunDetailActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityRunDetailBinding
@@ -106,7 +104,6 @@ class RunDetailActivity : AppCompatActivity() {
             binding.osmMap.invalidate()
         }
 
-        // ป้ายสถิติใหม่ใช้แค่การวิ่ง ≥ 5 กม. ที่เกิดก่อนหน้า → กรองใน SQL (เดิมโหลดทุกการวิ่งทุกครั้งที่เปิดหน้า, AUDIT P6)
         val record = RunCalculator.newRecordLabel(run, RunRepository.longRunsBefore(5000.0, run.startTime))
         binding.badgeRecord.visibility = if (record != null) View.VISIBLE else View.GONE
         binding.badgeRecord.text = record
@@ -137,7 +134,7 @@ class RunDetailActivity : AppCompatActivity() {
         binding.tvPhotoDesc.setText(if (photo != null) R.string.detail_photo_has else R.string.detail_photo_none)
     }
 
-    /** แตะป้ายสถานะ: บอกเหตุผลที่ซิงก์ไม่ผ่าน หรือสถานะในอันดับโลก */
+    /** Explains the sync badge: why the upload failed, or the run's leaderboard status. */
     private fun explainSync() {
         val run = RunRepository.getById(runId, withTrack = false) ?: return
         val msg = when {
@@ -176,7 +173,7 @@ class RunDetailActivity : AppCompatActivity() {
         startActivity(Intent(this, ReplayActivity::class.java).putExtra(EXTRA_RUN_ID, runId))
     }
 
-    /** MA10: เปิดหน้าแก้ไขแบบรอผล — บันทึกแล้วหน้าแก้ไขส่ง RESULT_OK กลับมา → อ่าน SQLite ใหม่แล้วแสดง */
+    /** Opens the editor and re-renders when it returns RESULT_OK. */
     private val editLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == RESULT_OK) RunRepository.getById(runId)?.let { render(it) }
     }

@@ -6,10 +6,10 @@ import com.example.runtrail.data.TrackPoint
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 
-/** endpoint ทั้งหมดของ backend (เรียกจาก background thread) — รายละเอียดใน backend/README.md */
+/** Blocking wrappers for every backend endpoint (see backend/README.md). Call from a background thread. */
 class RunTrailApi(val client: ApiClient) {
 
-    // ---------------- บัญชี
+    // ---------------- Account
 
     fun register(email: String, password: String, displayName: String, country: String?, device: String): Session =
         session(client.call("POST", "/auth/register", JSONObject().apply {
@@ -30,7 +30,7 @@ class RunTrailApi(val client: ApiClient) {
             o.getString("access_token"), o.getString("refresh_token")).also { client.sessions.save(it) }
     }
 
-    /** ยกเลิก refresh token ของเครื่องนี้ (ไม่มีเน็ตก็ไม่เป็นไร token จะหมดอายุเอง) */
+    /** Revokes this device's refresh token. Failures are ignored; the token expires anyway. */
     fun logout() {
         val s = client.sessions.get() ?: return
         try { client.call("POST", "/auth/logout", JSONObject().put("refresh_token", s.refreshToken), auth = false) } catch (_: ApiException) {}
@@ -48,7 +48,7 @@ class RunTrailApi(val client: ApiClient) {
     fun patchMe(body: JSONObject): JSONObject = client.call("PATCH", "/me", body)!!
     fun deleteMe() { client.call("DELETE", "/me") }
 
-    // ---------------- การวิ่ง
+    // ---------------- Runs
 
     fun putRun(run: Run, track: List<TrackPoint>): JSONObject =
         client.call("PUT", "/runs/${run.uuid}", RunJson.toPutBody(run, track), gzip = true)!!
@@ -67,7 +67,7 @@ class RunTrailApi(val client: ApiClient) {
     fun track(uuid: String): List<TrackPoint> =
         RunJson.parseTrack(client.call("GET", "/runs/$uuid/track")!!.getJSONArray("points"))
 
-    // ---------------- รูป
+    // ---------------- Photos
 
     fun photoUploadUrl(uuid: String, contentType: String, size: Int): JSONObject =
         client.call("POST", "/runs/$uuid/photo/upload-url", JSONObject().put("content_type", contentType).put("size", size))!!
@@ -77,7 +77,7 @@ class RunTrailApi(val client: ApiClient) {
 
     fun photoDelete(uuid: String) { client.call("DELETE", "/runs/$uuid/photo") }
 
-    /** ขอ URL → PUT ไฟล์ไป S3 → confirm · คืนการวิ่งล่าสุดจาก server */
+    /** Requests an upload URL, uploads the file, then confirms it. Returns the updated run. */
     fun uploadPhoto(uuid: String, jpeg: ByteArray): JSONObject {
         val up = photoUploadUrl(uuid, "image/jpeg", jpeg.size)
         val headers = mutableMapOf<String, String>()
@@ -86,7 +86,7 @@ class RunTrailApi(val client: ApiClient) {
         return photoConfirm(uuid, up.getString("key"))
     }
 
-    // ---------------- แชร์
+    // ---------------- Sharing
 
     fun share(uuid: String, hideEnds: Boolean, showPhoto: Boolean, showKcal: Boolean): JSONObject =
         client.call("POST", "/runs/$uuid/share", JSONObject().apply {
@@ -95,12 +95,12 @@ class RunTrailApi(val client: ApiClient) {
 
     fun unshare(uuid: String) { client.call("DELETE", "/runs/$uuid/share") }
 
-    // ---------------- อันดับ
+    // ---------------- Leaderboard
 
     fun leaderboard(metric: String, period: String, scope: String): JSONObject =
         client.call("GET", "/leaderboard?metric=$metric&period=$period&scope=$scope&limit=100")!!
 
-    // ---------------- การแจ้งเตือน / นักวิ่งคนอื่น
+    // ---------------- Notifications and other runners
 
     fun notifications(cursor: String? = null): JSONObject =
         client.call("GET", "/notifications?limit=50" + (cursor?.let { "&cursor=" + Uri.encode(it) } ?: ""))!!
@@ -110,9 +110,8 @@ class RunTrailApi(val client: ApiClient) {
     fun userSummary(userId: String): JSONObject = client.call("GET", "/users/$userId/summary")!!
 
     /**
-     * ที่อยู่ใหม่เป็นเซิร์ฟเวอร์เดิมของบัญชีนี้ไหม (เช่น IP ของเครื่องที่รัน backend เปลี่ยน)
-     * เรียก GET /me ด้วย token ปัจจุบัน · token หมดอายุ → refresh ที่ที่อยู่ใหม่ 1 ครั้ง
-     * คืน true เมื่อเซิร์ฟเวอร์ใหม่รู้จักผู้ใช้คนเดียวกัน (token ใหม่จาก refresh ถูกเก็บไว้ให้)
+     * Checks whether [baseUrl] is the same account's server (e.g. after the host's IP changed).
+     * Tries `GET /me`, refreshing once on 401; keeps the refreshed tokens on success.
      */
     fun sameAccountAt(baseUrl: String): Boolean {
         val s = client.sessions.get() ?: return false

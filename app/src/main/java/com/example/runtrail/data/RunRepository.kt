@@ -14,10 +14,9 @@ import java.util.Calendar
 import java.util.concurrent.CopyOnWriteArrayList
 
 /**
- * แหล่งข้อมูลการวิ่ง (MA10) — อ่าน/เขียน SQLite ทั้งหมด ใช้ได้แม้ไม่มีเน็ต
- * ชื่อเมธอดเดิม (getAll / getById / insert / update / delete / query) ยังเหมือนเดิม หน้าจอจึงแก้น้อยที่สุด
+ * All reads and writes of runs.
  *
- * การวิ่งที่ "มองเห็น" = จบแล้ว, ไม่ถูกลบ และเป็นของผู้ใช้ปัจจุบันหรือของ Guest (owner ว่าง)
+ * "Visible" runs are finished, not deleted, and owned by the current user or by nobody (guest).
  */
 object RunRepository {
 
@@ -27,7 +26,7 @@ object RunRepository {
     private lateinit var helper: RunDb
     private val db: SQLiteDatabase get() = helper.writableDatabase
 
-    /** ผู้ใช้ที่ล็อกอินอยู่ (ตั้งจาก App) — null = Guest */
+    /** Signed-in user id, or null for a guest. */
     @Volatile var currentUser: () -> String? = { null }
 
     private val listeners = CopyOnWriteArrayList<() -> Unit>()
@@ -38,13 +37,10 @@ object RunRepository {
         helper = database
     }
 
-    /** หน้าจอที่เปิดอยู่ลงทะเบียนไว้ เพื่อรีเฟรชเมื่อการซิงก์เบื้องหลังเปลี่ยนข้อมูล */
+    /** Screens register here to refresh when background sync changes data. */
     fun addListener(l: () -> Unit) { listeners += l }
     fun removeListener(l: () -> Unit) { listeners -= l }
-    /**
-     * แจ้งหน้าจอที่เปิดอยู่ว่าข้อมูลเปลี่ยน — รวมการแจ้งที่เกิดติดกันเป็นครั้งเดียว
-     * (เดิมโพสต์ทุกครั้งที่เขียน DB: ดึงการวิ่ง 100 รายการ = หน้าจอโหลดข้อมูลทั้งหมดใหม่ 100 รอบ, AUDIT P1)
-     */
+    /** Notifies listeners on the main thread, coalescing bursts of writes into one callback. */
     fun notifyChanged() {
         if (notifyPending.compareAndSet(false, true)) main.postDelayed(dispatch, NOTIFY_DELAY_MS)
     }
@@ -56,12 +52,12 @@ object RunRepository {
         listeners.forEach { it() }
     }
 
-    /** จำนวนครั้งที่แจ้งหน้าจอจริง (ใช้ใน test วัดผลการรวมการแจ้ง) */
+    /** Number of listener dispatches; used by tests to check coalescing. */
     @Volatile var dispatchCount = 0
         private set
     private const val NOTIFY_DELAY_MS = 120L
 
-    // ---------------------------------------------------------------- อ่าน
+    // ---------------------------------------------------------------- Reads
 
     private fun visibleWhere(): Pair<String, Array<String>> {
         val user = currentUser()
@@ -72,7 +68,7 @@ object RunRepository {
         }
     }
 
-    /** การวิ่งทั้งหมด (ไม่มีจุด GPS เต็ม แต่มีเส้นทางย่อและ splits) เรียงใหม่ → เก่า */
+    /** Visible runs, newest first, with thumbnail and splits but without the full track. */
     fun getAll(): List<Run> {
         val (where, args) = visibleWhere()
         return queryRuns(where, args, "start_time DESC", withTrack = false)
@@ -84,20 +80,20 @@ object RunRepository {
     fun getByUuid(uuid: String, withTrack: Boolean = false): Run? =
         queryRuns("uuid = ?", arrayOf(uuid), null, withTrack).firstOrNull()
 
-    /** การวิ่งล่าสุด n รายการ (หน้าหลักไม่ต้องโหลดทั้งหมด) */
+    /** The newest [limit] visible runs. */
     fun recent(limit: Int): List<Run> {
         val (where, args) = visibleWhere()
         return queryRuns(where, args, "start_time DESC", withTrack = false, limit = limit.toString())
     }
 
-    /** การวิ่งที่ไกลอย่างน้อย minMeters และเริ่มก่อน before — ใช้ตัดสินป้าย "สถิติใหม่" โดยไม่โหลดทุกแถว */
+    /** Visible runs of at least [minMeters] that started before [before]; used for the new-record badge. */
     fun longRunsBefore(minMeters: Double, before: Long): List<Run> {
         val (where, args) = visibleWhere()
         return queryRuns("$where AND distance_m >= ? AND start_time < ?", args + minMeters.toString() + before.toString(),
             null, withTrack = false)
     }
 
-    /** การวิ่งตั้งแต่เวลา start (กรองใน SQL) */
+    /** Visible runs that started in [start, until). */
     fun since(start: Long, until: Long = Long.MAX_VALUE): List<Run> {
         val (where, args) = visibleWhere()
         return queryRuns("$where AND start_time >= ? AND start_time <= ?", args + start.toString() + until.toString(),
@@ -162,7 +158,7 @@ object RunRepository {
         return out
     }
 
-    // ---------------------------------------------------------------- เขียน
+    // ---------------------------------------------------------------- Writes
 
     private fun values(r: Run) = ContentValues().apply {
         put("uuid", r.uuid); put("owner", r.ownerUserId); put("source", r.source.name)
@@ -179,7 +175,7 @@ object RunRepository {
         put("feel", r.feel)
     }
 
-    /** เพิ่มการวิ่งใหม่ (จบแล้ว) พร้อมจุด GPS · คำนวณ splits และเส้นทางย่อให้ */
+    /** Inserts a finished run with its track and derives splits and the thumbnail. Returns the new id. */
     fun insert(run: Run): Long {
         var id = 0L
         db.transaction {
@@ -192,10 +188,7 @@ object RunRepository {
         return id
     }
 
-    /**
-     * แก้ไขข้อมูลการวิ่ง (ไม่แตะจุด GPS) — ถ้า touch = true ถือเป็นการแก้ของผู้ใช้:
-     * เวลาอัปเดตเป็นปัจจุบัน และรอซิงก์ใหม่
-     */
+    /** Updates run fields (not the track). With [touch], counts as a user edit: bumps `updatedAt` and marks it pending. */
     fun update(run: Run, touch: Boolean = true): Int {
         val r = if (touch) run.copy(updatedAt = maxOf(System.currentTimeMillis(), run.updatedAt + 1),
             syncStatus = SyncStatus.PENDING, syncError = null) else run
@@ -204,10 +197,7 @@ object RunRepository {
         return n
     }
 
-    /**
-     * ลบการวิ่ง — ถ้าเคยขึ้น server และ alsoServer = true จะเก็บเป็น "รอลบ" ให้ SyncEngine ส่งคำสั่งลบ
-     * ไม่อย่างนั้นลบออกจากเครื่องทันที
-     */
+    /** Deletes a run. Runs already on the server become tombstones when [alsoServer]; others are removed at once. */
     fun delete(id: Long, alsoServer: Boolean = true): Int {
         val run = getById(id, withTrack = false) ?: return 0
         val n = if (run.onServer && alsoServer) {
@@ -237,7 +227,7 @@ object RunRepository {
         }
     }
 
-    /** splits + เส้นทางย่อ คำนวณครั้งเดียวตอนบันทึก (หน้ารายการจะได้ไม่ต้องโหลดจุดทั้งหมด) */
+    /** Recomputes splits and the thumbnail so list screens never load full tracks. */
     private fun writeTrackDerived(d: SQLiteDatabase, runId: Long, track: List<TrackPoint>) {
         d.delete("splits", "run_id = ?", arrayOf(runId.toString()))
         TrackMath.splits(track).forEach { s ->
@@ -249,7 +239,7 @@ object RunRepository {
             "id = ?", arrayOf(runId.toString()))
     }
 
-    /** แทนที่จุด GPS ทั้งหมด (ใช้ตอนดึงการวิ่งจาก server ลงเครื่อง) */
+    /** Replaces the whole track, e.g. after downloading a run from the server. */
     fun replaceTrack(runId: Long, track: List<TrackPoint>) {
         db.transaction {
             delete("run_points", "run_id = ?", arrayOf(runId.toString()))
@@ -262,16 +252,16 @@ object RunRepository {
     fun hasTrack(runId: Long): Boolean =
         db.rawQuery("SELECT 1 FROM run_points WHERE run_id = ? LIMIT 1", arrayOf(runId.toString())).use { it.moveToFirst() }
 
-    // ---------------------------------------------------------------- การวิ่งที่ยังไม่จบ (draft)
+    // ---------------------------------------------------------------- Drafts (runs in progress)
 
-    /** เริ่มบันทึกการวิ่ง: สร้างแถว end_time = NULL ไว้ก่อน เพื่อกู้คืนได้ถ้าแอปถูกปิดกลางคัน */
+    /** Creates the draft row up front so a run can be recovered if the app is killed. */
     fun startDraft(startTime: Long): Run {
         val run = Run(title = "", startTime = startTime, ownerUserId = currentUser())
         val id = db.insertOrThrow("runs", null, values(run))
         return run.copy(id = id)
     }
 
-    /** เขียนจุด GPS ที่เพิ่มขึ้น + ตัวเลขล่าสุดของ draft (เรียกทุกไม่กี่วินาที) */
+    /** Appends new points and the latest totals to a draft. Called every few seconds while recording. */
     fun saveDraft(run: Run, newPoints: List<TrackPoint>, fromSeq: Int) {
         db.transaction {
             writePoints(this, run.id, fromSeq, newPoints)
@@ -284,11 +274,11 @@ object RunRepository {
         }
     }
 
-    /** การวิ่งที่ค้างอยู่ (ถ้ามี) พร้อมจุด GPS ทั้งหมด */
+    /** The unfinished run, if any, with its full track. */
     fun activeDraft(): Run? =
         queryRuns("end_time IS NULL AND deleted = 0", emptyArray(), "start_time DESC", withTrack = true).firstOrNull()
 
-    /** จบ draft ให้เป็นการวิ่งจริง (ทั้งจากการกดจบ และจาก "บันทึกเท่าที่มี" ตอนกู้คืน) */
+    /** Turns a draft into a finished run, from either Stop or "save what was recorded" on recovery. */
     fun finishDraft(run: Run, endTime: Long, track: List<TrackPoint>) {
         db.transaction {
             val r = run.copy(endTime = endTime, syncStatus = SyncStatus.PENDING,
@@ -305,9 +295,9 @@ object RunRepository {
         db.delete("runs", "id = ? AND end_time IS NULL", arrayOf(id.toString()))
     }
 
-    // ---------------------------------------------------------------- ซิงก์ (ใช้โดย SyncEngine)
+    // ---------------------------------------------------------------- Sync (used by SyncEngine)
 
-    /** การวิ่งที่ต้องส่งขึ้น server ของผู้ใช้นี้ (จบแล้ว ยังไม่ซิงก์) */
+    /** Finished, non-deleted runs of [userId] that still need uploading. */
     fun runsToPush(userId: String): List<Run> =
         queryRuns("end_time IS NOT NULL AND deleted = 0 AND owner = ? AND sync_status != ?",
             arrayOf(userId, SyncStatus.SYNCED.name), "start_time", withTrack = false)
@@ -319,17 +309,14 @@ object RunRepository {
         queryRuns("end_time IS NOT NULL AND deleted = 0 AND owner = ? AND on_server = 1 AND photo_sync IN (?, ?)",
             arrayOf(userId, PhotoSync.PENDING.name, PhotoSync.DELETE.name), null, withTrack = false)
 
-    /** Guest → ผูกการวิ่งทั้งหมดที่ยังไม่มีเจ้าของให้บัญชีที่เพิ่งล็อกอิน */
+    /** Assigns all guest runs to [userId] after sign-in. */
     fun claimGuestRuns(userId: String): Int {
         val n = db.update("runs", ContentValues().apply { put("owner", userId) }, "owner IS NULL", null)
         if (n > 0) notifyChanged()
         return n
     }
 
-    /**
-     * อัปเดตเฉพาะถ้าผู้ใช้ไม่ได้แก้ระหว่างที่กำลังส่ง (updated_at ยังเท่าเดิม)
-     * คืน true ถ้าเขียนได้
-     */
+    /** Writes [run] only if the row was not edited meanwhile (`updated_at` still equals [expectedUpdatedAt]). */
     fun updateIfUnchanged(run: Run, expectedUpdatedAt: Long): Boolean {
         val n = db.update("runs", values(run), "id = ? AND updated_at = ?",
             arrayOf(run.id.toString(), expectedUpdatedAt.toString()))
@@ -357,7 +344,7 @@ object RunRepository {
         notifyChanged()
     }
 
-    /** บันทึกการวิ่งที่ดึงมาจาก server (ไม่ทำเป็นการแก้ของผู้ใช้) คืน id ในเครื่อง */
+    /** Inserts or updates a run downloaded from the server without marking it as a user edit. Returns the local id. */
     fun upsertFromServer(run: Run, clearLocalPhoto: Boolean = false): Long {
         val existing = getByUuid(run.uuid)
         val id: Long
@@ -372,15 +359,12 @@ object RunRepository {
         return id
     }
 
-    // ---------------------------------------------------------------- ส่งออก / นำเข้า (MA09 SAF)
+    // ---------------------------------------------------------------- Backup
 
-    /** การวิ่งที่ผู้ใช้เห็นทั้งหมด พร้อมจุด GPS เต็ม (ใช้ตอนส่งออกไฟล์สำรอง) */
+    /** Visible runs with full tracks, for export. */
     fun allWithTracks(): List<Run> = getAll().map { it.copy(track = loadTrack(it.id)) }
 
-    /**
-     * เพิ่มการวิ่งจากไฟล์สำรอง — ข้ามตัวที่มี uuid นี้ในเครื่องแล้ว (นำเข้าไฟล์เดิมซ้ำได้ ไม่เกิดข้อมูลซ้ำ)
-     * การวิ่งที่เพิ่มจะเป็นของบัญชีปัจจุบันและรอซิงก์ขึ้น server · คืนจำนวนที่เพิ่ม
-     */
+    /** Inserts backup runs whose uuid is not on the device yet, owned by the current user. Returns the number added. */
     fun importRuns(runs: List<Run>): Int {
         var added = 0
         db.transaction {
@@ -398,7 +382,7 @@ object RunRepository {
         return added
     }
 
-    /** ออกจากระบบ: ล้างข้อมูลทั้งหมดในเครื่อง */
+    /** Deletes every run on the device (sign-out). */
     fun clearAll() {
         db.transaction {
             delete("run_points", null, null)
@@ -408,12 +392,11 @@ object RunRepository {
         notifyChanged()
     }
 
-    // ---------------------------------------------------------------- ค้นหา / สถิติ
+    // ---------------------------------------------------------------- Search and stats
 
-    /** ค้นหา + กรอง + เรียง */
     fun query(text: String, filter: Filter, sort: Sort): List<Run> = filterAndSort(getAll(), text, filter, sort)
 
-    /** กรอง + เรียงจากรายการที่โหลดไว้แล้ว (หน้าประวัติใช้ตอนพิมพ์ค้นหา ไม่ต้องอ่าน DB ทุกตัวอักษร, AUDIT P3) */
+    /** Filters and sorts an already loaded list, so typing in search does not hit the database. */
     fun filterAndSort(all: List<Run>, text: String, filter: Filter, sort: Sort, now: Long = System.currentTimeMillis()): List<Run> {
         val weekStart = startOfWeek(now)
         val monthStart = startOfMonth(now)
@@ -438,13 +421,13 @@ object RunRepository {
         }
     }
 
-    /** การวิ่งใน 7 วันล่าสุด (รวมวันนี้) — ตรงกับ "กิจกรรม 7 วัน" ในหน้าหลัก */
+    /** Runs in the last 7 days, including today. */
     fun thisWeek(now: Long = System.currentTimeMillis(), all: List<Run> = getAll()): List<Run> {
         val start = startOfWeek(now)
         return all.filter { it.startTime >= start && it.startTime <= now }
     }
 
-    /** ระยะทางรายวัน 7 วันล่าสุด (index 6 = วันนี้) หน่วย กม. */
+    /** Distance per day for the last 7 days (index 6 = today), in km or miles. */
     fun weekDailyKm(now: Long = System.currentTimeMillis(), all: List<Run> = getAll(), miles: Boolean = false): FloatArray {
         val start = startOfWeek(now)
         val out = FloatArray(7)
@@ -455,7 +438,7 @@ object RunRepository {
         return out
     }
 
-    /** ตัวย่อวันของ 7 วันล่าสุด เช่น อ พ พฤ ศ ส อา จ */
+    /** Short weekday labels for the last 7 days, oldest first. */
     fun weekDayLetters(now: Long = System.currentTimeMillis()): List<String> {
         val letters = com.example.runtrail.domain.Fmt.DAY_LETTERS
         val start = startOfWeek(now)
@@ -465,7 +448,7 @@ object RunRepository {
         }
     }
 
-    /** ระยะทางรวมรายเดือนย้อนหลัง n เดือน (เก่า → ใหม่) */
+    /** Total distance per month for the last [months] months, oldest first. */
     fun monthlyKm(months: Int = 6, now: Long = System.currentTimeMillis(), all: List<Run> = getAll(), miles: Boolean = false): List<Pair<Int, Float>> {
         val cal = Calendar.getInstance().apply { timeInMillis = now }
         val result = mutableListOf<Pair<Int, Float>>()
@@ -487,7 +470,7 @@ object RunRepository {
 
     fun route(run: Run): List<RoutePoint> = RouteGenerator.route(run)
 
-    /** จำนวนการวิ่งที่ยังไม่ได้ซิงก์ (นับใน SQL ไม่ต้องโหลดทุกแถว) */
+    /** Number of runs waiting to sync, counted in SQL. */
     fun pendingCount(): Int {
         val (where, args) = visibleWhere()
         return db.rawQuery("SELECT count(*) FROM runs WHERE $where AND sync_status != ?", args + SyncStatus.SYNCED.name)

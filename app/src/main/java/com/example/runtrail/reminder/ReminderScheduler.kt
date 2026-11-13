@@ -10,11 +10,10 @@ import com.example.runtrail.data.PrefsHelper
 import com.example.runtrail.domain.ReminderTime
 
 /**
- * ตั้ง/ยกเลิก Alarm "เตือนไปวิ่ง" ผ่าน AlarmManager (MA13: ReminderScheduler)
+ * Schedules the run reminder with [AlarmManager].
  *
- * วงจร: ผู้ใช้บันทึกในหน้าตั้งค่า → [schedule] → ถึงเวลา AlarmManager ปลุก → ส่ง Broadcast
- * → [ReminderReceiver] แสดงแจ้งเตือน แล้วเรียก [schedule] อีกครั้งเพื่อตั้งรอบถัดไป
- * (ไม่ใช้ setRepeating เพราะ Android ไม่รับประกันเวลา และต้องข้ามวันที่ไม่ได้เลือก)
+ * One alarm is set at a time; [ReminderReceiver] schedules the next occurrence after each one,
+ * which also skips unselected days.
  */
 object ReminderScheduler {
 
@@ -22,17 +21,16 @@ object ReminderScheduler {
     const val ACTION_REMIND = "com.example.runtrail.action.REMIND"
     private const val REQUEST_CODE = 7001
 
-    /** ตั้งเวลารอบถัดไปตามค่าที่บันทึกไว้ (ปิดอยู่ = ยกเลิก) · คืนเวลาที่ตั้ง หรือ null */
+    /** Schedules the next reminder from saved settings, or cancels it when disabled. Returns the trigger time or null. */
     fun schedule(context: Context, now: Long = System.currentTimeMillis()): Long? {
         val prefs = PrefsHelper(context)
         val am = context.getSystemService(AlarmManager::class.java)
         val pi = pendingIntent(context)
-        am.cancel(pi)                                     // ยกเลิกของเดิมก่อนเสมอ (PendingIntent ต้องเหมือนตอนตั้ง)
+        am.cancel(pi)
         if (!prefs.reminderEnabled) return null
         val at = ReminderTime.next(now, prefs.reminderHour, prefs.reminderMinute, prefs.reminderDays) ?: return null
         try {
             if (canExact(context)) {
-                // RTC_WAKEUP = เวลานาฬิกาจริง + ปลุก CPU · AllowWhileIdle = ทำงานได้แม้อยู่ในโหมด Doze
                 am.setExactAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, pi)
             } else {
                 inexact(am, at, pi)
@@ -45,8 +43,8 @@ object ReminderScheduler {
     }
 
     /**
-     * ยังไม่ได้สิทธิ์ exact alarm (Android 12+) → ให้ระบบเตือนภายใน 10 นาทีหลังเวลาที่ตั้ง (ไม่ต้องขอสิทธิ์)
-     * ไม่ใช้ setAndAllowWhileIdle เพราะระบบเลื่อนได้ถึง 1 ชั่วโมง
+     * Fallback without the exact-alarm permission: fires within 10 minutes of [at].
+     * Preferred over setAndAllowWhileIdle, which may be deferred by up to an hour.
      */
     private fun inexact(am: AlarmManager, at: Long, pi: PendingIntent) {
         am.setWindow(AlarmManager.RTC_WAKEUP, at, WINDOW_MS, pi)
@@ -58,12 +56,11 @@ object ReminderScheduler {
         context.getSystemService(AlarmManager::class.java).cancel(pendingIntent(context))
     }
 
-    /** Android 12+ ต้องได้สิทธิ์ SCHEDULE_EXACT_ALARM ก่อน (ผู้ใช้เปิดเองในหน้าตั้งค่าระบบ) */
+    /** Exact alarms need the user-granted SCHEDULE_EXACT_ALARM permission on Android 12+. */
     fun canExact(context: Context): Boolean =
         Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
             context.getSystemService(AlarmManager::class.java).canScheduleExactAlarms()
 
-    /** Explicit Intent ชี้ไปที่ ReminderReceiver · FLAG_IMMUTABLE = ผู้รับแก้ Intent ไม่ได้ */
     private fun pendingIntent(context: Context): PendingIntent {
         val intent = Intent(context, ReminderReceiver::class.java).setAction(ACTION_REMIND)
         return PendingIntent.getBroadcast(

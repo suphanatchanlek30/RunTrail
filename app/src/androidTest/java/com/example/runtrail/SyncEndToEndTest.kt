@@ -32,16 +32,16 @@ import kotlin.math.cos
 import kotlin.math.hypot
 
 /**
- * ทดสอบแอป ↔ backend จริงทั้งวงจร (ข้ามเมื่อไม่ได้ระบุ server):
+ * Full app ↔ backend cycle; skipped unless a server is given:
  *   ./gradlew connectedDebugAndroidTest -Pe2eApiUrl=http://10.0.2.2:8080
  *
- * วิ่งตอน "ออฟไลน์" (บันทึกในเครื่อง) → ซิงก์ → ส่งครั้งเดียว · server ตรวจผ่าน · รูปขึ้น S3 · ลิงก์แชร์เปิดได้
- * · แก้/ลบแล้วตามไปที่ server · ล็อกอินเครื่องใหม่ดึงประวัติคืนครบ · อันดับโลกนับเฉพาะ GPS
+ * Record offline → sync once → server verifies → photo to S3 → share page works → edits and deletes
+ * propagate → a new device restores the history → only GPS runs count on the leaderboard.
  */
 @RunWith(AndroidJUnit4::class)
 class SyncEndToEndTest {
 
-    /** Android 17: ต้องได้สิทธิ์เครือข่ายภายในก่อนต่อ backend บน Mac (10.0.2.2) */
+    /** Android 17: local-network permission is needed to reach the host at 10.0.2.2. */
     @get:org.junit.Rule
     val localNetwork: androidx.test.rule.GrantPermissionRule =
         androidx.test.rule.GrantPermissionRule.grant("android.permission.ACCESS_LOCAL_NETWORK")
@@ -72,7 +72,7 @@ class SyncEndToEndTest {
         ctx.deleteSharedPreferences(PREFS)
     }
 
-    /** รอบสวนลุมพินี ~2.4 กม. 1 จุด/วินาที ที่ 3 ม./วิ เริ่มเมื่อ 2 ชั่วโมงก่อน */
+    /** ~2.4 km loop of Lumphini Park at 3 m/s, one fix per second, starting two hours ago. */
     private fun lumphini(start: Long): List<TrackPoint> {
         val loop = listOf(13.7280 to 100.5385, 13.7280 to 100.5445, 13.7330 to 100.5445, 13.7330 to 100.5385, 13.7280 to 100.5385)
         val mLat = 6_371_000.0 * PI / 180
@@ -104,14 +104,14 @@ class SyncEndToEndTest {
     }
 
     @Test fun fullOfflineFirstCycle() {
-        // 1) บันทึกตอนออฟไลน์: GPS 1 รอบ + เพิ่มเอง 1 รอบ (ยังไม่มีอะไรบน server)
+        // 1) Record offline: one GPS run and one manual run; nothing on the server yet.
         val gpsId = recordGpsRun()
         val manualId = RunRepository.insert(Run(title = "เพิ่มเอง", startTime = System.currentTimeMillis() - 86_400_000,
             endTime = System.currentTimeMillis() - 86_400_000 + 1_800_000, distanceM = 5000.0, movingTimeS = 1800,
             source = RunSource.MANUAL))
         assertEquals(2, RunRepository.pendingCount())
 
-        // 2) มีเน็ต → ซิงก์
+        // 2) Online → sync.
         val first = engine.sync() as SyncEngine.Outcome.Done
         assertEquals(2, first.pushed)
         val gps = RunRepository.getById(gpsId, withTrack = false)!!
@@ -119,16 +119,16 @@ class SyncEndToEndTest {
         assertEquals("server ตรวจเส้นทางผ่าน: ${gps.verifyReason}", true, gps.verified)
         assertEquals(gps.distanceM, gps.serverDistanceM!!, gps.distanceM * 0.01)
         assertEquals(false, RunRepository.getById(manualId, withTrack = false)!!.verified)
-        // การแจ้งเตือนจาก server ถูกดึงมาเก็บไว้ (แสดงตอนออฟไลน์ได้)
+        // Notifications are fetched and cached for offline display.
         val notes = org.json.JSONObject(prefs.notificationsCache!!).getJSONArray("items")
         assertTrue("run_verified notification", (0 until notes.length()).any { notes.getJSONObject(it).getString("type") == "run_verified" })
         assertTrue(prefs.unreadNotifications >= 1)
 
-        // 3) ซิงก์ซ้ำ → ไม่ส่งซ้ำ ไม่เกิดข้อมูลซ้ำบน server
+        // 3) Syncing again uploads nothing and creates no duplicates.
         assertEquals(0, (engine.sync() as SyncEngine.Outcome.Done).pushed)
         assertEquals(2, api.listRuns(null, null).getJSONArray("items").length())
 
-        // 4) รูป → อัปโหลดตรงไป S3 แล้วดาวน์โหลดคืนได้
+        // 4) Photo uploads to S3 and downloads back.
         val bmp = Bitmap.createBitmap(64, 48, Bitmap.Config.ARGB_8888).apply { eraseColor(0xFF00D47A.toInt()) }
         val photo = ImageStore.save(ctx, bmp)
         RunRepository.update(gps.copy(photoUri = photo, photoSync = PhotoSync.PENDING))
@@ -138,14 +138,14 @@ class SyncEndToEndTest {
         val photoUrl = serverRun.getString("photo_url")
         assertNotNull("download photo from S3", api.client.download(photoUrl))
 
-        // 5) ลิงก์แชร์ → หน้าเว็บเปิดได้ และไม่มีจุดใกล้บ้าน
+        // 5) The share page opens and contains no points near home.
         val share = api.share(gps.uuid, hideEnds = true, showPhoto = true, showKcal = false)
         val page = api.client.plain.newCall(Request.Builder().url(share.getString("url")).build()).execute()
             .use { it.code to it.body.string() }
         assertEquals(200, page.first)
         assertTrue(page.second.contains("og:title"))
 
-        // 6) แก้ชื่อ → ตามไป server · ลบ → server ลบด้วย
+        // 6) Rename propagates to the server; delete removes it there too.
         RunRepository.update(RunRepository.getById(gpsId, withTrack = false)!!.copy(title = "แก้ชื่อแล้ว"))
         engine.sync()
         assertEquals("แก้ชื่อแล้ว", findOnServer(gps.uuid)!!.getString("title"))
@@ -155,12 +155,12 @@ class SyncEndToEndTest {
         assertNull("deleted on server too", findOnServer(manualUuid))
         assertTrue("tombstone cleared", RunRepository.tombstones(uid).isEmpty())
 
-        // 7) อันดับโลก: นับเฉพาะ GPS ที่ตรวจผ่าน
+        // 7) Leaderboard counts only verified GPS runs.
         val lb = api.leaderboard("distance", "week", "global")
         val me = lb.getJSONObject("me")
         assertEquals(gps.serverDistanceM!!, me.getDouble("value"), 1.0)
 
-        // 8) "เครื่องใหม่": ล้างข้อมูลในเครื่องแล้วซิงก์ → ได้ประวัติคืนพร้อมเส้นทางและรูป
+        // 8) "New device": wipe local data and sync → history returns with track and photo.
         val trackSize = RunRepository.loadTrack(gpsId).size
         RunRepository.clearAll()
         prefs.lastPull = null
@@ -178,7 +178,7 @@ class SyncEndToEndTest {
         val start = System.currentTimeMillis() - 3 * 3_600_000
         val a = lumphini(start)
         val half = a.size / 2
-        // หยุด 2 นาทีแล้วเดินไปอีกฝั่ง (ไม่มีจุดระหว่างหยุด) — แอปไม่นับระยะช่วงนี้
+        // A 2-minute stop, then walk on from the other side (no points during the stop); not counted.
         val after = a.drop(half).map { it.copy(time = it.time + 120_000) }
         val track = a.take(half - 40) + after
         var dist = 0.0
@@ -196,7 +196,7 @@ class SyncEndToEndTest {
     }
 
     @Test fun veryLongRunStillSyncs() {
-        // 60,000 จุด ≈ 16.7 ชม. ที่ 1 จุด/วินาที — เกินเพดาน 50,000 จุดของ server (เดิมได้ 400 ทุกรอบ ซิงก์ไม่ได้เลย)
+        // 60,000 points ≈ 16.7 h at 1 Hz, above the server's 50,000-point limit.
         val n = 60_000
         val start = System.currentTimeMillis() - n * 1000L - 3_600_000
         val track = List(n) { i -> TrackPoint(13.0 + i * 3.0 / 111_194.93, 100.5, start + i * 1000L, 5.0, 5f) }
@@ -208,13 +208,13 @@ class SyncEndToEndTest {
         val r = RunRepository.getById(id, withTrack = false)!!
         assertEquals("sync error: ${r.syncError}", SyncStatus.SYNCED, r.syncStatus)
         assertEquals("server distance ≈ app distance", dist, r.serverDistanceM!!, dist * 0.01)
-        assertEquals(n, RunRepository.loadTrack(id).size)                  // ในเครื่องยังครบทุกจุด
+        assertEquals(n, RunRepository.loadTrack(id).size)                  // local track keeps every point
         val onServer = api.track(r.uuid)
         assertEquals("server keeps 50,000 points", 50_000, onServer.size)
     }
 
     @Test fun photoRemovedOnOneDeviceDisappearsOnAnother() {
-        // เครื่อง A: บันทึก + รูป → ซิงก์
+        // Device A: record with a photo, sync.
         val id = recordGpsRun()
         val bmp = Bitmap.createBitmap(64, 48, Bitmap.Config.ARGB_8888).apply { eraseColor(0xFF00D47A.toInt()) }
         RunRepository.update(RunRepository.getById(id, withTrack = false)!!.copy(photoUri = ImageStore.save(ctx, bmp), photoSync = PhotoSync.PENDING))
@@ -222,7 +222,7 @@ class SyncEndToEndTest {
         val uuid = RunRepository.getById(id, withTrack = false)!!.uuid
         assertNotNull(findOnServer(uuid)!!.optString("photo_url").ifBlank { null })
 
-        // เครื่อง B: ฐานข้อมูลใหม่ ดึงลงมาพร้อมรูป
+        // Device B: fresh database, pulls the run with its photo.
         RunRepository.init(ctx, RunDb(ctx, null))
         RunRepository.currentUser = { uid }
         prefs.lastPull = null
@@ -232,12 +232,12 @@ class SyncEndToEndTest {
         assertNotNull("photo downloaded on B", fileOnB)
         assertEquals(PhotoSync.SYNCED, onB.photoSync)
 
-        // เครื่อง A ลบรูป (ในแอป = แก้การวิ่ง + ส่งคำสั่งลบรูป) — จำลองด้วย API ตรง ๆ
+        // Device A removes the photo (simulated through the API).
         api.client.call("PATCH", "/runs/$uuid", org.json.JSONObject()
             .put("note", "ลบรูปแล้ว").put("client_updated_at", com.example.runtrail.net.RunJson.iso(System.currentTimeMillis())))
         api.photoDelete(uuid)
 
-        // เครื่อง B ซิงก์ → รูปหายตาม และไฟล์ในเครื่องถูกลบ (AUDIT A9)
+        // Device B syncs → the photo and its local file are removed.
         engine.sync()
         val after = RunRepository.getByUuid(uuid)!!
         assertNull("photo cleared on B", after.photoUri)

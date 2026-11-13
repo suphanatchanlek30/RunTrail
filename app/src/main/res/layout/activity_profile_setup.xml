@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 03 · Profile & Goal — ข้อมูลร่างกาย + เป้าหมายรายสัปดาห์ -->
+<!-- Profile and weekly goal -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -65,7 +65,7 @@
             android:text="@string/profile_body"
             android:textColor="@color/text_secondary" />
 
-        <!-- ชื่อ / นามสกุล -->
+        <!-- First / last name -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -124,7 +124,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- น้ำหนัก / ส่วนสูง -->
+        <!-- Weight / height -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -220,7 +220,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- อายุ / หน่วยระยะทาง -->
+        <!-- Age / distance unit -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -303,7 +303,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- เป้าหมายรายสัปดาห์ -->
+        <!-- Weekly goal -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

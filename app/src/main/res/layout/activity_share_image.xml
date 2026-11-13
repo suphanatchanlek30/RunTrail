@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 23 · ภาพแชร์ — รูป/เส้นทาง + ระยะ เวลา เพซ (สร้างในเครื่อง) -->
+<!-- Share image builder -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/root"
@@ -31,7 +31,7 @@
             android:text="@string/share_image_title" />
     </FrameLayout>
 
-    <!-- พรีวิว: ย่อให้พอดีพื้นที่ที่เหลือ ไม่ว่าจอจะสูงแค่ไหน -->
+    <!-- Preview, scaled to fit the remaining space -->
     <FrameLayout
         android:layout_width="match_parent"
         android:layout_height="0dp"

@@ -17,10 +17,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/**
- * เปิดหน้าจอด้วยการวิ่งที่ "ไม่มีเส้นทาง GPS" (เพิ่มเอง) — เคยทำให้แอปเด้ง (AUDIT A1, A2)
- * ใช้ฐานข้อมูลในหน่วยความจำ ไม่แตะข้อมูลของแอป
- */
+/** Screens opened with a manual run (no GPS track) must not crash. Uses an in-memory database. */
 @RunWith(AndroidJUnit4::class)
 class ScreenCrashTest {
 
@@ -42,9 +39,9 @@ class ScreenCrashTest {
 
     @Test fun replayOfManualRunDoesNotCrash() {
         ActivityScenario.launch<ReplayActivity>(intent(ReplayActivity::class.java)).use { s ->
-            // ไม่มีเส้นทาง → แจ้งผู้ใช้แล้วปิดหน้า หรือแสดงหน้าว่าง แต่ต้องไม่เด้ง
+            // No route: the screen may close with a message or show an empty state, but must not crash.
             InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-            Thread.sleep(300)   // ให้ frame ของการเล่นทำงานอย่างน้อยหนึ่งรอบ
+            Thread.sleep(300)   // let at least one playback frame run
             InstrumentationRegistry.getInstrumentation().waitForIdleSync()
             assertEquals(true, s.state == Lifecycle.State.RESUMED || s.state == Lifecycle.State.DESTROYED)
         }

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- ตัวเลือกใน sheet: ปกติ = พื้นเทาอ่อน · เลือกอยู่ = เขียวอ่อน + ขอบเขียว -->
+<!-- Option cell: light grey, or light green with a green border when selected -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_selected="true">
         <shape android:shape="rectangle">

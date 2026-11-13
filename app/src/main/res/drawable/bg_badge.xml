@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- ป้ายตัวเลขบนกระดิ่ง -->
+<!-- Unread count badge on the bell -->
 <shape xmlns:android="http://schemas.android.com/apk/res/android" android:shape="rectangle">
     <solid android:color="@color/danger" />
     <corners android:radius="9dp" />

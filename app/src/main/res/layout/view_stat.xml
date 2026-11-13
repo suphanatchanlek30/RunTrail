@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Stat บนพื้นขาว: ค่า + หน่วย / ป้ายกำกับ -->
+<!-- Stat on a light background: value + unit, label -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="wrap_content"

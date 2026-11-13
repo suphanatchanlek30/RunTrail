@@ -9,9 +9,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 
-/**
- * เปลี่ยนที่อยู่เซิร์ฟเวอร์ขณะล็อกอิน (AUDIT K1): ยอมเมื่อเป็นบัญชีเดียวกัน (เช่น IP ของ Mac เปลี่ยน) เท่านั้น
- */
+/** Changing the server while signed in is allowed only when it is the same account's server. */
 class ServerSwitchTest {
 
     private lateinit var oldServer: MockWebServer
@@ -51,7 +49,7 @@ class ServerSwitchTest {
         newServer.enqueue(json(401, """{"error":{"code":"invalid_token","message":"x"}}"""))
         newServer.enqueue(json(401, """{"error":{"code":"invalid_refresh_token","message":"x"}}"""))
         assertFalse(api().sameAccountAt(newUrl))
-        assertEquals("refresh-1", sessions.get()!!.refreshToken)   // ไม่ล้าง session ของเซิร์ฟเวอร์เดิม
+        assertEquals("refresh-1", sessions.get()!!.refreshToken)   // the old server's session is kept
     }
 
     @Test fun expiredAccessIsRefreshedAtNewAddress() {

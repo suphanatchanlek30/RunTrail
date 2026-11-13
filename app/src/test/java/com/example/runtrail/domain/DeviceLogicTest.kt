@@ -7,7 +7,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** ตรรกะที่เคยทำให้เด้งบนเครื่องบางรุ่น (AUDIT A3, A4) — ส่วนที่ไม่ต้องใช้ฮาร์ดแวร์จริง */
+/** Hardware-independent parts of image decoding and location-provider selection. */
 class DeviceLogicTest {
 
     @Test fun prefersGpsThenFusedThenNetwork() {
@@ -22,7 +22,7 @@ class DeviceLogicTest {
         assertEquals(1, ImageStore.sampleSize(2000, 1500))
         assertEquals(2, ImageStore.sampleSize(4000, 3000))
         assertEquals(4, ImageStore.sampleSize(8160, 6120))     // 50 MP
-        // ด้านยาวหลัง sample ต้องยังไม่ต่ำกว่า 1280 (ไม่เสียความคม) และไม่เกิน 2 เท่า (ไม่เปลืองหน่วยความจำ)
+        // After sampling, the long side stays ≥ 1280 px (sharp enough) and < 2× that (memory).
         for (w in listOf(1300, 2600, 3000, 5000, 9000, 12000)) {
             val longest = w / ImageStore.sampleSize(w, w / 2)
             assertTrue("$w → $longest", longest >= ImageStore.MAX_SIDE && longest < ImageStore.MAX_SIDE * 2)

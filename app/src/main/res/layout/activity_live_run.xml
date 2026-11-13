@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 07 · Live Run + 08 · Paused / Hold to stop -->
+<!-- Live run: map, running sheet and paused sheet with hold-to-stop -->
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -9,7 +9,6 @@
     android:background="@color/map_land"
     tools:context=".ui.live.LiveRunActivity">
 
-    <!-- แผนที่จริง OpenStreetMap + เส้นทาง GPS -->
     <org.osmdroid.views.MapView
         android:id="@+id/map"
         android:layout_width="0dp"
@@ -28,7 +27,7 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- ===== Map overlay ===== -->
+    <!-- Map overlay -->
     <LinearLayout
         android:id="@+id/overlay"
         android:layout_width="0dp"
@@ -125,7 +124,7 @@
         app:layout_constraintStart_toStartOf="parent"
         tools:text="เร็วกว่าเป้า 12 วิ/กม. · เป้า 6:00" />
 
-    <!-- ===== Bottom sheet: กำลังวิ่ง ===== -->
+    <!-- Bottom sheet: running -->
     <LinearLayout
         android:id="@+id/sheetRunning"
         android:layout_width="0dp"
@@ -220,7 +219,7 @@
             </LinearLayout>
         </LinearLayout>
 
-        <!-- tiles -->
+        <!-- Stat tiles -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -265,7 +264,7 @@
                 android:layout_weight="1" />
         </LinearLayout>
 
-        <!-- env chips -->
+        <!-- Environment chips -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="30dp"
@@ -314,7 +313,7 @@
                 tools:text="76%" />
         </LinearLayout>
 
-        <!-- controls -->
+        <!-- Controls -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="80dp"
@@ -360,7 +359,7 @@
         </LinearLayout>
     </LinearLayout>
 
-    <!-- ===== Bottom sheet: หยุดชั่วคราว ===== -->
+    <!-- Bottom sheet: paused -->
     <LinearLayout
         android:id="@+id/sheetPaused"
         android:layout_width="0dp"
