@@ -230,6 +230,36 @@
             android:paddingBottom="@dimen/space_15"
             android:textSize="@dimen/text_size_15" />
 
+        <!-- ความรู้สึกหลังวิ่ง (MA08 RatingBar → getRating() ได้ float) -->
+        <TextView
+            style="@style/FieldLabel"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_l"
+            android:text="@string/edit_feel" />
+
+        <RatingBar
+            android:id="@+id/ratingFeel"
+            style="?android:attr/ratingBarStyle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_xs"
+            android:contentDescription="@string/edit_feel"
+            android:isIndicator="false"
+            android:numStars="5"
+            android:progressBackgroundTint="@color/border"
+            android:progressTint="@color/run_green"
+            android:rating="0"
+            android:secondaryProgressTint="@color/run_green"
+            android:stepSize="1" />
+
+        <TextView
+            android:id="@+id/tvFeel"
+            style="@style/Txt.Caption"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/feel_none" />
+
         <!-- ระยะ / เวลา (เฉพาะโหมดเพิ่มย้อนหลัง) -->
         <LinearLayout
             android:id="@+id/groupManual"

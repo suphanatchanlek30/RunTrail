@@ -80,6 +80,35 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="@dimen/space_xxs"
                             tools:text="อา. 9 พ.ย. 2026 · 17:42 – 18:15" />
+
+                        <!-- ความรู้สึกหลังวิ่ง: RatingBar แบบแสดงผลอย่างเดียว (isIndicator) -->
+                        <LinearLayout
+                            android:id="@+id/rowFeel"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginTop="@dimen/space_xs"
+                            android:gravity="center_vertical"
+                            android:visibility="gone">
+
+                            <RatingBar
+                                android:id="@+id/ratingFeel"
+                                style="?android:attr/ratingBarStyleSmall"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:isIndicator="true"
+                                android:numStars="5"
+                                android:progressBackgroundTint="@color/border"
+                                android:progressTint="@color/run_green"
+                                android:secondaryProgressTint="@color/run_green"
+                                android:stepSize="1" />
+
+                            <TextView
+                                android:id="@+id/tvFeel"
+                                style="@style/Txt.Caption"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginStart="@dimen/space_s" />
+                        </LinearLayout>
                     </LinearLayout>
 
                     <ImageView

@@ -9,8 +9,9 @@ import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
 import androidx.test.espresso.action.ViewActions.click
 import androidx.test.espresso.action.ViewActions.replaceText
+import androidx.test.espresso.action.ViewActions.typeText
 import androidx.test.espresso.matcher.RootMatchers.isDialog
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
+import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
 import androidx.test.espresso.matcher.ViewMatchers.withId
 import androidx.test.espresso.matcher.ViewMatchers.withText
 import androidx.test.ext.junit.runners.AndroidJUnit4
@@ -27,7 +28,7 @@ import com.example.runtrail.sync.SyncManager
 import com.example.runtrail.ui.auth.LoginActivity
 import com.example.runtrail.ui.auth.RegisterActivity
 import com.example.runtrail.ui.settings.SettingsActivity
-import org.hamcrest.Matchers.allOf
+import org.hamcrest.Matchers.startsWith
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -130,10 +131,11 @@ class AccountFlowTest {
                 assertTrue("account row visible", shown(st, id))
             }
 
-            // 2) ประเทศ → เลือก "LA" ในรายการ → ซิงก์ → server เก็บค่าใหม่
+            // 2) ประเทศ → พิมพ์ "LA" ในช่อง AutoComplete → แตะ "LA · …" ในรายการ → ซิงก์ → server เก็บค่าใหม่
             tap(st, R.id.rowCountry)
-            Thread.sleep(800)   // รอ bottom sheet เลื่อนขึ้นจนนิ่ง (Espresso ไม่รอแอนิเมชันนี้)
-            onView(allOf(withText("LA"), isDisplayed())).inRoot(isDialog()).perform(click())
+            Thread.sleep(800)   // รอ dialog แสดงจนนิ่ง
+            onView(withId(R.id.etCountry)).inRoot(isDialog()).perform(typeText("LA"))
+            onView(withText(startsWith("LA ·"))).inRoot(isPlatformPopup()).perform(click())
             waitUntil("country saved locally") { App.services.prefs.countryCode == "LA" }
             App.services.sync.sync()
             assertEquals("LA", App.services.api.me().optString("country_code"))

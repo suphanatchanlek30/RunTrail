@@ -9,6 +9,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.android.volley.Request
 import com.example.runtrail.App
 import com.example.runtrail.R
 import com.example.runtrail.data.Accounts
@@ -16,7 +17,10 @@ import com.example.runtrail.data.RunRepository
 import com.example.runtrail.databinding.ActivityNotificationsBinding
 import com.example.runtrail.databinding.ItemNotificationBinding
 import com.example.runtrail.domain.Fmt
+import com.example.runtrail.net.ApiConfig
+import com.example.runtrail.net.ApiRequest
 import com.example.runtrail.net.RunJson
+import com.example.runtrail.net.VolleyApi
 import com.example.runtrail.ui.auth.LoginActivity
 import com.example.runtrail.ui.common.applySystemBarsPadding
 import com.example.runtrail.ui.common.runAsync
@@ -69,15 +73,13 @@ class NotificationsActivity : AppCompatActivity() {
         if (loading) return
         loading = true
         if (adapter.itemCount == 0) binding.progress.visibility = View.VISIBLE
-        runAsync({
-            val page = App.services.api.notifications()
-            // อ่านแล้วทั้งหมดเมื่อเปิดหน้านี้ (ตัวที่ยังไม่อ่านยังมีจุดสีเขียวให้เห็นในรอบนี้)
-            if (page.optInt("unread_count") > 0) App.services.api.markAllRead()
-            page
-        }) { result ->
-            loading = false
-            binding.progress.visibility = View.GONE
-            result.onSuccess { page ->
+        val q = ApiRequest(
+            Request.Method.GET, ApiConfig.NOTIFICATIONS, null,
+            { page ->
+                loading = false
+                binding.progress.visibility = View.GONE
+                // อ่านแล้วทั้งหมดเมื่อเปิดหน้านี้ (ตัวที่ยังไม่อ่านยังมีจุดสีเขียวให้เห็นในรอบนี้)
+                if (page.optInt("unread_count") > 0) markAllRead()
                 val cached = JSONObject(page.toString()).apply {
                     val items = getJSONArray("items")
                     for (i in 0 until items.length()) items.getJSONObject(i).put("read", true)
@@ -86,11 +88,28 @@ class NotificationsActivity : AppCompatActivity() {
                 App.services.prefs.notificationsCache = cached.toString()
                 App.services.prefs.unreadNotifications = 0
                 render(page, fromCache = false)
-            }.onFailure { e ->
+            },
+            { e ->
+                loading = false
+                binding.progress.visibility = View.GONE
                 if (adapter.itemCount == 0) showEmpty(e.userMessage(), getString(R.string.lb_retry)) { load() }
                 else showStatus(getString(R.string.notif_offline))
-            }
-        }
+            },
+        )
+        q.setTag(this)
+        VolleyApi.getQueue(this).add(q)
+    }
+
+    /** POST /notifications/read {"all":true} — ไม่สำเร็จก็ไม่เป็นไร เปิดหน้านี้ครั้งหน้าจะส่งใหม่ */
+    private fun markAllRead() {
+        val body = JSONObject().put("all", true)
+        val q = ApiRequest(Request.Method.POST, ApiConfig.NOTIFICATIONS_READ, body, {}, {})
+        VolleyApi.getQueue(this).add(q)   // ไม่ผูก tag กับหน้านี้: ปิดหน้าแล้วก็ยังส่งต่อ
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        VolleyApi.getQueue(this).cancelAll(this)
     }
 
     private fun render(page: JSONObject, fromCache: Boolean) {

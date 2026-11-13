@@ -5,8 +5,9 @@ import android.os.Bundle
 import android.text.Editable
 import android.text.TextWatcher
 import android.view.View
+import android.widget.AdapterView
+import android.widget.ArrayAdapter
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.PopupMenu
 import androidx.recyclerview.widget.LinearLayoutManager
 import com.example.runtrail.R
 import com.example.runtrail.data.PrefsHelper
@@ -77,7 +78,9 @@ class HistoryActivity : AppCompatActivity() {
         binding.chipWeek.setOnClickListener { filter = Filter.THIS_WEEK; load() }
         binding.chipMonth.setOnClickListener { filter = Filter.THIS_MONTH; load() }
         binding.chip5k.setOnClickListener { filter = Filter.OVER_5K; load() }
-        binding.btnFilter.setOnClickListener { showSortMenu(it) }
+        // ปุ่ม + = เพิ่มการวิ่งย้อนหลัง (เดิมอยู่ในเมนูเรียงลำดับ)
+        binding.btnFilter.setOnClickListener { startActivity(Intent(this, AddEditRunActivity::class.java)) }
+        setupSortSpinner()
     }
 
     private val onDataChanged: () -> Unit = { reload() }
@@ -119,26 +122,22 @@ class HistoryActivity : AppCompatActivity() {
         binding.emptyView.visibility = if (list.isEmpty()) View.VISIBLE else View.GONE
     }
 
-    private fun showSortMenu(anchor: View) {
-        PopupMenu(this, anchor).apply {
-            menu.add(0, 1, 0, R.string.sort_newest).isChecked = sort == Sort.NEWEST
-            menu.add(0, 2, 1, R.string.sort_oldest).isChecked = sort == Sort.OLDEST
-            menu.add(0, 3, 2, R.string.sort_longest).isChecked = sort == Sort.LONGEST
-            menu.add(0, 4, 3, R.string.sort_fastest).isChecked = sort == Sort.FASTEST
-            menu.setGroupCheckable(0, true, true)
-            menu.add(1, 5, 4, R.string.history_add_manual)
-            setOnMenuItemClickListener {
-                when (it.itemId) {
-                    1 -> sort = Sort.NEWEST
-                    2 -> sort = Sort.OLDEST
-                    3 -> sort = Sort.LONGEST
-                    4 -> sort = Sort.FASTEST
-                    5 -> { startActivity(Intent(this@HistoryActivity, AddEditRunActivity::class.java)); return@setOnMenuItemClickListener true }
-                }
-                load()
-                true
+    /**
+     * MA08 Spinner: ใช้ layout 2 ตัว — item_spinner_sort (ตอนปิด) และ item_dropdown (ตอนเปิดรายการ)
+     * ลำดับใน R.array.sort_options ตรงกับ enum Sort (NEWEST, OLDEST, LONGEST, FASTEST)
+     */
+    private fun setupSortSpinner() {
+        val sortAdapter = ArrayAdapter.createFromResource(this, R.array.sort_options, R.layout.item_spinner_sort)
+        sortAdapter.setDropDownViewResource(R.layout.item_dropdown)
+        binding.spinnerSort.adapter = sortAdapter
+        binding.spinnerSort.setSelection(sort.ordinal, false)   // ค่าที่กู้คืนจาก onSaveInstanceState
+        binding.spinnerSort.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
+                val picked = Sort.entries[position]
+                if (picked != sort) { sort = picked; load() }
             }
-        }.show()
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

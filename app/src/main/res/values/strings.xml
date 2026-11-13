@@ -516,4 +516,46 @@
     <string name="server_change_logged_in">ที่อยู่นี้ไม่ใช่เซิร์ฟเวอร์ของบัญชีนี้ หรือเชื่อมต่อไม่ได้ ถ้าต้องการย้ายไปเซิร์ฟเวอร์อื่น ให้ซิงก์ให้ครบแล้วออกจากระบบก่อน</string>
     <string name="server_checking">กำลังตรวจเซิร์ฟเวอร์…</string>
     <string name="server_waking">เซิร์ฟเวอร์กำลังตื่น (โฮสต์ฟรี) อาจใช้เวลาถึง 1 นาที…</string>
+
+    <!-- เตือนไปวิ่ง (MA13) -->
+    <string name="setting_reminder">เตือนไปวิ่ง</string>
+    <string name="setting_reminder_off">ปิด</string>
+    <string name="reminder_enable">เปิดการเตือน</string>
+    <string name="reminder_time">เวลา</string>
+    <string name="reminder_days">วันที่เตือน</string>
+    <string name="reminder_exact_hint">เครื่องยังไม่อนุญาตให้ตั้งเวลาแบบแม่นยำ การเตือนอาจช้าได้ถึง 10 นาที · แตะเพื่อเปิดสิทธิ์</string>
+    <string name="reminder_no_days">เลือกอย่างน้อย 1 วัน</string>
+    <string name="reminder_saved">จะเตือนครั้งถัดไป %1$s</string>
+    <string name="reminder_turned_off">ปิดการเตือนแล้ว</string>
+    <string name="reminder_need_notif">ต้องอนุญาตการแจ้งเตือนก่อน จึงจะเตือนไปวิ่งได้</string>
+    <string name="channel_reminder">เตือนไปวิ่ง</string>
+    <string name="reminder_notif_title">ได้เวลาออกไปวิ่งแล้ว 🏃</string>
+    <string name="reminder_notif_body">แตะเพื่อเปิด RunTrail แล้วเริ่มวิ่งได้เลย</string>
+
+    <!-- ส่งออก / นำเข้าประวัติ (MA09 SAF + ไฟล์ส่วนตัวของแอป) -->
+    <string name="setting_export">ส่งออกประวัติการวิ่ง</string>
+    <string name="setting_import">นำเข้าจากไฟล์สำรอง</string>
+    <string name="setting_backup_never">ยังไม่เคย</string>
+    <string name="setting_backup_last">%1$s · %2$d รายการ</string>
+    <string name="backup_file_name" translatable="false">runtrail-backup-%1$s.json</string>
+    <string name="backup_exported">ส่งออกแล้ว %1$d รายการ</string>
+    <string name="backup_export_empty">ยังไม่มีการวิ่งให้ส่งออก</string>
+    <string name="backup_imported">นำเข้าแล้ว %1$d รายการ</string>
+    <string name="backup_imported_none">ไม่มีรายการใหม่ (การวิ่งในไฟล์มีอยู่ในเครื่องแล้ว)</string>
+    <string name="backup_invalid">ไฟล์นี้ไม่ใช่ไฟล์สำรองของ RunTrail</string>
+    <string name="backup_failed">อ่าน/เขียนไฟล์ไม่สำเร็จ</string>
+    <string name="country_search_hint">พิมพ์ชื่อหรือรหัสประเทศ เช่น ไทย / TH</string>
+    <string-array name="sort_options">
+        <item>@string/sort_newest</item>
+        <item>@string/sort_oldest</item>
+        <item>@string/sort_longest</item>
+        <item>@string/sort_fastest</item>
+    </string-array>
+    <string name="edit_feel">วิ่งรอบนี้รู้สึกอย่างไร</string>
+    <string name="feel_none">แตะดาวเพื่อให้คะแนน (ไม่บังคับ)</string>
+    <string name="feel_1">หนักมาก</string>
+    <string name="feel_2">เหนื่อย</string>
+    <string name="feel_3">กำลังดี</string>
+    <string name="feel_4">ดี</string>
+    <string name="feel_5">ยอดเยี่ยม</string>
 </resources>

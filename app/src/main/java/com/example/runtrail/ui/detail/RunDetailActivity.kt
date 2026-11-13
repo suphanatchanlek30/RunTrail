@@ -3,6 +3,7 @@ package com.example.runtrail.ui.detail
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.PopupMenu
 import com.example.runtrail.R
@@ -92,6 +93,9 @@ class RunDetailActivity : AppCompatActivity() {
         val miles = prefs.useMiles
         binding.tvTitle.text = run.title
         binding.tvDate.text = Fmt.detailDate(run.startTime, run.endTime ?: (run.startTime + run.movingTimeS * 1000))
+        binding.rowFeel.visibility = if (run.feel > 0) View.VISIBLE else View.GONE
+        binding.ratingFeel.rating = run.feel.toFloat()
+        binding.tvFeel.text = com.example.runtrail.ui.edit.AddEditRunActivity.feelLabel(this, run.feel)
         binding.map.setRoute(RunRepository.route(run))
         val real = run.track.size >= 2
         binding.osmMap.visibility = if (real) View.VISIBLE else View.GONE
@@ -172,8 +176,13 @@ class RunDetailActivity : AppCompatActivity() {
         startActivity(Intent(this, ReplayActivity::class.java).putExtra(EXTRA_RUN_ID, runId))
     }
 
+    /** MA10: เปิดหน้าแก้ไขแบบรอผล — บันทึกแล้วหน้าแก้ไขส่ง RESULT_OK กลับมา → อ่าน SQLite ใหม่แล้วแสดง */
+    private val editLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == RESULT_OK) RunRepository.getById(runId)?.let { render(it) }
+    }
+
     private fun openEdit() {
-        startActivity(Intent(this, AddEditRunActivity::class.java).putExtra(EXTRA_RUN_ID, runId))
+        editLauncher.launch(Intent(this, AddEditRunActivity::class.java).putExtra(EXTRA_RUN_ID, runId))
     }
 
     private fun openStats() {
