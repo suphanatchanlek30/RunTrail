@@ -166,6 +166,18 @@
     </style>
 
     <!-- เส้นคั่น -->
+    <!-- CheckBox เลือกวันเตือนไปวิ่ง (GridLayout 4 คอลัมน์ กว้างเท่ากัน) -->
+    <style name="DayCheck">
+        <item name="android:layout_width">0dp</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_columnWeight">1</item>
+        <item name="android:minHeight">48dp</item>
+        <item name="android:buttonTint">@color/day_check</item>
+        <item name="android:fontFamily">@font/anuphan_semibold</item>
+        <item name="android:textSize">@dimen/text_size_m</item>
+        <item name="android:textColor">@color/day_check_text</item>
+    </style>
+
     <style name="Divider">
         <item name="android:layout_width">match_parent</item>
         <item name="android:layout_height">1dp</item>

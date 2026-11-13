@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Spinner เรียงลำดับ (ตอนปิด) — หน้าตาเหมือนชิป + ลูกศรลง · ตอนเปิดรายการใช้ item_dropdown
+     clickable=false: ให้ Spinner รับการแตะเอง (สไตล์ชิปตั้ง clickable=true ไว้) -->
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/ChipToggle"
+    android:layout_width="wrap_content"
+    android:clickable="false"
+    android:focusable="false"
+    android:drawableEnd="@drawable/ic_chevron_down"
+    android:drawablePadding="@dimen/space_xs"
+    android:drawableTint="@color/text_secondary"
+    android:maxLines="1"
+    android:paddingEnd="@dimen/space_10" />

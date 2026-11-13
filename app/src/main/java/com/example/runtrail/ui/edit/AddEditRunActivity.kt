@@ -113,12 +113,15 @@ class AddEditRunActivity : AppCompatActivity() {
             editing?.let {
                 binding.etName.setText(it.title)
                 binding.etNote.setText(it.note.orEmpty())
+                binding.ratingFeel.rating = it.feel.toFloat()
                 startTime = it.startTime
                 photoPath = it.photoUri
             }
         }
         renderPhoto()
         renderDate()
+        renderFeel()
+        binding.ratingFeel.setOnRatingBarChangeListener { _, _, _ -> renderFeel() }
 
         binding.btnCamera.setOnClickListener { openCamera() }
         binding.btnGallery.setOnClickListener { pickPhoto.launch("image/*") }
@@ -163,6 +166,11 @@ class AddEditRunActivity : AppCompatActivity() {
         }
     }
 
+    /** ข้อความใต้ดาว: 0 = ยังไม่ให้ · 1–5 = ระดับความรู้สึก */
+    private fun renderFeel() {
+        binding.tvFeel.text = feelLabel(this, binding.ratingFeel.rating.toInt())
+    }
+
     private fun renderDate() {
         binding.tvDate.text = Fmt.detailDate(startTime, null)
     }
@@ -192,6 +200,7 @@ class AddEditRunActivity : AppCompatActivity() {
             return
         }
         val note = binding.etNote.text.toString().trim().ifEmpty { null }
+        val feel = binding.ratingFeel.rating.toInt()          // RatingBar.getRating() คืน float → ปัดเป็นจำนวนดาว
         val current = editing
         if (current != null) {
             val photoSync = when {
@@ -204,9 +213,10 @@ class AddEditRunActivity : AppCompatActivity() {
             }
             if (photoChanged && current.photoUri != photoPath) ImageStore.delete(this, current.photoUri)
             cleanupSessionPhotos(keep = photoPath)
-            RunRepository.update(current.copy(title = title, note = note, startTime = startTime, photoUri = photoPath,
+            RunRepository.update(current.copy(title = title, note = note, feel = feel, startTime = startTime, photoUri = photoPath,
                 endTime = current.endTime?.let { it + (startTime - current.startTime) }, photoSync = photoSync))
             com.example.runtrail.sync.SyncManager.requestSync(this)
+            setResult(RESULT_OK)          // MA10: บอกหน้าที่เปิดมาว่าบันทึกแล้ว (หน้ารายละเอียดจะโหลดใหม่)
             toast(getString(R.string.toast_saved))
             finish()
             return
@@ -223,7 +233,7 @@ class AddEditRunActivity : AppCompatActivity() {
         val meters = distInput * if (prefs.useMiles) 1609.344 else 1000.0
         val seconds = minutes * 60
         val run = Run(
-            title = title, note = note, startTime = startTime, endTime = startTime + seconds * 1000,
+            title = title, note = note, feel = feel, startTime = startTime, endTime = startTime + seconds * 1000,
             distanceM = meters, movingTimeS = seconds,
             calories = RunCalculator.calories(meters, seconds, prefs.weightKg).roundToInt().toDouble(),
             elevationGainM = 0, photoUri = photoPath, source = com.example.runtrail.data.RunSource.MANUAL,
@@ -242,10 +252,11 @@ class AddEditRunActivity : AppCompatActivity() {
         val title = binding.etName.text.toString().trim()
         val note = binding.etNote.text.toString().trim()
         return if (e == null) {
-            title.isNotEmpty() || note.isNotEmpty() || photoPath != null ||
+            title.isNotEmpty() || note.isNotEmpty() || photoPath != null || binding.ratingFeel.rating > 0 ||
                 binding.etDistance.text.isNotEmpty() || binding.etDuration.text.isNotEmpty()
         } else {
-            title != e.title || note != e.note.orEmpty() || startTime != e.startTime || photoPath != e.photoUri
+            title != e.title || note != e.note.orEmpty() || startTime != e.startTime || photoPath != e.photoUri ||
+                binding.ratingFeel.rating.toInt() != e.feel
         }
     }
 
@@ -274,6 +285,18 @@ class AddEditRunActivity : AppCompatActivity() {
     }
 
     companion object {
+        /** คำอธิบายระดับความรู้สึก (ใช้ทั้งหน้านี้และหน้าสรุปผล) */
+        fun feelLabel(context: android.content.Context, stars: Int): String = context.getString(
+            when (stars) {
+                1 -> R.string.feel_1
+                2 -> R.string.feel_2
+                3 -> R.string.feel_3
+                4 -> R.string.feel_4
+                5 -> R.string.feel_5
+                else -> R.string.feel_none
+            },
+        )
+
         private const val KEY_START = "start"
         private const val KEY_PHOTO = "photo"
         private const val KEY_PHOTO_CHANGED = "photo_changed"

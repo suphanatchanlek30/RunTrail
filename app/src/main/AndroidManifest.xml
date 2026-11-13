@@ -21,6 +21,10 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
+    <!-- เตือนไปวิ่ง (MA13): ตั้งเวลาแบบแม่นยำ (Android 12+ ผู้ใช้ต้องอนุญาตเอง) · ตั้งเวลากลับหลังเปิดเครื่องใหม่ -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
     <!-- เซนเซอร์ไม่บังคับ — เครื่องที่ไม่มีจะใช้ค่าทดแทน (MA12) -->
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
     <uses-feature android:name="android.hardware.sensor.stepcounter" android:required="false" />
@@ -163,6 +167,24 @@
             android:name=".service.RunTrackingService"
             android:exported="false"
             android:foregroundServiceType="location" />
+
+        <!-- MA13: AlarmManager ส่ง Broadcast มาที่นี่เมื่อถึงเวลาเตือน (รับจาก PendingIntent ของแอปเองเท่านั้น) -->
+        <receiver
+            android:name=".reminder.ReminderReceiver"
+            android:exported="false" />
+
+        <!-- MA13: เครื่อง reboot / อัปเดตแอป / เปลี่ยนเวลา → ตั้ง Alarm กลับ (เหตุการณ์มาจากระบบ จึง exported="true") -->
+        <receiver
+            android:name=".reminder.BootReceiver"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+                <action android:name="android.intent.action.TIME_SET" />
+                <action android:name="android.intent.action.TIMEZONE_CHANGED" />
+                <action android:name="android.app.action.SCHEDULE_EXACT_ALARM_PERMISSION_STATE_CHANGED" />
+            </intent-filter>
+        </receiver>
 
         <provider
             android:name="androidx.core.content.FileProvider"

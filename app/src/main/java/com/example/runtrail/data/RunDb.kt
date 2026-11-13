@@ -52,7 +52,8 @@ class RunDb(context: Context, name: String? = NAME) : SQLiteOpenHelper(context, 
                 updated_at INTEGER NOT NULL,
                 deleted INTEGER NOT NULL DEFAULT 0,
                 thumb TEXT,
-                pauses TEXT
+                pauses TEXT,
+                feel INTEGER NOT NULL DEFAULT 0
             )
             """.trimIndent(),
         )
@@ -80,11 +81,12 @@ class RunDb(context: Context, name: String? = NAME) : SQLiteOpenHelper(context, 
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // เวอร์ชันแรกของฐานข้อมูล ยังไม่มีการย้ายข้อมูล
+        // v2: ความรู้สึกหลังวิ่ง 0–5 ดาว (RatingBar ในหน้าเพิ่ม/แก้ไข) — ข้อมูลเดิมไม่หาย ได้ค่า 0 = ยังไม่ให้คะแนน
+        if (oldVersion < 2) db.execSQL("ALTER TABLE runs ADD COLUMN feel INTEGER NOT NULL DEFAULT 0")
     }
 
     companion object {
         const val NAME = "runtrail.db"
-        const val VERSION = 1
+        const val VERSION = 2
     }
 }

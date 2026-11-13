@@ -135,6 +135,25 @@ class PrefsHelper(context: Context, name: String = PREFS_NAME) {
         get() = prefs.getStringSet(KEY_NOTIFIED, emptySet()) ?: emptySet()
         set(value) = prefs.edit { putStringSet(KEY_NOTIFIED, value.toSet()) }
 
+    // ---------------- เตือนไปวิ่ง (MA13: AlarmManager) — ค่าของเครื่องนี้ ไม่ล้างตอนออกจากระบบ
+
+    var reminderEnabled: Boolean
+        get() = prefs.getBoolean(KEY_REMINDER_ON, false)
+        set(value) = prefs.edit { putBoolean(KEY_REMINDER_ON, value) }
+
+    var reminderHour: Int
+        get() = prefs.getInt(KEY_REMINDER_HOUR, 18)
+        set(value) = prefs.edit { putInt(KEY_REMINDER_HOUR, value) }
+
+    var reminderMinute: Int
+        get() = prefs.getInt(KEY_REMINDER_MINUTE, 0)
+        set(value) = prefs.edit { putInt(KEY_REMINDER_MINUTE, value) }
+
+    /** วันที่เตือน: bitmask ตาม ReminderTime (bit 0 = อาทิตย์ … bit 6 = เสาร์) */
+    var reminderDays: Int
+        get() = prefs.getInt(KEY_REMINDER_DAYS, com.example.runtrail.domain.ReminderTime.ALL_DAYS)
+        set(value) = prefs.edit { putInt(KEY_REMINDER_DAYS, value) }
+
     /** ผลอันดับโลกล่าสุด (JSON) เก็บไว้แสดงตอนออฟไลน์ */
     fun leaderboardCache(key: String): String? = prefs.getString("lb_$key", null)
     fun saveLeaderboardCache(key: String, json: String) = prefs.edit { putString("lb_$key", json) }
@@ -202,5 +221,9 @@ class PrefsHelper(context: Context, name: String = PREFS_NAME) {
         private const val KEY_LAST_SYNC_AT = "last_sync_at"
         private const val KEY_LAST_SYNC_ERROR = "last_sync_error"
         private const val KEY_RECREATE = "recreate_count"
+        private const val KEY_REMINDER_ON = "reminder_enabled"
+        private const val KEY_REMINDER_HOUR = "reminder_hour"
+        private const val KEY_REMINDER_MINUTE = "reminder_minute"
+        private const val KEY_REMINDER_DAYS = "reminder_days"
     }
 }

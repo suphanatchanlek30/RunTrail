@@ -53,22 +53,19 @@
         android:paddingStart="@dimen/space_14"
         android:paddingEnd="@dimen/space_14">
 
-        <FrameLayout
+        <!-- MA08 CheckBox: ติ๊ก = ลบจากเซิร์ฟเวอร์ด้วย (แตะทั้งแถวก็สลับได้) -->
+        <CheckBox
             android:id="@+id/checkServer"
-            android:layout_width="22dp"
-            android:layout_height="22dp"
-            android:background="@drawable/bg_checkbox_danger"
-            android:duplicateParentState="false">
-
-            <ImageView
-                android:id="@+id/ivCheck"
-                android:layout_width="@dimen/icon_xs"
-                android:layout_height="@dimen/icon_xs"
-                android:layout_gravity="center"
-                android:importantForAccessibility="no"
-                android:src="@drawable/ic_check"
-                app:tint="@color/white" />
-        </FrameLayout>
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:background="@null"
+            android:button="@drawable/checkbox_danger"
+            android:clickable="false"
+            android:focusable="false"
+            android:importantForAccessibility="no"
+            android:minWidth="0dp"
+            android:minHeight="0dp"
+            app:useMaterialThemeColors="false" />
 
         <LinearLayout
             android:layout_width="0dp"

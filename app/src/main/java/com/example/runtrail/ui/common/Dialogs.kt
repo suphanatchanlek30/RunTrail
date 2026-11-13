@@ -40,18 +40,15 @@ object Dialogs {
             Fmt.distance(run.distanceM),
         )
         val synced = run.onServer
-        var alsoServer = synced
         b.rowServer.visibility = if (synced) View.VISIBLE else View.GONE
-        fun render() {
-            b.checkServer.isSelected = alsoServer
-            b.ivCheck.visibility = if (alsoServer) View.VISIBLE else View.INVISIBLE
-        }
-        render()
-        b.rowServer.setOnClickListener { alsoServer = !alsoServer; render() }
+        b.checkServer.buttonTintList = null          // ใช้สีของ drawable เอง (ไม่ให้ธีม Material ย้อมสีทับ)
+        b.checkServer.isChecked = synced
+        // แถวทั้งแถวกดได้ (เป้ากดใหญ่) → สลับ CheckBox · อ่านค่าด้วย isChecked ตอนกดลบ
+        b.rowServer.setOnClickListener { b.checkServer.toggle() }
         b.btnCancel.setOnClickListener { dialog.dismiss() }
         b.btnDelete.setOnClickListener {
             dialog.dismiss()
-            onDelete(alsoServer && synced)
+            onDelete(b.checkServer.isChecked && synced)
         }
         dialog.show()
     }

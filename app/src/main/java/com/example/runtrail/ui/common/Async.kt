@@ -6,6 +6,7 @@ import android.os.Looper
 import com.example.runtrail.App
 import com.example.runtrail.domain.Lang
 import com.example.runtrail.net.ApiException
+import com.example.runtrail.net.toApiException
 
 private val main = Handler(Looper.getMainLooper())
 
@@ -22,6 +23,7 @@ fun <T> Activity.runAsync(work: () -> T, done: (Result<T>) -> Unit) {
 
 /** ข้อความข้อผิดพลาดตามภาษาที่เลือก สำหรับแสดงผู้ใช้ */
 fun Throwable.userMessage(): String = when (this) {
+    is com.android.volley.VolleyError -> toApiException().userMessage()
     is ApiException -> if (isNetwork) Lang.t(
         "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้ ตรวจสอบอินเทอร์เน็ตหรือที่อยู่เซิร์ฟเวอร์",
         "Can't reach the server. Check your internet or server address.",

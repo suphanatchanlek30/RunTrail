@@ -8,11 +8,16 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.WindowManager
+import android.text.SpannableStringBuilder
+import android.text.Spanned
+import android.text.style.AbsoluteSizeSpan
+import android.text.style.ForegroundColorSpan
 import android.widget.LinearLayout
+import android.widget.RadioGroup
 import androidx.core.content.ContextCompat
 import com.example.runtrail.R
 import com.example.runtrail.databinding.DialogConfirmBinding
-import com.example.runtrail.databinding.ItemOptionBinding
+import com.example.runtrail.databinding.ItemOptionRadioBinding
 import com.example.runtrail.databinding.ItemOptionCellBinding
 import com.example.runtrail.databinding.SheetInputBinding
 import com.example.runtrail.databinding.SheetOptionsBinding
@@ -57,18 +62,21 @@ object Sheets {
         }
 
         if (columns <= 1) {
+            // MA08: RadioGroup + RadioButton — เลือกได้ทีละ 1 ค่า อ่านค่าด้วย getCheckedRadioButtonId()
+            val group = RadioGroup(activity).apply { orientation = RadioGroup.VERTICAL }
+            val ids = IntArray(options.size) { View.generateViewId() }
+            val hintSize = activity.resources.getDimensionPixelSize(R.dimen.text_size_s)
             options.forEachIndexed { i, opt ->
-                val row = ItemOptionBinding.inflate(LayoutInflater.from(activity), b.options, false)
-                row.tvLabel.text = opt.label
-                row.tvHint.text = opt.hint
-                row.tvHint.visibility = if (opt.hint.isNullOrEmpty()) View.GONE else View.VISIBLE
-                row.root.isSelected = i == selected
-                row.check.isActivated = i == selected
-                row.ivCheck.visibility = if (i == selected) View.VISIBLE else View.INVISIBLE
-                row.root.setOnClickListener { pick(i) }
-                b.options.addView(row.root, LinearLayout.LayoutParams(-1, -2).apply { if (i > 0) topMargin = gap })
-                if (i == selected) selectedView = row.root
+                val rb = ItemOptionRadioBinding.inflate(LayoutInflater.from(activity), group, false).root
+                rb.id = ids[i]
+                rb.text = optionText(activity, opt, checked = i == selected, hintSize)
+                group.addView(rb, RadioGroup.LayoutParams(-1, -2).apply { if (i > 0) topMargin = gap })
+                // แตะ = เลือกแล้วปิด sheet (แตะค่าเดิมก็ปิดได้ จึงใช้ OnClick ไม่ใช่ OnCheckedChange)
+                rb.setOnClickListener { pick(ids.indexOf(group.checkedRadioButtonId)) }
+                if (i == selected) selectedView = rb
             }
+            if (selected in options.indices) group.check(ids[selected])
+            b.options.addView(group, LinearLayout.LayoutParams(-1, -2))
         } else {
             options.chunked(columns).forEachIndexed { r, chunk ->
                 val line = LinearLayout(activity).apply { orientation = LinearLayout.HORIZONTAL }
@@ -100,6 +108,18 @@ object Sheets {
             selectedView?.let { v -> b.scroll.post { b.scroll.scrollTo(0, (v.top - maxH / 3).coerceAtLeast(0)) } }
         }
         dialog.show()
+    }
+
+    /** ชื่อตัวเลือก + คำอธิบายบรรทัดล่าง (ตัวเล็ก สีรอง) ใน RadioButton เดียว */
+    private fun optionText(activity: Activity, opt: Option, checked: Boolean, hintSize: Int): CharSequence {
+        if (opt.hint.isNullOrEmpty()) return opt.label
+        val hintColor = ContextCompat.getColor(activity, if (checked) R.color.run_green_dark else R.color.text_tertiary)
+        return SpannableStringBuilder(opt.label).append("\n").apply {
+            val start = length
+            append(opt.hint)
+            setSpan(AbsoluteSizeSpan(hintSize), start, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+            setSpan(ForegroundColorSpan(hintColor), start, length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
+        }
     }
 
     /** Bottom sheet กรอกข้อความ 1 ช่อง — validate คืนข้อความ error หรือ null ถ้าผ่าน */

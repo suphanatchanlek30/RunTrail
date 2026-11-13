@@ -137,6 +137,7 @@ object RunRepository {
             syncStatus = SyncStatus.valueOf(str("sync_status")!!), syncError = str("sync_error"),
             onServer = bool("on_server"), updatedAt = long("updated_at"), deleted = bool("deleted"),
             thumb = Codec.decodeTrack(str("thumb")), pauses = Codec.decodePauses(str("pauses")),
+            feel = c.getInt(c.getColumnIndexOrThrow("feel")),
         )
     }
 
@@ -175,6 +176,7 @@ object RunRepository {
         put("sync_status", r.syncStatus.name); put("sync_error", r.syncError); put("on_server", r.onServer)
         put("updated_at", r.updatedAt); put("deleted", r.deleted)
         put("pauses", Codec.encodePauses(r.pauses))
+        put("feel", r.feel)
     }
 
     /** เพิ่มการวิ่งใหม่ (จบแล้ว) พร้อมจุด GPS · คำนวณ splits และเส้นทางย่อให้ */
@@ -368,6 +370,32 @@ object RunRepository {
         }
         notifyChanged()
         return id
+    }
+
+    // ---------------------------------------------------------------- ส่งออก / นำเข้า (MA09 SAF)
+
+    /** การวิ่งที่ผู้ใช้เห็นทั้งหมด พร้อมจุด GPS เต็ม (ใช้ตอนส่งออกไฟล์สำรอง) */
+    fun allWithTracks(): List<Run> = getAll().map { it.copy(track = loadTrack(it.id)) }
+
+    /**
+     * เพิ่มการวิ่งจากไฟล์สำรอง — ข้ามตัวที่มี uuid นี้ในเครื่องแล้ว (นำเข้าไฟล์เดิมซ้ำได้ ไม่เกิดข้อมูลซ้ำ)
+     * การวิ่งที่เพิ่มจะเป็นของบัญชีปัจจุบันและรอซิงก์ขึ้น server · คืนจำนวนที่เพิ่ม
+     */
+    fun importRuns(runs: List<Run>): Int {
+        var added = 0
+        db.transaction {
+            for (run in runs) {
+                val exists = rawQuery("SELECT 1 FROM runs WHERE uuid = ? LIMIT 1", arrayOf(run.uuid)).use { it.moveToFirst() }
+                if (exists) continue
+                val r = run.copy(id = 0, ownerUserId = currentUser())
+                val id = insertOrThrow("runs", null, values(r))
+                writeTrackDerived(this, id, r.track)
+                writePoints(this, id, 0, r.track)
+                added++
+            }
+        }
+        if (added > 0) notifyChanged()
+        return added
     }
 
     /** ออกจากระบบ: ล้างข้อมูลทั้งหมดในเครื่อง */
