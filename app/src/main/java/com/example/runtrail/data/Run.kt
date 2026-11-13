@@ -42,6 +42,7 @@ data class Run(
     val onServer: Boolean = false,            // เคยขึ้น server สำเร็จอย่างน้อย 1 ครั้ง
     val updatedAt: Long = System.currentTimeMillis(), // = client_updated_at (last-write-wins)
     val deleted: Boolean = false,             // รอส่งคำสั่งลบไป server
+    val feel: Int = 0,                        // ความรู้สึกหลังวิ่ง 1–5 ดาว (0 = ไม่ได้ให้) · เก็บในเครื่อง ไม่ส่ง server
     val track: List<TrackPoint> = emptyList(),
     val thumb: List<TrackPoint> = emptyList(),
     val pauses: List<Pause> = emptyList(),

@@ -518,4 +518,39 @@
     <string name="server_change_logged_in">This address isn\'t this account\'s server, or it can\'t be reached. To move to another server, finish syncing and sign out first.</string>
     <string name="server_checking">Checking server…</string>
     <string name="server_waking">The server is waking up (free hosting). This can take up to a minute…</string>
+
+    <!-- Run reminder (MA13) -->
+    <string name="setting_reminder">Run reminder</string>
+    <string name="setting_reminder_off">Off</string>
+    <string name="reminder_enable">Remind me</string>
+    <string name="reminder_time">Time</string>
+    <string name="reminder_days">Days</string>
+    <string name="reminder_exact_hint">Exact alarms aren\'t allowed yet, so the reminder may be up to 10 minutes late · Tap to allow</string>
+    <string name="reminder_no_days">Pick at least one day</string>
+    <string name="reminder_saved">Next reminder: %1$s</string>
+    <string name="reminder_turned_off">Reminder turned off</string>
+    <string name="reminder_need_notif">Allow notifications to get run reminders</string>
+    <string name="channel_reminder">Run reminders</string>
+    <string name="reminder_notif_title">Time for your run 🏃</string>
+    <string name="reminder_notif_body">Tap to open RunTrail and start running</string>
+
+    <!-- Export / import history (MA09 SAF + app-specific file) -->
+    <string name="setting_export">Export run history</string>
+    <string name="setting_import">Import from backup</string>
+    <string name="setting_backup_never">Never</string>
+    <string name="setting_backup_last">%1$s · %2$d runs</string>
+    <string name="backup_exported">Exported %1$d runs</string>
+    <string name="backup_export_empty">No runs to export yet</string>
+    <string name="backup_imported">Imported %1$d runs</string>
+    <string name="backup_imported_none">Nothing new (these runs are already on this device)</string>
+    <string name="backup_invalid">This isn\'t a RunTrail backup file</string>
+    <string name="backup_failed">Couldn\'t read or write the file</string>
+    <string name="country_search_hint">Type a country name or code, e.g. Thailand / TH</string>
+    <string name="edit_feel">How did this run feel?</string>
+    <string name="feel_none">Tap a star to rate (optional)</string>
+    <string name="feel_1">Very hard</string>
+    <string name="feel_2">Tough</string>
+    <string name="feel_3">Okay</string>
+    <string name="feel_4">Good</string>
+    <string name="feel_5">Great</string>
 </resources>

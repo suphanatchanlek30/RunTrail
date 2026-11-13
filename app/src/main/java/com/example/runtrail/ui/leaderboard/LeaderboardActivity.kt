@@ -8,16 +8,20 @@ import android.view.ViewGroup
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.android.volley.Request
 import com.example.runtrail.App
 import com.example.runtrail.R
 import com.example.runtrail.data.Accounts
 import com.example.runtrail.databinding.ActivityLeaderboardBinding
 import com.example.runtrail.databinding.ItemLeaderboardBinding
 import com.example.runtrail.domain.Fmt
+import com.example.runtrail.net.ApiConfig
+import com.example.runtrail.net.ApiRequest
+import com.example.runtrail.net.VolleyApi
+import com.example.runtrail.net.toApiException
 import com.example.runtrail.ui.auth.LoginActivity
 import com.example.runtrail.ui.common.BottomNav
 import com.example.runtrail.ui.common.applySystemBarsPadding
-import com.example.runtrail.ui.common.runAsync
 import com.example.runtrail.ui.common.setupEdgeToEdge
 import com.example.runtrail.ui.common.toast
 import com.example.runtrail.ui.common.userMessage
@@ -97,30 +101,38 @@ class LeaderboardActivity : AppCompatActivity() {
         loading = true
         if (cached == null) binding.progress.visibility = View.VISIBLE
         val key = cacheKey
-        val m = metric; val p = period; val s = scope
-        runAsync({ App.services.api.leaderboard(m, p, s) }) { result ->
-            loading = false
-            binding.progress.visibility = View.GONE
-            result.onSuccess { o ->
+        // MA11 Get All: GET + url + body null → ④ สำเร็จ / ⑤ ผิดพลาด แล้ว add เข้าคิวจึงถูกส่งจริง
+        val q = ApiRequest(
+            Request.Method.GET,                             // ① อ่านข้อมูลอย่างเดียว
+            ApiConfig.leaderboard(metric, period, scope),   // ② /leaderboard?metric=…
+            null,                                           // ③ ไม่มี body
+            { o ->                                          // ④ สำเร็จ: o = JSON ที่ server ตอบ
+                loading = false
+                binding.progress.visibility = View.GONE
                 o.put("fetched_at", System.currentTimeMillis())
                 prefs.saveLeaderboardCache(key, o.toString())
                 if (key == cacheKey) render(o, offline = false)
                 else load()   // ผู้ใช้เปลี่ยนตัวกรองระหว่างโหลด
-            }.onFailure { e ->
-                if (key != cacheKey) { load(); return@onFailure }
-                if ((e as? com.example.runtrail.net.ApiException)?.fields?.containsKey("country") == true) {
-                    // บัญชีนี้ยังไม่มีประเทศบน server → ให้ตั้งได้ทันทีจากตรงนี้ (เดิมมีแค่ปุ่ม "ลองใหม่" ที่ไม่ช่วยอะไร, AUDIT A7)
-                    showEmpty(getString(R.string.lb_country_needed), getString(R.string.lb_set_country)) { setCountry() }
-                    return@onFailure
+            },
+            { error ->                                      // ⑤ ผิดพลาด: เน็ตหลุด / server ตอบ error
+                loading = false
+                binding.progress.visibility = View.GONE
+                val e = error.toApiException()
+                when {
+                    key != cacheKey -> load()
+                    // บัญชีนี้ยังไม่มีประเทศบน server → ให้ตั้งได้ทันทีจากตรงนี้ (AUDIT A7)
+                    e.fields.containsKey("country") ->
+                        showEmpty(getString(R.string.lb_country_needed), getString(R.string.lb_set_country)) { setCountry() }
+                    cached != null -> {
+                        render(cached, offline = true)
+                        toast(getString(R.string.lb_offline))
+                    }
+                    else -> showEmpty(e.userMessage(), getString(R.string.lb_retry)) { load() }
                 }
-                if (cached != null) {
-                    render(cached, offline = true)
-                    toast(getString(R.string.lb_offline))
-                } else {
-                    showEmpty(e.userMessage(), getString(R.string.lb_retry)) { load() }
-                }
-            }
-        }
+            },
+        )
+        q.setTag(this)
+        VolleyApi.getQueue(this).add(q)
     }
 
     private fun setCountry() {
@@ -129,14 +141,21 @@ class LeaderboardActivity : AppCompatActivity() {
             val otherEditsPending = App.services.prefs.profileDirty
             App.services.prefs.countryCode = code
             binding.progress.visibility = View.VISIBLE
-            runAsync({ App.services.api.patchMe(JSONObject().put("country_code", code)) }) { r ->
-                binding.progress.visibility = View.GONE
-                r.onSuccess {
+            val q = ApiRequest(
+                Request.Method.PATCH, ApiConfig.ME, JSONObject().put("country_code", code),
+                {
+                    binding.progress.visibility = View.GONE
                     App.services.prefs.profileDirty = otherEditsPending
                     if (otherEditsPending) com.example.runtrail.sync.SyncManager.requestSync(this)
                     load()
-                }.onFailure { toast(it.userMessage()) }   // ยังเป็น dirty → การซิงก์รอบหน้าจะส่งประเทศให้
-            }
+                },
+                { e ->
+                    binding.progress.visibility = View.GONE
+                    toast(e.userMessage())   // ยังเป็น dirty → การซิงก์รอบหน้าจะส่งประเทศให้
+                },
+            )
+            q.setTag(this)
+            VolleyApi.getQueue(this).add(q)
         }
     }
 
@@ -206,9 +225,11 @@ class LeaderboardActivity : AppCompatActivity() {
         b.tvName.text = if (e.isMe) getString(R.string.lb_you, e.name) else e.name
         b.tvSub.text = getString(R.string.lb_rank, e.rank) + (e.country?.let { " · $it" } ?: "")
         dialog.show()
-        runAsync({ App.services.api.userSummary(e.userId) }) { result ->
-            b.progress.visibility = View.GONE
-            result.onSuccess { s ->
+        // MA11 Get One: GET + id ต่อท้าย URL + body null → อ่าน JSONObject แล้ว setText
+        val q = ApiRequest(
+            Request.Method.GET, ApiConfig.userSummary(e.userId), null,
+            { s ->
+                b.progress.visibility = View.GONE
                 val miles = App.services.prefs.useMiles
                 fun dist(k: String) = "${Fmt.distance(s.optDouble(k), miles, 1)} ${Fmt.unit(miles)}"
                 fun best(k: String) = if (s.isNull(k)) "--" else Fmt.duration(s.optLong(k))
@@ -233,11 +254,20 @@ class LeaderboardActivity : AppCompatActivity() {
                     ).apply { width = 0; bottomMargin = (12 * resources.displayMetrics.density).toInt() })
                 }
                 b.grid.visibility = View.VISIBLE
-            }.onFailure {
-                b.tvError.text = it.userMessage()
+            },
+            { error ->
+                b.progress.visibility = View.GONE
+                b.tvError.text = error.userMessage()
                 b.tvError.visibility = View.VISIBLE
-            }
-        }
+            },
+        )
+        q.setTag(this)
+        VolleyApi.getQueue(this).add(q)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        VolleyApi.getQueue(this).cancelAll(this)   // ยกเลิกคำขอที่ค้างของหน้านี้
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

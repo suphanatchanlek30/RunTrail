@@ -15,6 +15,7 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.content.ContextCompat
+import com.android.volley.Request
 import com.example.runtrail.App
 import com.example.runtrail.R
 import com.example.runtrail.data.Accounts
@@ -23,6 +24,9 @@ import com.example.runtrail.data.RunRepository
 import com.example.runtrail.data.SyncStatus
 import com.example.runtrail.databinding.SheetShareBinding
 import com.example.runtrail.domain.Fmt
+import com.example.runtrail.net.ApiConfig
+import com.example.runtrail.net.ApiRequest
+import com.example.runtrail.net.VolleyApi
 import com.example.runtrail.ui.auth.LoginActivity
 import com.example.runtrail.ui.common.Sheets
 import com.example.runtrail.ui.common.dp
@@ -34,6 +38,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import com.google.zxing.BarcodeFormat
 import com.google.zxing.qrcode.QRCodeWriter
+import org.json.JSONObject
 import java.util.Calendar
 
 /**
@@ -120,22 +125,35 @@ object ShareSheet {
             val hide = b.swHideEnds.isChecked
             val photo = b.swPhoto.isChecked
             val kcal = b.swKcal.isChecked
-            activity.runAsync({
-                val synced = App.services.sync.pushNow(current.id) ?: error(activity.getString(R.string.share_run_missing))
-                if (!synced.onServer) error(synced.syncError ?: activity.getString(R.string.share_failed_title))
-                val o = App.services.api.share(synced.uuid, hide, photo, kcal)
-                synced.copy(shareCode = o.getString("code"), shareUrl = o.getString("url"),
-                    shareHideEnds = hide, shareShowPhoto = photo, shareShowKcal = kcal)
-            }) { result ->
+            fun done(linked: Run?, error: Throwable?) {
+                if (activity.isFinishing || activity.isDestroyed) return
                 busy = false
-                result.onSuccess { save(it) }.onFailure {
+                if (linked != null) save(linked) else {
                     RunRepository.getById(current.id, withTrack = false)?.let { r -> current = r }
-                    activity.toast(it.userMessage())
+                    error?.let { activity.toast(it.userMessage()) }
                 }
                 render()
                 val optionsChanged = hide != b.swHideEnds.isChecked || photo != b.swPhoto.isChecked || kcal != b.swKcal.isChecked
                 if (resendOptions && optionsChanged && current.shareUrl != null && dialog.isShowing) createLink()
                 resendOptions = false
+            }
+            // 1) ส่งการวิ่งขึ้น server ก่อน (ใช้ตัวซิงก์เดิม ซึ่งเรียกแบบรอผลบน background thread)
+            activity.runAsync({
+                val synced = App.services.sync.pushNow(current.id) ?: error(activity.getString(R.string.share_run_missing))
+                if (!synced.onServer) error(synced.syncError ?: activity.getString(R.string.share_failed_title))
+                synced
+            }) { pushed ->
+                val synced = pushed.getOrElse { done(null, it); return@runAsync }
+                // 2) MA11: POST /runs/{uuid}/share ผ่าน Volley → ได้ code + url ของลิงก์
+                val q = ApiRequest(
+                    Request.Method.POST, ApiConfig.share(synced.uuid), shareBody(hide, photo, kcal),
+                    { o ->
+                        done(synced.copy(shareCode = o.getString("code"), shareUrl = o.getString("url"),
+                            shareHideEnds = hide, shareShowPhoto = photo, shareShowKcal = kcal), null)
+                    },
+                    { e -> done(null, e) },
+                )
+                VolleyApi.getQueue(activity).add(q)
             }
         }
 
@@ -194,14 +212,24 @@ object ShareSheet {
                 cancelText = activity.getString(R.string.action_cancel), tone = Sheets.Tone.DANGER,
             ) {
                 busy = true; render()
-                activity.runAsync({ App.services.api.unshare(current.uuid) }) { result ->
-                    busy = false
-                    result.onSuccess {
+                // MA11: DELETE /runs/{uuid}/share (server ตอบ 204 ไม่มี body)
+                val q = ApiRequest(
+                    Request.Method.DELETE, ApiConfig.share(current.uuid), null,
+                    {
+                        if (activity.isDestroyed) return@ApiRequest
+                        busy = false
                         save(current.copy(shareCode = null, shareUrl = null))
                         activity.toast(activity.getString(R.string.toast_removed_server))
-                    }.onFailure { activity.toast(it.userMessage()) }
-                    render()
-                }
+                        render()
+                    },
+                    { e ->
+                        if (activity.isDestroyed) return@ApiRequest
+                        busy = false
+                        activity.toast(e.userMessage())
+                        render()
+                    },
+                )
+                VolleyApi.getQueue(activity).add(q)
             }
         }
 
@@ -211,15 +239,23 @@ object ShareSheet {
         // มีลิงก์อยู่แล้ว → ขอลิงก์ล่าสุดจาก server (ที่อยู่ server อาจเปลี่ยน หรือถูกยกเลิกจากเครื่องอื่น) · ออฟไลน์ก็ใช้ของเดิม
         if (Accounts.isLoggedIn && current.shareUrl != null && current.onServer) {
             val r = current
-            activity.runAsync({ App.services.api.share(r.uuid, r.shareHideEnds, r.shareShowPhoto, r.shareShowKcal) }) { result ->
-                result.onSuccess { o ->
-                    if (!busy && dialog.isShowing) {
+            val q = ApiRequest(
+                Request.Method.POST, ApiConfig.share(r.uuid), shareBody(r.shareHideEnds, r.shareShowPhoto, r.shareShowKcal),
+                { o ->
+                    if (!busy && dialog.isShowing && !activity.isDestroyed) {
                         save(current.copy(shareCode = o.getString("code"), shareUrl = o.getString("url")))
                         render()
                     }
-                }
-            }
+                },
+                { /* ออฟไลน์: ใช้ลิงก์เดิม */ },
+            )
+            VolleyApi.getQueue(activity).add(q)
         }
+    }
+
+    /** body ของ POST /runs/{uuid}/share — ตัวเลือกความเป็นส่วนตัว */
+    private fun shareBody(hideEnds: Boolean, showPhoto: Boolean, showKcal: Boolean) = JSONObject().apply {
+        put("hide_ends", hideEnds); put("show_photo", showPhoto); put("show_kcal", showKcal)
     }
 
     private fun syncedAt(run: Run): String {
