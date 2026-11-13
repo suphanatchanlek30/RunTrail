@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Setting row 318×48 : IconChip 34 · ชื่อ · ค่า · › หรือ Toggle -->
+<!-- Settings row: icon, title, value with chevron or a toggle -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"

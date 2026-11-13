@@ -22,10 +22,7 @@ import com.example.runtrail.domain.ShareImageLayout.Background
 import com.example.runtrail.domain.ShareImageLayout.Format
 import kotlin.math.max
 
-/**
- * วาดภาพแชร์ของการวิ่ง (ในเครื่องทั้งหมด ไม่ต้องใช้เน็ต)
- * พื้นหลังเป็นรูปจากการวิ่งหรือพื้นเข้ม + เส้นทางไล่สีตามเพซ + ระยะ เวลา เพซ วันที่ + โลโก้ RunTrail
- */
+/** Draws the share image: photo or dark background, pace-coloured route, stats and logo. */
 class ShareImageRenderer(private val context: Context) {
 
     private val bold: Typeface = font(R.font.anuphan_bold)
@@ -40,8 +37,8 @@ class ShareImageRenderer(private val context: Context) {
     private val muted = 0xFFB8C0C8.toInt()
 
     /**
-     * @param run การวิ่ง (ควรโหลดพร้อมจุด GPS เพื่อเส้นทางที่ละเอียด)
-     * @param photo รูปพื้นหลัง (null = ใช้พื้นเข้ม)
+     * @param run should include its track for a detailed route
+     * @param photo background photo, or null for the dark background
      */
     fun render(run: Run, photo: Bitmap?, format: Format, miles: Boolean): Bitmap {
         val bg = if (photo != null) Background.PHOTO else Background.ROUTE
@@ -66,7 +63,7 @@ class ShareImageRenderer(private val context: Context) {
         while (y < h) { c.drawLine(0f, y, w.toFloat(), y, grid); y += 90f }
     }
 
-    /** รูปแบบ center-crop + ไล่เงาบน/ล่างให้อ่านตัวหนังสือได้ทุกรูป */
+    /** Center-crops the photo and adds top/bottom gradients so text stays readable. */
     private fun drawPhoto(c: Canvas, photo: Bitmap, w: Int, h: Int) {
         val scale = max(w / photo.width.toFloat(), h / photo.height.toFloat())
         val sw = (w / scale).toInt()
@@ -92,7 +89,7 @@ class ShareImageRenderer(private val context: Context) {
         val line = Paint(Paint.ANTI_ALIAS_FLAG).apply {
             style = Paint.Style.STROKE; strokeCap = Paint.Cap.ROUND; strokeJoin = Paint.Join.ROUND
         }
-        // ขอบขาวให้เส้นเด่นบนทุกพื้นหลัง
+        // White casing so the route stands out on any background.
         line.strokeWidth = if (big) 22f else 15f
         line.color = if (big) 0x33FFFFFF else Color.WHITE
         for (i in 1 until pts.size) c.drawLine(pts[i - 1].first, pts[i - 1].second, pts[i].first, pts[i].second, line)
@@ -116,7 +113,7 @@ class ShareImageRenderer(private val context: Context) {
         val m = ShareImageLayout.margin(f)
         val top = if (f == Format.STORY) 120f else 70f
         val size = 76f
-        // บนพื้นเข้มใช้ป้ายสีมะนาว (ป้ายดำจะกลืนกับพื้น) · บนรูปใช้ป้ายดำ
+        // Lime badge on the dark background (black would disappear), black on photos.
         val onDark = bg == Background.ROUTE
         val badge = Paint(Paint.ANTI_ALIAS_FLAG).apply { color = if (onDark) lime else ink }
         c.drawRoundRect(RectF(m, top, m + size, top + size), 22f, 22f, badge)
@@ -128,9 +125,9 @@ class ShareImageRenderer(private val context: Context) {
         val m = ShareImageLayout.margin(f)
         val w = f.width.toFloat()
         val story = f == Format.STORY
-        var y = f.height - (if (story) 170f else 70f)   // เส้นฐานของแถวล่างสุด
+        var y = f.height - (if (story) 170f else 70f)   // baseline of the bottom row
 
-        // แถวสถิติ: เวลา · เพซ · แคลอรี่
+        // Stats row: time · pace · calories.
         val pace = RunCalculator.pace(run)
         val cols = listOf(
             Fmt.duration(run.movingTimeS) to context.getString(R.string.label_time),
@@ -145,7 +142,7 @@ class ShareImageRenderer(private val context: Context) {
         }
         y -= if (story) 170f else 165f
 
-        // ระยะทางตัวใหญ่
+        // Distance, large.
         val big = Fmt.distance(run.distanceM, miles)
         val bigSize = if (story) 230f else 180f
         val bigPaint = paint(bigSize, bold, lime)
@@ -153,7 +150,7 @@ class ShareImageRenderer(private val context: Context) {
         text(c, Fmt.unit(miles), m + bigPaint.measureText(big) + 18f, y, 64f, semi, Color.WHITE)
         y -= bigSize * 0.92f
 
-        // ชื่อ + วันที่
+        // Title and date.
         text(c, Fmt.detailDate(run.startTime, run.endTime), m, y, 36f, body, muted)
         y -= 62f
         text(c, ellipsize(run.title.ifBlank { context.getString(R.string.title_morning_run) }, w - 2 * m, 58f), m, y, 58f, bold, Color.WHITE)

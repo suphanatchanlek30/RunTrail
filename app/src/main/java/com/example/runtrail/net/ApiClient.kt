@@ -16,9 +16,7 @@ import java.io.IOException
 import java.util.concurrent.TimeUnit
 import java.util.zip.GZIPOutputStream
 
-/**
- * ข้อผิดพลาดจาก server ตามรูปแบบ {"error":{"code","message","fields"}} (status 0 = เชื่อมต่อไม่ได้)
- */
+/** Server error in the form `{"error":{"code","message","fields"}}`. Status 0 means the server was unreachable. */
 class ApiException(
     val status: Int,
     val code: String,
@@ -31,12 +29,11 @@ class ApiException(
 }
 
 /**
- * HTTP client ของแอป (ทำงานแบบรอผล → เรียกจาก background thread เท่านั้น)
+ * Blocking HTTP client for the backend API. Call from a background thread.
  *
- * - แนบ access token ให้อัตโนมัติ
- * - เจอ 401 → ขอ token ใหม่ด้วย refresh token แล้วลองซ้ำ 1 ครั้ง
- *   มี lock เดียวทั้งแอป: ถ้าหลายคำขอเจอ 401 พร้อมกัน จะ refresh แค่ครั้งเดียว
- * - refresh ไม่ผ่าน → ล้าง session แล้วเรียก [onSessionExpired] (ข้อมูลในเครื่องไม่หาย)
+ * Adds the access token and, on 401, refreshes it once and retries. Refreshes are serialised so
+ * concurrent 401s trigger a single refresh. If the refresh is rejected the session is cleared and
+ * [onSessionExpired] is called; local data is kept.
  */
 class ApiClient(
     private val baseUrl: () -> String,
@@ -46,7 +43,7 @@ class ApiClient(
 ) {
     private val refreshLock = Any()
 
-    /** client ไม่มี authenticator สำหรับ refresh เอง (กันวนซ้ำ) และสำหรับอัปโหลดไป S3 */
+    /** Client without the token authenticator, for refresh calls and presigned uploads. */
     val plain: OkHttpClient = builder
         .connectTimeout(CONNECT_TIMEOUT_S, TimeUnit.SECONDS)
         .readTimeout(READ_TIMEOUT_S, TimeUnit.SECONDS)
@@ -61,7 +58,7 @@ class ApiClient(
 
     fun rootUrl(path: String) = baseUrl().trimEnd('/') + path
 
-    /** เรียก API แล้วคืน JSON (null เมื่อ 204) · gzip = บีบอัด body (ใช้กับการวิ่งที่มีจุดเยอะ) */
+    /** Calls the API and returns the JSON body, or null for 204. [gzip] compresses the request body. */
     fun call(method: String, path: String, body: JSONObject? = null, auth: Boolean = true, gzip: Boolean = false): JSONObject? {
         val rb = body?.let { jsonBody(it, gzip) }
         val req = Request.Builder().url(url(path)).method(method, rb ?: emptyBodyFor(method)).apply {
@@ -100,7 +97,7 @@ class ApiClient(
         throw errorFrom(res.code, text)
     }
 
-    /** อัปโหลดไฟล์ไปที่ลิงก์ presigned ของ S3 (ไม่ส่ง token ของแอป) */
+    /** PUTs a file to a presigned storage URL (no app token is sent). */
     fun upload(url: String, headers: Map<String, String>, bytes: ByteArray, contentType: String) {
         val req = Request.Builder().url(url).put(bytes.toRequestBody(contentType.toMediaType())).apply {
             headers.forEach { (k, v) -> header(k, v) }
@@ -120,10 +117,10 @@ class ApiClient(
         null
     }
 
-    /** ขอ token ใหม่ — คืน access token ใหม่ หรือ null ถ้า session หมดอายุ */
+    /** Refreshes the access token. Returns the new token, or null if the session has expired. */
     fun refreshNow(usedAccess: String?): String? = synchronized(refreshLock) {
         val s = sessions.get() ?: return null
-        if (usedAccess != null && s.accessToken != usedAccess) return s.accessToken   // อีกคำขอเพิ่ง refresh ไปแล้ว
+        if (usedAccess != null && s.accessToken != usedAccess) return s.accessToken   // another request already refreshed
         val req = Request.Builder().url(url("/auth/refresh"))
             .post(JSONObject().put("refresh_token", s.refreshToken).toString().toByteArray().toRequestBody(JSON))
             .build()
@@ -145,7 +142,7 @@ class ApiClient(
 
     private inner class TokenAuthenticator : Authenticator {
         override fun authenticate(route: Route?, response: Response): Request? {
-            if (response.priorResponse != null) return null          // ลองไปแล้ว 1 ครั้ง
+            if (response.priorResponse != null) return null          // already retried once
             val used = response.request.header("Authorization")?.removePrefix("Bearer ") ?: return null
             val fresh = refreshNow(used) ?: return null
             return response.request.newBuilder().header("Authorization", "Bearer $fresh").build()
@@ -156,10 +153,7 @@ class ApiClient(
         val JSON = "application/json; charset=utf-8".toMediaType()
 
         const val CONNECT_TIMEOUT_S = 15L
-        /**
-         * รอคำตอบได้ถึง 90 วินาที: เซิร์ฟเวอร์แพ็กเกจฟรี (Render) หลับเมื่อว่าง 15 นาที และใช้ ~1 นาทีกว่าจะตื่น
-         * ระหว่างนั้นการเชื่อมต่อสำเร็จแล้ว (proxy ของ Render รับไว้) แค่ยังไม่ตอบ — เดิม 30 วินาทีจึง timeout ทุกครั้งแรก
-         */
+        /** A sleeping free-tier server can take about a minute to answer the first request. */
         const val READ_TIMEOUT_S = 90L
         const val WRITE_TIMEOUT_S = 60L
 

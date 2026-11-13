@@ -21,7 +21,7 @@ import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/** ฐานข้อมูลในเครื่อง (SQLite จริงบนเครื่อง แต่เป็นแบบในหน่วยความจำ ไม่แตะข้อมูลของแอป) */
+/** Repository against a real SQLite database kept in memory, so app data is untouched. */
 @RunWith(AndroidJUnit4::class)
 class RunRepositoryTest {
 
@@ -121,7 +121,7 @@ class RunRepositoryTest {
         val edited = RunRepository.getById(id, withTrack = false)!!
         assertEquals(SyncStatus.PENDING, edited.syncStatus)
         assertTrue(edited.updatedAt > before.updatedAt)
-        // ตัวซิงก์ถือค่าเก่าอยู่ → เขียนทับไม่ได้ (ผู้ใช้แก้ระหว่างส่ง)
+        // A stale copy held by sync cannot overwrite a newer user edit.
         assertFalse(RunRepository.updateIfUnchanged(before.copy(syncStatus = SyncStatus.SYNCED), before.updatedAt))
         assertTrue(RunRepository.updateIfUnchanged(edited.copy(syncStatus = SyncStatus.SYNCED), edited.updatedAt))
     }

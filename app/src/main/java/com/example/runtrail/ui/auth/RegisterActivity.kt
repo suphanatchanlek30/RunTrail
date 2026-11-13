@@ -17,10 +17,7 @@ import com.example.runtrail.ui.common.toast
 import com.example.runtrail.ui.common.userMessage
 import com.example.runtrail.ui.onboarding.ProfileSetupActivity
 
-/**
- * 21 · สมัครสมาชิก — ประเทศใช้จัดอันดับรายประเทศ
- * การวิ่งที่บันทึกไว้ตอนเป็น Guest จะถูกผูกกับบัญชีใหม่และอัปโหลดให้อัตโนมัติ
- */
+/** Account sign-up. Guest runs are assigned to the new account and uploaded. */
 class RegisterActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityRegisterBinding
@@ -105,7 +102,7 @@ class RegisterActivity : AppCompatActivity() {
             "GB" to "สหราชอาณาจักร", "US" to "สหรัฐอเมริกา", "AU" to "ออสเตรเลีย",
         )
 
-        /** ชื่อประเทศตามภาษาที่เลือก (อังกฤษใช้ชื่อจาก java.util.Locale) */
+        /** Supported countries as (ISO code, name) in the UI language. */
         val COUNTRIES: List<Pair<String, String>>
             get() = if (com.example.runtrail.domain.Lang.english()) {
                 COUNTRIES_TH.map { (code, _) -> code to java.util.Locale("", code).getDisplayCountry(java.util.Locale.ENGLISH) }

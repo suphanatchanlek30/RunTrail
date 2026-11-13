@@ -10,9 +10,7 @@ import android.hardware.SensorManager
 import android.os.Build
 import androidx.core.content.ContextCompat
 
-/**
- * Cadence (ก้าว/นาที) จาก Step Counter — นับส่วนต่างจำนวนก้าวในช่วง 30 วินาทีล่าสุด (MA12)
- */
+/** Cadence (steps/min) from the step counter, measured over the last 30 seconds. */
 class CadenceTracker(context: Context) : SensorEventListener {
 
     private val sm = context.getSystemService(Context.SENSOR_SERVICE) as SensorManager
@@ -27,7 +25,7 @@ class CadenceTracker(context: Context) : SensorEventListener {
 
     fun stop() = sm.unregisterListener(this)
 
-    /** ก้าว/นาที หรือ 0 ถ้ายังไม่มีข้อมูล */
+    /** Current cadence, or 0 when there is no data. */
     fun cadence(now: Long = System.currentTimeMillis()): Int {
         while (samples.size > 2 && now - samples.first().first > WINDOW_MS) samples.removeFirst()
         return compute(samples, now)
@@ -43,8 +41,8 @@ class CadenceTracker(context: Context) : SensorEventListener {
         const val WINDOW_MS = 30_000L
 
         /**
-         * ก้าว/นาที จากค่าสะสมของ Step Counter (เวลา ms, จำนวนก้าวสะสม) — ฟังก์ชันล้วน ทดสอบบน JVM ได้
-         * 0 = ข้อมูลไม่พอ (น้อยกว่า 6 วินาที) หรือไม่มีก้าวใหม่เกิน 5 วินาที (หยุดเดิน)
+         * Cadence from (time ms, cumulative steps) samples. Returns 0 with less than 6 s of data
+         * or when no new step arrived in the last 5 s.
          */
         fun compute(samples: List<Pair<Long, Float>>, now: Long): Int {
             if (samples.size < 2) return 0

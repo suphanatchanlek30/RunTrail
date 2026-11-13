@@ -40,12 +40,12 @@ import java.util.Calendar
 import kotlin.math.roundToInt
 
 /**
- * Foreground service (type = location) ที่ "เป็นเจ้าของ" การวิ่งสด
+ * Foreground location service that owns the run being recorded.
  *
- * - GPS / Step counter / เวลา ทำงานต่อแม้ปิดจอ สลับแอป หรือปิดหน้าวิ่ง
- * - เขียนจุด GPS ที่เพิ่มขึ้นลง SQLite ทุก 5 วินาที → ถ้าแอปถูกระบบปิด หน้าหลักจะถามกู้คืน
- * - LiveRunActivity เป็นแค่หน้าจอแสดงผล: อ่านค่าจาก [current] และสั่ง pause / resume / finish
- * - START_NOT_STICKY: ถ้าระบบฆ่า process จะไม่เริ่มใหม่เอง (ใช้ draft ใน DB + dialog กู้คืนแทน)
+ * GPS, step counting and timing continue with the screen off or the app in the background.
+ * New points are written to SQLite every 5 s so the run can be recovered if the process dies;
+ * the service is START_NOT_STICKY and relies on that draft instead of restarting itself.
+ * LiveRunActivity only displays [current] and sends pause, resume and finish.
  */
 class RunTrackingService : Service() {
 
@@ -71,7 +71,7 @@ class RunTrackingService : Service() {
     val gpsEnabled: Boolean get() = tracker.gpsEnabled
     val lastKnown get() = tracker.lastKnown
 
-    /** หน้าจอที่เปิดอยู่ (ถ้ามี) — ถูกเรียกบน main thread ทุกครั้งที่ค่ามีการเปลี่ยน */
+    /** Screen callback, invoked on the main thread whenever the state changes. */
     var listener: (() -> Unit)? = null
 
     private val tempListener = object : SensorEventListener {
@@ -91,7 +91,7 @@ class RunTrackingService : Service() {
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
         when (intent?.action) {
             ACTION_PAUSE, ACTION_RESUME -> when {
-                !started -> stopSelf()   // กดจากการแจ้งเตือนเก่าหลังการวิ่งจบไปแล้ว
+                !started -> stopSelf()   // action from a stale notification after the run ended
                 intent.action == ACTION_PAUSE -> pause()
                 else -> resume()
             }
@@ -100,11 +100,11 @@ class RunTrackingService : Service() {
         return START_NOT_STICKY
     }
 
-    /** เริ่มการวิ่งใหม่ หรือกู้คืนจาก draft · คืน false ถ้าเริ่มไม่ได้ */
+    /** Starts a new run or resumes the saved draft. Returns false if it cannot start. */
     private fun begin(resume: Boolean): Boolean {
         prefs = PrefsHelper(this)
         tracker = LocationTracker(this, ::onLocation) { listener?.invoke() }
-        if (!tracker.hasPermission) return false   // Android 14+ ห้ามเริ่ม location service ถ้ายังไม่อนุญาต
+        if (!tracker.hasPermission) return false   // Android 14+ forbids starting a location service without permission
 
         val existing = RunRepository.activeDraft()
         if (resume && existing != null) {
@@ -187,7 +187,7 @@ class RunTrackingService : Service() {
         pauses = state.allPauses(System.currentTimeMillis()),
     )
 
-    /** เขียนจุดที่เพิ่มขึ้นและตัวเลขล่าสุดลง SQLite */
+    /** Writes new points and the latest totals to the draft. */
     private fun persist() {
         if (!started) return
         val pts = state.track
@@ -196,7 +196,7 @@ class RunTrackingService : Service() {
         savedPoints = pts.size
     }
 
-    /** จบการวิ่ง → บันทึกเป็นการวิ่งจริง แล้วสั่งซิงก์ (ถ้าไม่มีเน็ต WorkManager จะรอเอง) · คืน id */
+    /** Saves the run, requests a sync and returns its id. */
     fun finish(): Long {
         val end = System.currentTimeMillis()
         val run = snapshot().copy(title = defaultTitle(draft.startTime))
@@ -206,7 +206,7 @@ class RunTrackingService : Service() {
         return run.id
     }
 
-    /** ทิ้งการวิ่งนี้ */
+    /** Deletes the run in progress. */
     fun discard() {
         RunRepository.discardDraft(draft.id)
         shutdown()
@@ -225,7 +225,7 @@ class RunTrackingService : Service() {
 
     override fun onDestroy() {
         if (started) {
-            persist()   // ถูกปิดโดยไม่ได้กดจบ → เก็บ draft ไว้ให้กู้คืน
+            persist()   // stopped without Finish: keep the draft for recovery
             started = false
             current = null
             handler.removeCallbacks(ticker)
@@ -248,7 +248,7 @@ class RunTrackingService : Service() {
         )
     }
 
-    // ---------------------------------------------------------------- notification
+    // ---------------------------------------------------------------- Notifications
 
     private fun buildNotification(): Notification {
         val open = PendingIntent.getActivity(
@@ -321,13 +321,13 @@ class RunTrackingService : Service() {
         const val CHANNEL_KM = "km_alert"
         const val CHANNEL_UPDATES = "updates"
 
-        /** การวิ่งที่กำลังบันทึกอยู่ (null = ไม่มี) */
+        /** The service while a run is being recorded, else null. */
         @Volatile var current: RunTrackingService? = null
             private set
 
         val isRunning: Boolean get() = current != null
 
-        /** เริ่มบันทึก (resume = กู้คืน draft ล่าสุด) — เรียกหลังได้สิทธิ์ตำแหน่งแล้วเท่านั้น */
+        /** Starts recording, or resumes the latest draft when [resume]. Requires location permission. */
         fun start(context: Context, resume: Boolean) {
             val i = Intent(context, RunTrackingService::class.java).setAction(ACTION_START).putExtra(EXTRA_RESUME, resume)
             ContextCompat.startForegroundService(context, i)

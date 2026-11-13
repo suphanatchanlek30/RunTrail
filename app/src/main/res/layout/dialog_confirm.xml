@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Dialog ยืนยัน/แจ้งข้อมูล รูปแบบเดียวกับ 18 · 19 -->
+<!-- Generic confirm/info dialog (see Sheets.confirm) -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"

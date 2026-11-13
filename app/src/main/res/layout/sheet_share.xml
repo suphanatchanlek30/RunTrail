@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 13 · Share & Sync — Share sheet -->
+<!-- Share sheet -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -43,7 +43,7 @@
             app:tint="@color/text_primary" />
     </LinearLayout>
 
-    <!-- สถานะซิงก์ -->
+    <!-- Sync status -->
     <LinearLayout
         android:id="@+id/rowSync"
         android:layout_width="match_parent"
@@ -101,7 +101,7 @@
             android:visibility="gone" />
     </LinearLayout>
 
-    <!-- ลิงก์ -->
+    <!-- Link -->
     <LinearLayout
         android:id="@+id/rowLink"
         android:layout_width="match_parent"
@@ -164,7 +164,7 @@
         android:layout_marginTop="@dimen/space_l"
         android:text="@string/share_privacy" />
 
-    <!-- toggles -->
+    <!-- Privacy toggles -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="60dp"
@@ -281,7 +281,7 @@
             android:contentDescription="@string/share_show_kcal" />
     </LinearLayout>
 
-    <!-- actions -->
+    <!-- Actions -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

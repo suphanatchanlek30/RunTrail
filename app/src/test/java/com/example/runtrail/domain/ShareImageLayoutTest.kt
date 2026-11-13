@@ -22,12 +22,12 @@ class ShareImageLayoutTest {
     }
 
     @Test fun routeIsCenteredWithoutStretching() {
-        val box = ShareImageLayout.Box(100f, 200f, 900f, 600f)   // กว้างกว่าสูง
+        val box = ShareImageLayout.Box(100f, 200f, 900f, 600f)   // wider than tall
         val pts = listOf(RoutePoint(0f, 0f, 300, 0f), RoutePoint(1f, 1f, 300, 0f), RoutePoint(0.5f, 0.5f, 300, 0f))
         val out = ShareImageLayout.fitRoute(pts, box)
         out.forEach { (x, y) -> assertTrue(box.contains(x, y)) }
-        assertEquals(400f, out[1].first - out[0].first, 0.01f)   // ใช้ด้านสั้น 400 ทั้งสองแกน
+        assertEquals(400f, out[1].first - out[0].first, 0.01f)   // the short side (400) is used for both axes
         assertEquals(400f, out[1].second - out[0].second, 0.01f)
-        assertEquals(500f, out[2].first, 0.01f)                   // กึ่งกลางกล่อง
+        assertEquals(500f, out[2].first, 0.01f)                   // centred in the box
     }
 }

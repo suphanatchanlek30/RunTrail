@@ -5,13 +5,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.util.Properties
 
-/**
- * บันทึกการส่งออก/นำเข้าครั้งล่าสุด เก็บเป็นไฟล์ส่วนตัวของแอป (MA09 App-specific Storage)
- *
- * เขียน: openFileOutput(MODE_PRIVATE) + Properties.store()
- * อ่าน: File(getFilesDir(), …) + FileInputStream + Properties.load()
- * ไฟล์อยู่ใน /data/data/<package>/files/ แอปอื่นอ่านไม่ได้ และถูกลบเมื่อถอนการติดตั้ง
- */
+/** Time and size of the last backup export/import, stored in a private properties file. */
 class BackupInfo(private val context: Context) {
 
     data class Entry(val at: Long, val count: Int)

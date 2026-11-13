@@ -1,9 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-    Text styles จาก Figma
-    - หัวข้อ/ตัวเลข: Anuphan  · เนื้อหา: IBM Plex Sans Thai
-    - lineHeight = ขนาดตัวอักษร × line-height ของ Figma
-    - letterSpacing ของ Android เป็นหน่วย em (px ÷ ขนาดตัวอักษร)
+    Text styles. Headings and numbers use Anuphan, body text IBM Plex Sans Thai.
+    letterSpacing is in em (px ÷ text size).
 -->
 <resources>
 
@@ -13,7 +11,7 @@
         <item name="android:includeFontPadding">false</item>
     </style>
 
-    <!-- ตัวเลขใหญ่สุด เช่น 12.4 / 4.62 -->
+    <!-- Largest numbers, e.g. 12.4 -->
     <style name="Txt.Display">
         <item name="android:fontFamily">@font/anuphan_bold</item>
         <item name="android:textSize">48sp</item>
@@ -65,7 +63,7 @@
         <item name="android:lineHeight">@dimen/line_height_l</item>
     </style>
 
-    <!-- Number/L 24 (ไทล์สถิติ) -->
+    <!-- Number/L 24 (stat tiles) -->
     <style name="Txt.NumL">
         <item name="android:fontFamily">@font/anuphan_bold</item>
         <item name="android:textSize">24sp</item>
@@ -80,7 +78,7 @@
         <item name="android:lineHeight">@dimen/line_height_l</item>
     </style>
 
-    <!-- Label/L 15 SemiBold (หัวการ์ด ปุ่ม) -->
+    <!-- Label/L 15 SemiBold (card titles, buttons) -->
     <style name="Txt.LabelL">
         <item name="android:fontFamily">@font/plex_semibold</item>
         <item name="android:textSize">@dimen/text_size_15</item>
@@ -138,7 +136,7 @@
         <item name="android:textColor">@color/text_tertiary</item>
     </style>
 
-    <!-- หน่วยข้างตัวเลข -->
+    <!-- Unit next to a number -->
     <style name="Txt.Unit">
         <item name="android:fontFamily">@font/plex_medium</item>
         <item name="android:textSize">@dimen/text_size_s</item>

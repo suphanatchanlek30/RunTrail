@@ -21,8 +21,8 @@ import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 
 /**
- * วัดผลการปรับประสิทธิภาพ (AUDIT P1–P4) — วิธีเดิมกับวิธีใหม่บนข้อมูลชุดเดียวกัน 1,000 การวิ่ง
- * ผลเวลาเขียนลง logcat (tag RunTrailPerf) · assert เฉพาะสิ่งที่ไม่ขึ้นกับความเร็วเครื่อง
+ * Old vs new implementations on the same 1,000 runs. Timings go to logcat (tag RunTrailPerf);
+ * assertions only cover results that do not depend on device speed.
  */
 @RunWith(AndroidJUnit4::class)
 class PerfTest {
@@ -59,7 +59,7 @@ class PerfTest {
             val week = RunRepository.since(RunRepository.startOfWeek(now), now)
             RunRepository.weekDailyKm(now, week)
         }
-        // ผลต้องเหมือนเดิม
+        // Same result as before.
         assertEquals(RunRepository.thisWeek(now).map { it.id }, RunRepository.since(RunRepository.startOfWeek(now), now).map { it.id })
         assertEquals(RunRepository.getAll().take(2).map { it.id }, RunRepository.recent(2).map { it.id })
         Log.i(TAG, "P2 home data path, 1000 runs: before %.1f ms, after %.1f ms".format(before, after))
@@ -98,7 +98,7 @@ class PerfTest {
         main.post { RunRepository.addListener(l) }
         InstrumentationRegistry.getInstrumentation().waitForIdleSync()
         val ids = RunRepository.getAll().take(100)
-        ids.forEach { RunRepository.setPhotoPath(it.id, "/nope") }   // 100 เขียนติดกันแบบตอนซิงก์
+        ids.forEach { RunRepository.setPhotoPath(it.id, "/nope") }   // 100 writes in a row, as during sync
         Thread.sleep(600)
         val done = CountDownLatch(1)
         main.post { RunRepository.removeListener(l); done.countDown() }

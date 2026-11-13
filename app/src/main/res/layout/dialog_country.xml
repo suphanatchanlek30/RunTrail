@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    เลือกประเทศ (สมัครสมาชิก / ตั้งค่า / อันดับ) — MA08 AutoCompleteTextView
-    พิมพ์ชื่อหรือรหัสประเทศแล้วมีรายการให้เลือก (setThreshold(1)) · แตะช่องว่างเพื่อดูทั้งหมด
--->
+<!-- Country picker: type a name or ISO code, or tap the empty field to see all -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"

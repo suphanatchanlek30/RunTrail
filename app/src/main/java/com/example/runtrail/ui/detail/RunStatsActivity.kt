@@ -25,9 +25,7 @@ import com.example.runtrail.ui.replay.ReplayActivity
 import com.example.runtrail.ui.share.ShareSheet
 import kotlin.math.roundToInt
 
-/**
- * 10 · Splits & Charts — กราฟเพซ/ความสูง (Canvas) + ตาราง split รายกิโลเมตร + สภาพแวดล้อม
- */
+/** Pace/elevation charts, per-km splits and conditions for one run. */
 class RunStatsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityRunStatsBinding
@@ -88,7 +86,7 @@ class RunStatsActivity : AppCompatActivity() {
         binding.chipPace.isSelected = !showElevation
         binding.chipElevation.isSelected = showElevation
         val route = RunRepository.route(run)
-        // เฉลี่ยเคลื่อนที่ 9 จุดเพื่อให้กราฟนุ่มขึ้น
+        // 9-point moving average to smooth the chart.
         val raw = route.map { if (showElevation) it.altitudeM else it.paceSecPerKm.toFloat() }
         val smooth = raw.indices.map { i ->
             val from = (i - 4).coerceAtLeast(0)
@@ -99,7 +97,7 @@ class RunStatsActivity : AppCompatActivity() {
         binding.chart.setData(smooth, invert = !showElevation, color = color)
 
         if (raw.isEmpty()) {
-            // การวิ่งที่บันทึกเองไม่มีจุด GPS (เดิม raw.max() ของรายการว่างทำให้แอปเด้ง, AUDIT A2)
+            // Manual runs have no GPS points to chart.
             binding.tvChartTitle.setText(if (showElevation) R.string.stats_elev_chart else R.string.stats_pace_chart)
             binding.tvChartDesc.setText(R.string.stats_no_route)
         } else if (showElevation) {
@@ -114,9 +112,9 @@ class RunStatsActivity : AppCompatActivity() {
             )
         }
 
-        // แกน X: 0 … N (กม. หรือ ไมล์)
+        // X axis: 0 … N in km or miles.
         binding.axis.removeAllViews()
-        val marks = Units.axisMarks(run.distanceM, miles)   // ตามหน่วยที่เลือก (AUDIT A8)
+        val marks = Units.axisMarks(run.distanceM, miles)
         marks.forEachIndexed { i, k ->
             val tv = TextView(this).apply {
                 setTextAppearance(R.style.Txt_Caption)
@@ -171,7 +169,7 @@ class RunStatsActivity : AppCompatActivity() {
         fun cond(c: ViewConditionBinding, icon: Int, value: String, label: Int) {
             c.ivIcon.setImageResource(icon); c.tvValue.text = value; c.tvLabel.setText(label)
         }
-        // อุณหภูมิมาจากเซนเซอร์ในเครื่อง (ส่วนใหญ่ไม่มี) จึงแสดง "--" แทนการเดาค่า · ไม่มีเซนเซอร์ความชื้น
+        // Temperature exists only if the device has a sensor; there is no humidity sensor.
         cond(binding.condTemp, R.drawable.ic_thermo, run.tempC?.let { "$it°C" } ?: "--", R.string.stats_temp)
         cond(binding.condHumidity, R.drawable.ic_activity, run.track.size.toString(), R.string.stats_gps_points)
         cond(binding.condElevation, R.drawable.ic_mountain, "+${run.elevationGainM} ${getString(R.string.unit_m)}", R.string.stats_chip_elevation)

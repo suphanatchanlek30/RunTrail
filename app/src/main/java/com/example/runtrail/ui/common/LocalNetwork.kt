@@ -8,8 +8,8 @@ import androidx.core.content.ContextCompat
 import com.example.runtrail.App
 
 /**
- * Android 17+ ต้องได้สิทธิ์ "อุปกรณ์ในเครือข่าย" ก่อนต่อ server ในวง LAN / emulator (10.0.2.2)
- * ขอเฉพาะเมื่อที่อยู่ server เป็นเครือข่ายภายใน และแอปประกาศสิทธิ์นี้ไว้ (เฉพาะ build debug)
+ * Android 17+ requires the local-network permission to reach a LAN or emulator host (10.0.2.2).
+ * Requested only for local server addresses and only when the permission is declared (debug builds).
  */
 object LocalNetwork {
     const val PERMISSION = "android.permission.ACCESS_LOCAL_NETWORK"
@@ -30,7 +30,7 @@ object LocalNetwork {
         false
     }
 
-    /** ต้องขอสิทธิ์ก่อนใช้งาน server ปัจจุบันหรือไม่ */
+    /** Whether the permission must be requested before using the current server. */
     fun needsPermission(context: Context): Boolean =
         Build.VERSION.SDK_INT >= 37 && isLocal(App.services.prefs.apiUrl) && declared(context) &&
             ContextCompat.checkSelfPermission(context, PERMISSION) != PackageManager.PERMISSION_GRANTED

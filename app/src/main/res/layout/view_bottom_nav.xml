@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- BottomNav (Components ใน Figma) : เส้นขอบบน 1dp + 4 แท็บ -->
+<!-- Bottom navigation with a 1 dp top border -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"

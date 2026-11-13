@@ -49,8 +49,8 @@ import com.example.runtrail.ui.sensor.SensorCheckActivity
 import com.example.runtrail.ui.common.Sheets
 
 /**
- * 17 · Settings — ค่าทั้งหมดเก็บใน SharedPreferences (MA09)
- * "ทดสอบคืนสถานะหน้าจอ" เรียก recreate() แล้วนับจำนวนครั้งที่ Activity ถูกสร้างใหม่ผ่าน onSaveInstanceState
+ * Settings, stored in SharedPreferences.
+ * "Recreate screen" calls recreate() and shows how many times the activity was created, via saved state.
  */
 class SettingsActivity : AppCompatActivity() {
 
@@ -105,7 +105,6 @@ class SettingsActivity : AppCompatActivity() {
         binding.rowAutoPause.swToggle.setOnCheckedChangeListener { _, checked -> prefs.autoPause = checked }
         binding.rowKmAlert.swToggle.setOnCheckedChangeListener { _, checked -> prefs.kmAlert = checked }
         binding.rowReminder.root.setOnClickListener { editReminder() }
-        // MA09 SAF: ให้ผู้ใช้เลือกเองว่าจะบันทึก/เปิดไฟล์ที่ไหน
         binding.rowExport.root.setOnClickListener {
             val date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
             exportLauncher.launch(getString(R.string.backup_file_name, date))
@@ -127,10 +126,9 @@ class SettingsActivity : AppCompatActivity() {
             }
         }
         binding.rowUpdates.root.setOnClickListener { binding.rowUpdates.swToggle.toggle() }
-        // ประเทศสำหรับอันดับ "ประเทศของฉัน" — เดิมตั้งได้เฉพาะตอนสมัคร (AUDIT A7)
         binding.rowCountry.root.setOnClickListener {
             com.example.runtrail.ui.common.CountryPicker.show(this, prefs.countryCode) { code ->
-                prefs.countryCode = code          // ตั้ง profileDirty → ซิงก์ส่งขึ้น server
+                prefs.countryCode = code          // marks the profile dirty so sync uploads it
                 SyncManager.requestSync(this)
                 render()
             }
@@ -164,7 +162,7 @@ class SettingsActivity : AppCompatActivity() {
         binding.tvName.text = prefs.name.ifBlank { getString(R.string.settings_name_empty) }
         binding.tvBody.text = getString(R.string.settings_body, prefs.weightKg, prefs.heightCm, prefs.age)
         binding.rowUnit.tvValue.text = Fmt.unit(miles)
-        // เป้าหมาย/เพซเป้าหมายเก็บเป็นหน่วย กม. (เหมือน server) — โหมดไมล์แปลงเพื่อแสดง (AUDIT A6)
+        // Goals are stored in km like on the server; miles only change the display.
         binding.rowGoal.tvValue.text = "${Units.goalText(prefs.weeklyGoalKm, miles)} ${Fmt.unit(miles)}"
         binding.rowPace.tvValue.text = "${Fmt.pace(prefs.targetPaceSec.toDouble(), miles)}${Fmt.paceUnit(miles)}"
         binding.rowTheme.tvValue.text = getString(THEME_LABELS[THEME_MODES.indexOf(prefs.themeMode).coerceAtLeast(0)])
@@ -216,7 +214,7 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    /** ธีม: ตามระบบ / กลางวัน / กลางคืน — AppCompatDelegate จะ recreate ทุกหน้าที่เปิดอยู่ให้เปลี่ยนสีทันที */
+    /** System, light or dark theme; AppCompatDelegate recreates open activities. */
     private fun chooseTheme() {
         Sheets.choose(
             this, R.drawable.ic_sun, getString(R.string.setting_theme), getString(R.string.sheet_theme_sub),
@@ -228,7 +226,7 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    /** ภาษา: ตามระบบ / ไทย / English — เก็บด้วย per-app language (autoStoreLocales) แล้วทุกหน้าเปลี่ยนภาษาทันที */
+    /** System, Thai or English; stored as the per-app locale and applied immediately. */
     private fun chooseLanguage() {
         Sheets.choose(
             this, R.drawable.ic_globe, getString(R.string.setting_language), getString(R.string.sheet_language_sub),
@@ -247,11 +245,11 @@ class SettingsActivity : AppCompatActivity() {
 
     private fun chooseGoal() {
         val values = (5..50 step 5).toList()
-        val unit = Fmt.unit(false)   // ตัวเลือกเป็น กม. เสมอ
+        val unit = Fmt.unit(false)   // options are always in km
         Sheets.choose(
             this, R.drawable.ic_target, getString(R.string.setting_weekly_goal), getString(R.string.sheet_goal_sub),
             values.map { Sheets.Option(it.toString(), getString(R.string.sheet_goal_per_week, unit)) },
-            // ค่าปัจจุบันไม่อยู่ในรายการ (เช่น 23 จากหน้าโปรไฟล์) → -1 ไม่มีช่องไหนถูกเลือกไว้ จึงกดได้ทุกช่อง (AUDIT A5)
+            // A value not in the list (e.g. 23 from profile setup) gives -1, so every option stays selectable.
             selected = values.indexOf(prefs.weeklyGoalKm),
             columns = 3,
         ) { which ->
@@ -273,7 +271,7 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    /** คำอธิบายระดับเพซสั้น ๆ ใต้ตัวเลข */
+    /** Short description of a pace level. */
     private fun paceLevel(sec: Int): String = getString(
         when {
             sec < 330 -> R.string.pace_level_fast
@@ -282,9 +280,9 @@ class SettingsActivity : AppCompatActivity() {
         },
     )
 
-    // ---------------- ส่งออก / นำเข้า (MA09: SAF CreateDocument / OpenDocument)
+    // ---------------- Backup export / import
 
-    /** ระบบเปิดหน้าเลือกที่บันทึกไฟล์ → ได้ Uri กลับมา (null = ผู้ใช้กดยกเลิก) */
+    /** Null when the user cancels the file picker. */
     private val exportLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument(RunBackup.MIME)) { uri ->
         if (uri != null) exportTo(uri)
     }
@@ -297,11 +295,10 @@ class SettingsActivity : AppCompatActivity() {
         runAsync({
             val runs = RunRepository.allWithTracks()
             if (runs.isNotEmpty()) {
-                // เขียนผ่าน ContentResolver → OutputStream (ไฟล์อยู่ที่ผู้ใช้เลือก เช่น Downloads / Google Drive)
                 contentResolver.openOutputStream(uri, "wt")!!.use { out ->
                     out.write(RunBackup.toJson(runs).toString().toByteArray(Charsets.UTF_8))
                 }
-                BackupInfo(this).recordExport(runs.size)    // บันทึกลงไฟล์ส่วนตัวของแอป
+                BackupInfo(this).recordExport(runs.size)
             }
             runs.size
         }) { r ->
@@ -327,9 +324,9 @@ class SettingsActivity : AppCompatActivity() {
         }
     }
 
-    // ---------------- เตือนไปวิ่ง (MA13 AlarmManager + MA08 SwitchCompat / CheckBox / TimePickerDialog)
+    // ---------------- Run reminder
 
-    /** Android 13+: ขอสิทธิ์แจ้งเตือนตอนเปิดการเตือน (ประกาศใน Manifest อย่างเดียวไม่พอ) */
+    /** Android 13+: notification permission, requested when the reminder is turned on. */
     private val notifPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
         if (!granted) toast(getString(R.string.reminder_need_notif))
     }
@@ -338,7 +335,7 @@ class SettingsActivity : AppCompatActivity() {
         val b = DialogReminderBinding.inflate(layoutInflater)
         var hour = prefs.reminderHour
         var minute = prefs.reminderMinute
-        // CheckBox ของแต่ละวัน จันทร์ → อาทิตย์ คู่กับ Calendar.DAY_OF_WEEK
+        // Day checkboxes, Monday first, paired with Calendar.DAY_OF_WEEK.
         val days = listOf(
             b.cbMon to Calendar.MONDAY, b.cbTue to Calendar.TUESDAY, b.cbWed to Calendar.WEDNESDAY,
             b.cbThu to Calendar.THURSDAY, b.cbFri to Calendar.FRIDAY, b.cbSat to Calendar.SATURDAY,
@@ -395,7 +392,7 @@ class SettingsActivity : AppCompatActivity() {
         dialog.show()
     }
 
-    /** Android 12+: พาไปหน้าระบบเพื่ออนุญาต "การปลุกและการช่วยเตือน" (ACTION_REQUEST_SCHEDULE_EXACT_ALARM) */
+    /** Android 12+: opens the system screen for the "Alarms & reminders" permission. */
     private fun openExactAlarmSettings() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
         try {
@@ -422,11 +419,10 @@ class SettingsActivity : AppCompatActivity() {
                 val body = JSONObject().apply {
                     put("old_password", o); put("new_password", n); put("device_name", App.services.deviceName)
                 }
-                // MA11: POST + body → ④ สำเร็จ / ⑤ ผิดพลาด
                 val q = ApiRequest(
                     Request.Method.POST, ApiConfig.CHANGE_PASSWORD, body,
                     { r ->
-                        // server ออก token ชุดใหม่ (เครื่องอื่นถูกออกจากระบบ) → เก็บไว้ใช้ต่อ
+                        // Changing the password revokes other sessions and returns new tokens.
                         val sessions = App.services.sessions
                         sessions.get()?.let { s ->
                             sessions.save(s.copy(accessToken = r.getString("access_token"), refreshToken = r.getString("refresh_token")))
@@ -492,7 +488,7 @@ class SettingsActivity : AppCompatActivity() {
         ).toList()
         private val THEME_LABELS = listOf(R.string.theme_system, R.string.theme_day, R.string.theme_night)
 
-        /** "" = ตามภาษาของเครื่อง */
+        /** "" = follow the system language. */
         private val LANGUAGE_TAGS = listOf("", "th", "en")
         private val LANGUAGE_LABELS = listOf(R.string.language_system, R.string.language_th, R.string.language_en)
     }

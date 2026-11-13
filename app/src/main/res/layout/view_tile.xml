@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Tile 170×89 (หน้าวิ่งสด): ไอคอน + ป้าย / ค่า 24 + หน่วย -->
+<!-- Live run tile: icon + label, value + unit -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"

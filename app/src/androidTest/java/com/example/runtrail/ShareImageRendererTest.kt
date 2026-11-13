@@ -15,7 +15,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
 
-/** วาดภาพแชร์จริงทั้ง 4 แบบ (รูป/เส้นทาง × 9:16/1:1) และเก็บไฟล์ไว้ให้เปิดดูได้ */
+/** Renders all four share images (photo/route × 9:16/1:1) and keeps the files for inspection. */
 @RunWith(AndroidJUnit4::class)
 class ShareImageRendererTest {
 

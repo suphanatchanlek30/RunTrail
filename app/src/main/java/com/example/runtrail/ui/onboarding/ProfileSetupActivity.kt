@@ -14,12 +14,7 @@ import com.example.runtrail.ui.common.setupEdgeToEdge
 import com.example.runtrail.ui.common.toast
 import com.example.runtrail.ui.home.MainActivity
 
-/**
- * 03 · Profile & Goal — ชื่อ-นามสกุล · น้ำหนัก/ส่วนสูง/อายุ/หน่วย + เป้าหมายรายสัปดาห์
- * - เก็บลง SharedPreferences (MA09)
- * - หมุนจอแล้วค่าที่เลือกไม่หาย (onSaveInstanceState, MA09)
- * - เปิดจากหน้าตั้งค่าด้วย EXTRA_EDIT = true เพื่อใช้เป็นหน้าแก้ไขโปรไฟล์
- */
+/** Profile and weekly goal setup. With [EXTRA_EDIT] it edits the existing profile from settings. */
 class ProfileSetupActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityProfileSetupBinding

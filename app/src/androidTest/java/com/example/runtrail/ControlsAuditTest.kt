@@ -44,12 +44,10 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * ตรวจ "ปุ่มที่กดแล้วไม่มีอะไรเกิดขึ้น" ทุกหน้าจอ (AUDIT §3)
+ * Finds dead controls on every screen.
  *
- * เปิดแต่ละหน้า แล้วไล่ทุก view ที่มองเห็น:
- *  - กดได้ (clickable) แต่ไม่มี OnClickListener → ปุ่มตาย
- *  - id ขึ้นต้นด้วย btn / action / chip / seg / row / card แต่ไม่มี OnClickListener → หน้าตาเป็นปุ่มแต่กดไม่ได้
- * รายการ view ที่มีตัวรับการกดทั้งหมดเขียนลง logcat (tag RunTrailControls) เพื่อทำตารางใน AUDIT
+ * Fails for visible views that are clickable without a listener, or whose id looks like a button
+ * (btn/action/chip/seg/…) but have no listener. All handled controls are logged under RunTrailControls.
  */
 @RunWith(AndroidJUnit4::class)
 class ControlsAuditTest {
@@ -62,7 +60,7 @@ class ControlsAuditTest {
 
     @Before fun setUp() {
         wasOnboarded = prefs.onboarded
-        prefs.onboarded = true       // คืนค่าเดิมใน tearDown
+        prefs.onboarded = true       // restored in tearDown
         RunRepository.init(ctx, RunDb(ctx, null))
         RunRepository.currentUser = { null }
         val start = System.currentTimeMillis() - 3_600_000
@@ -75,7 +73,7 @@ class ControlsAuditTest {
 
     @After fun tearDown() { prefs.onboarded = wasOnboarded }
 
-    /** ชื่อที่ใช้กับปุ่มเท่านั้น (row/card ใช้กับกล่องแสดงข้อมูลด้วย จึงนับเฉพาะเมื่อกดได้) */
+    /** Ids used only for buttons; row/card are also used for plain containers, so they count only when clickable. */
     private val buttonLike = Regex("^(btn|action|chip|seg|speed|fab)[A-Z0-9].*")
 
     private fun name(v: View): String =
@@ -89,7 +87,7 @@ class ControlsAuditTest {
                 v is RecyclerView || v is ToggleSwitch || v is org.osmdroid.views.MapView
             if (v.hasOnClickListeners()) wired += n
             else if (!selfHandled && (v.isClickable || buttonLike.matches(n))) {
-                // แถวที่เป็นส่วนหัว/กล่องที่ตั้ง clickable เพื่อกันการแตะทะลุ ไม่ใช่ปุ่ม
+                // Containers made clickable only to block touch-through are not buttons.
                 if (!(v is ViewGroup && !buttonLike.matches(n) && v.id == View.NO_ID)) dead += n
             }
             if (v is ViewGroup && v !is RecyclerView) for (i in 0 until v.childCount) walk(v.getChildAt(i))
@@ -103,7 +101,7 @@ class ControlsAuditTest {
         val dead = mutableListOf<String>()
         ActivityScenario.launch<Activity>(intent).use { s ->
             InstrumentationRegistry.getInstrumentation().waitForIdleSync()
-            Thread.sleep(400)   // ให้ข้อมูลที่โหลดบน background แสดงผลก่อน
+            Thread.sleep(400)   // let background-loaded data render
             InstrumentationRegistry.getInstrumentation().waitForIdleSync()
             s.onActivity { audit(it, wired, dead) }
         }

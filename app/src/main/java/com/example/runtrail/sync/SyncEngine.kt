@@ -16,12 +16,11 @@ import org.json.JSONObject
 import java.io.File
 
 /**
- * ซิงก์ข้อมูลในเครื่อง ↔ server (offline-first)
+ * Offline-first sync between the local database and the server.
  *
- * ลำดับ: ผูกการวิ่งของ Guest → ส่งโปรไฟล์ → ส่งคำสั่งลบ → ส่งการวิ่งที่ค้าง → ส่งรูป → ดึงของใหม่ลงเครื่อง
- * - ทำงานทีละรอบทั้งแอป (lock เดียว) ไม่ว่าจะเรียกจาก WorkManager หรือจากปุ่มในหน้าแชร์
- * - ส่งสำเร็จแล้วจะเปลี่ยนเป็น "ซิงก์แล้ว" ก็ต่อเมื่อผู้ใช้ไม่ได้แก้ระหว่างส่ง (เทียบ updated_at)
- * - เน็ตหลุด / server ล่ม → หยุดทั้งรอบแล้วให้ WorkManager ลองใหม่ (ข้อมูลไม่หาย)
+ * Order: claim guest runs → push profile → push deletions → push runs → push photos → pull changes.
+ * Only one round runs at a time app-wide. A run is marked synced only if it was not edited during
+ * the upload. Network or server failures abort the round so WorkManager can retry.
  */
 class SyncEngine(
     private val context: Context,
@@ -61,7 +60,7 @@ class SyncEngine(
         }
     }
 
-    /** ส่งการวิ่งเดียวทันที (ใช้ในหน้าแชร์) · คืนการวิ่งล่าสุดในเครื่อง */
+    /** Uploads one run immediately (used before sharing). Returns the latest local copy. */
     fun pushNow(runId: Long): Run? = synchronized(LOCK) {
         val uid = api.client.sessions.get()?.userId ?: throw ApiException(401, "not_logged_in", com.example.runtrail.domain.Lang.t("ยังไม่ได้เข้าสู่ระบบ", "Not signed in"))
         RunRepository.claimGuestRuns(uid)
@@ -92,7 +91,7 @@ class SyncEngine(
             prefs.profileDirty = false
         } catch (e: ApiException) {
             if (e.status != 400) throw e
-            Log.w(TAG, "profile rejected: ${e.fields}")   // ค่าผิดรูปแบบ: ไม่ลองซ้ำไม่รู้จบ
+            Log.w(TAG, "profile rejected: ${e.fields}")   // invalid data: don't retry forever
             prefs.profileDirty = false
         }
     }
@@ -102,15 +101,15 @@ class SyncEngine(
             try {
                 api.deleteRun(run.uuid)
             } catch (e: ApiException) {
-                if (e.status != 404) throw e   // 404 = ไม่ใช่ของเราแล้ว ลบในเครื่องได้เลย
+                if (e.status != 404) throw e   // 404: already gone on the server
             }
             RunRepository.hardDelete(run.id)
         }
     }
 
-    /** คืน true ถ้าส่งสำเร็จ · ข้อผิดพลาดที่ลองใหม่ได้จะโยนต่อให้ยกเลิกทั้งรอบ */
+    /** Returns true if uploaded. Retryable errors are rethrown to abort the round. */
     private fun pushRun(run: Run, rethrow: Boolean = false): Boolean {
-        // วิ่งยาวเกินที่ server รับ → ลดจำนวนจุดก่อนส่ง (เส้นทางในเครื่องยังครบทุกจุด)
+        // Thin very long tracks to the server limit; the local track stays complete.
         val track = if (run.isGps) SyncRules.thinForUpload(RunRepository.loadTrack(run.id)) else emptyList()
         val resp = try {
             api.putRun(run, track)
@@ -118,7 +117,7 @@ class SyncEngine(
             when (SyncRules.onPushError(e.status, e.code)) {
                 SyncRules.PushFailure.ABORT_ROUND -> throw e
                 SyncRules.PushFailure.NEW_UUID -> {
-                    // ชน UUID กับคนอื่น (แทบเป็นไปไม่ได้) → เปลี่ยนรหัสแล้วส่งรอบหน้า
+                    // UUID taken by another user: pick a new one and upload next round.
                     RunRepository.update(run.copy(uuid = java.util.UUID.randomUUID().toString()), touch = false)
                     return false
                 }
@@ -135,7 +134,7 @@ class SyncEngine(
             photoSync = SyncRules.photoStateAfterPush(run.photoSync, serverHasPhoto = !resp.isNull("photo_url") && resp.optString("photo_url").isNotBlank()),
         )
         if (!RunRepository.updateIfUnchanged(merged, run.updatedAt)) {
-            RunRepository.markOnServer(run.id)   // ผู้ใช้แก้ระหว่างส่ง → ยังรอซิงก์อยู่ รอบหน้าจะส่งค่าล่าสุด
+            RunRepository.markOnServer(run.id)   // edited during upload: stays pending
         }
         return true
     }
@@ -172,7 +171,7 @@ class SyncEngine(
         }
     }
 
-    /** ดึงการวิ่งที่เปลี่ยนบน server ลงเครื่อง (เครื่องใหม่ = ดึงทั้งหมด) · คืนจำนวนที่เขียนลงเครื่อง */
+    /** Downloads runs changed on the server (everything on a new device). Returns the number written. */
     private fun pull(uid: String): Int {
         val since = prefs.lastPull
         var cursor: String? = null
@@ -191,10 +190,7 @@ class SyncEngine(
         return count
     }
 
-    /**
-     * ดึงการแจ้งเตือนจาก server → เก็บไว้แสดงตอนออฟไลน์ และขึ้นในแถบแจ้งเตือนของเครื่องสำหรับรายการใหม่
-     * ล้มเหลวก็ไม่เป็นไร (ไม่ทำให้การซิงก์การวิ่งล้ม)
-     */
+    /** Fetches notifications for offline display and posts new ones to the tray. Failures do not affect run sync. */
     fun fetchNotifications() {
         val page = try { api.notifications() } catch (e: ApiException) {
             if (e.status == 401) throw e
@@ -224,7 +220,6 @@ class SyncEngine(
 
         val merged = RunJson.fromServer(o, local, uid).copy(id = local?.id ?: 0)
         val photoUrl = if (o.isNull("photo_url")) null else o.optString("photo_url").ifBlank { null }
-        // เครื่องอื่นลบรูปไปแล้ว → ลบตามด้วย (AUDIT A9)
         val photoRemovedElsewhere = SyncRules.photoRemovedElsewhere(state, serverHasPhoto = photoUrl != null)
         if (photoRemovedElsewhere) ImageStore.delete(context, local?.photoUri)
         val id = RunRepository.upsertFromServer(merged, clearLocalPhoto = photoRemovedElsewhere)
@@ -241,7 +236,7 @@ class SyncEngine(
 
     companion object {
         private const val TAG = "SyncEngine"
-        /** lock เดียวทั้งแอป: WorkManager กับปุ่มซิงก์ในหน้าจอจะไม่ทำงานซ้อนกัน */
+        /** Serialises sync rounds from WorkManager and from screens. */
         val LOCK = Any()
     }
 }

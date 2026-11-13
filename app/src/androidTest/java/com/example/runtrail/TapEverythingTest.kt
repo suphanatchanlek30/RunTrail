@@ -37,11 +37,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * กดทุกปุ่มที่มีตัวรับการกดจริงทีละปุ่ม (เปิดหน้าใหม่ทุกครั้ง) แล้วตรวจว่าแอปไม่เด้ง (AUDIT §3)
- * ถ้าเด้ง instrumentation จะรายงาน "Process crashed" และ logcat (tag RunTrailTap) บอกปุ่มสุดท้ายที่กด
+ * Taps every control that has a click listener, one per fresh screen, and checks the app does not crash.
+ * A crash shows as "Process crashed"; logcat (tag RunTrailTap) names the last control tapped.
  *
- * ไม่กด: ปุ่มที่เปิดแอปอื่น (กล้อง แกลเลอรี ตัวเลือกแชร์ หน้าตั้งค่าระบบ กล่องขอสิทธิ์)
- *        และปุ่มที่เปลี่ยนข้อมูล/ค่าตั้งของผู้ใช้จริงบนเครื่อง (ProfileSetup บันทึก, สวิตช์ในหน้าตั้งค่า, เริ่มวิ่ง)
+ * Skipped: controls that open other apps (camera, gallery, share targets, system settings, permission
+ * dialogs) and controls that change the device's real data or settings.
  */
 @RunWith(AndroidJUnit4::class)
 class TapEverythingTest {
@@ -54,11 +54,11 @@ class TapEverythingTest {
     private var manualId = 0L
 
     private val skip = setOf(
-        "btnCamera", "btnGallery", "photoChip",          // กล้อง / แกลเลอรี
-        "btnShare@Records", "btnShare@ShareImage", "btnSave@ShareImage", "segPhoto@ShareImage",   // ตัวเลือกแชร์ / บันทึกลงแกลเลอรี
-        "cardLocation", "cardActivity", "btnNext@Permissions",                                     // กล่องขอสิทธิ์ของระบบ
-        "btnDone@ProfileSetup", "rowAutoPause", "rowKmAlert", "rowRecreate",                       // เปลี่ยนค่าตั้งของผู้ใช้
-        "fabStart", "btnFirstRun",                                                                 // เริ่มบันทึกการวิ่งจริง (ทดสอบแยกใน RunTrackingServiceTest)
+        "btnCamera", "btnGallery", "photoChip",          // camera / gallery
+        "btnShare@Records", "btnShare@ShareImage", "btnSave@ShareImage", "segPhoto@ShareImage",   // share targets / save to gallery
+        "cardLocation", "cardActivity", "btnNext@Permissions",                                     // system permission dialogs
+        "btnDone@ProfileSetup", "rowAutoPause", "rowKmAlert", "rowRecreate",                       // change the user's settings
+        "fabStart", "btnFirstRun",                                                                 // starts a real recording (covered by RunTrackingServiceTest)
     )
 
     @Before fun setUp() {

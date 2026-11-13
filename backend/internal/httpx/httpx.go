@@ -73,7 +73,7 @@ func fiberCode(status int) string {
 	}
 }
 
-// MaxJSONBody is the largest JSON body accepted after gzip is undone (plan: 5 MB).
+// MaxJSONBody is the largest JSON body accepted after gzip is undone.
 const MaxJSONBody = 5 << 20
 
 // Decode reads the request body (gzip allowed) into v and validates it.

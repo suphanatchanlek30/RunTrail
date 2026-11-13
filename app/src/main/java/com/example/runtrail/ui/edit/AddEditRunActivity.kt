@@ -29,10 +29,8 @@ import java.util.Calendar
 import kotlin.math.roundToInt
 
 /**
- * 12 · Add / Edit Run (MA10 CRUD)
- * - id > 0 → แก้ไข (update) · ไม่มี id → เพิ่มการวิ่งย้อนหลัง (insert)
- * - รูปจากกล้อง (TakePicturePreview) / แกลเลอรี (GetContent) → แก้ทิศ EXIF → ย่อ → JPEG 80%
- * - แก้แค่ข้อความโดยไม่เปลี่ยนรูปได้ · หมุนจอค่าไม่หาย (onSaveInstanceState)
+ * Adds a past run manually, or edits an existing one when started with a run id.
+ * Photos come from the camera or gallery and are processed by [ImageStore].
  */
 class AddEditRunActivity : AppCompatActivity() {
 
@@ -45,17 +43,17 @@ class AddEditRunActivity : AppCompatActivity() {
 
     private var pendingPhoto: java.io.File? = null
 
-    /** รูปที่สร้างขึ้นระหว่างแก้ไขหน้านี้ — ไฟล์ที่ไม่ได้ใช้จะถูกลบตอนออก (ไม่ทิ้งไฟล์ค้าง) */
+    /** Photos created in this session; unused ones are deleted on exit. */
     private val sessionPhotos = mutableListOf<String>()
 
-    /** กล้องแบบเต็มความละเอียดผ่าน FileProvider แล้วย่อ/แก้ทิศตาม EXIF */
+    /** Full-resolution camera capture through FileProvider. */
     private val takePhoto = registerForActivityResult(ActivityResultContracts.TakePicture()) { ok ->
         val file = pendingPhoto
         pendingPhoto = null
         if (ok && file != null) importPhoto(Uri.fromFile(file), deleteAfter = file) else file?.delete()
     }
 
-    /** ย่อ/แก้ทิศรูปบน background thread (รูปจากกล้องอาจใหญ่หลายสิบ MB, AUDIT A3) */
+    /** Processes the photo off the main thread; camera files can be tens of MB. */
     private fun importPhoto(uri: Uri, deleteAfter: java.io.File? = null) {
         toast(getString(R.string.photo_processing))
         runAsync({ ImageStore.saveFromUri(applicationContext, uri).also { deleteAfter?.delete() } }) { r ->
@@ -132,7 +130,7 @@ class AddEditRunActivity : AppCompatActivity() {
             renderPhoto()
             toast(getString(R.string.edit_photo_removed))
         }
-        // การวิ่งที่บันทึกด้วย GPS มีเวลาในทุกจุดอยู่แล้ว จึงแก้วันเวลาไม่ได้ (server ก็ไม่ยอมให้แก้)
+        // GPS runs carry timestamps on every point, so their date cannot be edited (the server rejects it too).
         val dateLocked = editing?.isGps == true
         binding.fieldDate.alpha = if (dateLocked) 0.5f else 1f
         binding.fieldDate.setOnClickListener {
@@ -166,7 +164,6 @@ class AddEditRunActivity : AppCompatActivity() {
         }
     }
 
-    /** ข้อความใต้ดาว: 0 = ยังไม่ให้ · 1–5 = ระดับความรู้สึก */
     private fun renderFeel() {
         binding.tvFeel.text = feelLabel(this, binding.ratingFeel.rating.toInt())
     }
@@ -200,13 +197,13 @@ class AddEditRunActivity : AppCompatActivity() {
             return
         }
         val note = binding.etNote.text.toString().trim().ifEmpty { null }
-        val feel = binding.ratingFeel.rating.toInt()          // RatingBar.getRating() คืน float → ปัดเป็นจำนวนดาว
+        val feel = binding.ratingFeel.rating.toInt()
         val current = editing
         if (current != null) {
             val photoSync = when {
                 !photoChanged -> current.photoSync
                 photoPath != null -> com.example.runtrail.data.PhotoSync.PENDING
-                // ลบรูปที่ขึ้น server แล้ว → ให้ SyncEngine ส่งคำสั่งลบรูป (AUDIT A9)
+                // Photo removed after it was uploaded: let sync delete it on the server.
                 current.onServer && current.photoSync == com.example.runtrail.data.PhotoSync.SYNCED ->
                     com.example.runtrail.data.PhotoSync.DELETE
                 else -> com.example.runtrail.data.PhotoSync.NONE
@@ -216,7 +213,7 @@ class AddEditRunActivity : AppCompatActivity() {
             RunRepository.update(current.copy(title = title, note = note, feel = feel, startTime = startTime, photoUri = photoPath,
                 endTime = current.endTime?.let { it + (startTime - current.startTime) }, photoSync = photoSync))
             com.example.runtrail.sync.SyncManager.requestSync(this)
-            setResult(RESULT_OK)          // MA10: บอกหน้าที่เปิดมาว่าบันทึกแล้ว (หน้ารายละเอียดจะโหลดใหม่)
+            setResult(RESULT_OK)
             toast(getString(R.string.toast_saved))
             finish()
             return
@@ -269,7 +266,7 @@ class AddEditRunActivity : AppCompatActivity() {
         ) { cleanupSessionPhotos(keep = null); finish() }
     }
 
-    /** ลบรูปที่ถ่าย/เลือกในหน้านี้แต่ไม่ได้ใช้ */
+    /** Deletes photos taken in this session except [keep]. */
     private fun cleanupSessionPhotos(keep: String?) {
         sessionPhotos.filter { it != keep }.forEach { ImageStore.delete(this, it) }
         sessionPhotos.clear()
@@ -285,7 +282,7 @@ class AddEditRunActivity : AppCompatActivity() {
     }
 
     companion object {
-        /** คำอธิบายระดับความรู้สึก (ใช้ทั้งหน้านี้และหน้าสรุปผล) */
+        /** Label for a 0–5 star rating; also used on the detail screen. */
         fun feelLabel(context: android.content.Context, stars: Int): String = context.getString(
             when (stars) {
                 1 -> R.string.feel_1

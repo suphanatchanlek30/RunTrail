@@ -14,9 +14,7 @@ import com.example.runtrail.databinding.DialogDeleteBinding
 import com.example.runtrail.databinding.DialogRecoverBinding
 import com.example.runtrail.domain.Fmt
 
-/**
- * Dialog แบบกำหนดหน้าตาเอง (ตาม Figma) — 18 กู้การวิ่งที่ค้าง · 19 ยืนยันการลบ
- */
+/** Custom-styled dialogs: recover an unfinished run and confirm deletion. */
 object Dialogs {
 
     private fun create(context: Context, view: View, cancelable: Boolean = true): Dialog =
@@ -30,7 +28,7 @@ object Dialogs {
             )
         }
 
-    /** 19 · ยืนยันการลบ — onDelete(ลบจากเซิร์ฟเวอร์ด้วยไหม) */
+    /** Confirms deleting [run]; [onDelete] receives whether to delete it from the server too. */
     fun confirmDelete(context: Context, run: Run, onDelete: (alsoServer: Boolean) -> Unit) {
         val b = DialogDeleteBinding.inflate(LayoutInflater.from(context))
         val dialog = create(context, b.root)
@@ -41,9 +39,8 @@ object Dialogs {
         )
         val synced = run.onServer
         b.rowServer.visibility = if (synced) View.VISIBLE else View.GONE
-        b.checkServer.buttonTintList = null          // ใช้สีของ drawable เอง (ไม่ให้ธีม Material ย้อมสีทับ)
+        b.checkServer.buttonTintList = null          // keep the drawable's own colours
         b.checkServer.isChecked = synced
-        // แถวทั้งแถวกดได้ (เป้ากดใหญ่) → สลับ CheckBox · อ่านค่าด้วย isChecked ตอนกดลบ
         b.rowServer.setOnClickListener { b.checkServer.toggle() }
         b.btnCancel.setOnClickListener { dialog.dismiss() }
         b.btnDelete.setOnClickListener {
@@ -53,7 +50,7 @@ object Dialogs {
         dialog.show()
     }
 
-    /** 18 · พบการวิ่งที่ยังไม่จบ */
+    /** Offers to resume, save or discard an unfinished run found at startup. */
     fun recoverRun(
         context: Context,
         draft: Run,

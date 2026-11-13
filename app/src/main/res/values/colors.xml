@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- โทนสีจาก Figma "COLOR SYSTEM" : ขาว · เขียว · เทา · ดำ -->
+<!-- Palette: white, green, grey, black -->
 <resources>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
@@ -33,7 +33,7 @@
     <color name="divider">#EEF0F3</color>
     <color name="grabber">#D0D5DD</color>
 
-    <!-- pace/* (สีเส้นทางบนแผนที่) -->
+    <!-- pace/* (route colours) -->
     <color name="pace_fast">#0EDA62</color>
     <color name="pace_steady">#A3E635</color>
     <color name="pace_moderate">#F5B83D</color>
@@ -59,11 +59,11 @@
 
     <color name="scrim">#8C0F1412</color>
 
-    <!-- พื้นผิวสีเข้มของการ์ด/ปุ่ม (กลางวัน = Ink · กลางคืนยกให้สว่างขึ้นเล็กน้อยเพื่อแยกจากพื้นหลัง) -->
+    <!-- Dark card/button fill; lighter at night to separate it from the background -->
     <color name="ink_fill">#0F1412</color>
     <color name="ink_fill_2">#1C2420</color>
     <color name="ink_fill_3">#2B3530</color>
-    <!-- สีเส้นของไอคอน (กลางวันเข้ม · กลางคืนสว่าง) -->
+    <!-- Icon stroke colour (dark by day, light at night) -->
     <color name="icon_ink">#0F1412</color>
     <color name="btn_primary_off">#B8EED3</color>
 </resources>

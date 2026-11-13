@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 20 · เข้าสู่ระบบ (ใช้งานแบบออฟไลน์ก่อนได้) -->
+<!-- Sign in, or continue offline as a guest -->
 <ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/root"

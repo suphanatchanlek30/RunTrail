@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 15 · History (+ 19 · Delete Confirmation เมื่อกดค้างที่การ์ด) -->
+<!-- Run history; long-press a card to delete -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -80,7 +80,7 @@
                 app:tint="@color/text_tertiary" />
         </LinearLayout>
 
-        <!-- ตัวกรอง (ชิป) + เรียงลำดับ (MA08 Spinner) -->
+        <!-- Filter chips + sort spinner -->
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"

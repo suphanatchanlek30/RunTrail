@@ -7,17 +7,17 @@ import org.junit.Test
 class UnitsTest {
 
     @Test fun weeklyGoalIsAlwaysKilometres() {
-        // AUDIT A6: เป้า 20 ต้องเป็น 20 กม. (20,000 ม.) ทั้งโหมด กม. และไมล์ — server ก็ถือเป็น กม.
+        // A goal of 20 is 20 km in both unit modes; the server also stores km.
         assertEquals(20_000.0, Units.goalMeters(20), 0.0)
         assertEquals("20", Units.goalText(20, miles = false))
         assertEquals("12.4", Units.goalText(20, miles = true))
-        // วิ่ง 10 กม. จากเป้า 20 กม. = 50% ไม่ว่าแสดงหน่วยอะไร
+        // 10 km of a 20 km goal is 50% regardless of display unit.
         assertEquals(50, Units.goalPercent(10_000.0, 20))
         assertEquals(0, Units.goalPercent(10_000.0, 0))
     }
 
     @Test fun axisMarksFollowTheSelectedUnit() {
-        // AUDIT A8: 10 กม. = 6.21 ไมล์ → แกนไมล์ต้องจบที่ 7 ไม่ใช่ 10
+        // 10 km = 6.21 mi, so the mile axis ends at 7, not 10.
         assertEquals(listOf(0, 2, 4, 6, 7), Units.axisMarks(10_000.0, miles = true))
         assertEquals(listOf(0, 2, 4, 6, 8, 10), Units.axisMarks(10_000.0, miles = false))
         assertEquals(listOf(0, 1, 2, 3, 4, 5), Units.axisMarks(5_000.0, miles = false))

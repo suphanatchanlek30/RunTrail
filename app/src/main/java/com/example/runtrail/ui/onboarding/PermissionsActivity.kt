@@ -15,9 +15,7 @@ import com.example.runtrail.ui.common.applySystemBarsPadding
 import com.example.runtrail.ui.common.setupEdgeToEdge
 import com.example.runtrail.ui.common.toast
 
-/**
- * 02 · Permissions — อธิบายเหตุผลก่อนขอ runtime permission (ตำแหน่ง · กิจกรรมทางกาย · แจ้งเตือน)
- */
+/** Explains and requests location, activity recognition and notification permissions. */
 class PermissionsActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityPermissionsBinding
@@ -95,7 +93,7 @@ class PermissionsActivity : AppCompatActivity() {
     private fun has(permission: String) =
         ContextCompat.checkSelfPermission(this, permission) == PackageManager.PERMISSION_GRANTED
 
-    /** ถัดไป: ยังไม่ล็อกอิน → หน้าเข้าสู่ระบบ (เลือกใช้แบบออฟไลน์ได้) · ล็อกอินแล้ว → หน้าโปรไฟล์ */
+    /** Continues to sign-in when signed out, otherwise to profile setup. */
     private fun openProfile() {
         if (com.example.runtrail.data.Accounts.isLoggedIn) {
             startActivity(Intent(this, ProfileSetupActivity::class.java))

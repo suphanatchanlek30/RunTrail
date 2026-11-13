@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Component styles (ปุ่ม การ์ด ชิป) ตามชุด Components ใน Figma -->
+<!-- Component styles: buttons, cards, chips, fields -->
 <resources>
 
-    <!-- ปุ่มหลักสีเขียว สูง 54 -->
+    <!-- Primary green button, 54 dp -->
     <style name="Btn">
         <item name="android:layout_height">@dimen/button_height</item>
         <item name="android:gravity">center</item>
@@ -42,7 +42,7 @@
         <item name="android:textColor">@color/text_tertiary</item>
     </style>
 
-    <!-- ปุ่มเล็กสีดำ เช่น "อนุญาต" / "คัดลอก" -->
+    <!-- Small black button, e.g. "Allow" or "Copy" -->
     <style name="Btn.SmallDark">
         <item name="android:layout_height">@dimen/button_height_small</item>
         <item name="android:paddingStart">@dimen/space_14</item>
@@ -53,7 +53,7 @@
         <item name="android:fontFamily">@font/plex_medium</item>
     </style>
 
-    <!-- IconButton วงกลม 44 -->
+    <!-- Round 44 dp icon button -->
     <style name="IconBtn">
         <item name="android:layout_width">@dimen/icon_button_size</item>
         <item name="android:layout_height">@dimen/icon_button_size</item>
@@ -74,7 +74,7 @@
         <item name="android:background">@drawable/bg_circle_canvas</item>
     </style>
 
-    <!-- IconChip สี่เหลี่ยมมุมมน + ไอคอน -->
+    <!-- Rounded square with an icon -->
     <style name="IconChip">
         <item name="android:layout_width">@dimen/icon_chip_size</item>
         <item name="android:layout_height">@dimen/icon_chip_size</item>
@@ -99,7 +99,7 @@
         <item name="tint">@color/text_primary</item>
     </style>
 
-    <!-- ชิปตัวกรอง/ตัวเลือก (เลือกอยู่ = ดำ) -->
+    <!-- Filter/option chip; black when selected -->
     <style name="ChipToggle">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">@dimen/chip_height</item>
@@ -130,13 +130,13 @@
         <item name="android:focusable">true</item>
     </style>
 
-    <!-- Toggle 46×28 (วาดเองใน ToggleSwitch) -->
+    <!-- 46×28 toggle (drawn by ToggleSwitch) -->
     <style name="Toggle">
         <item name="android:layout_width">46dp</item>
         <item name="android:layout_height">28dp</item>
     </style>
 
-    <!-- ช่องกรอก -->
+    <!-- Text field -->
     <style name="Field">
         <item name="android:layout_height">@dimen/field_height</item>
         <item name="android:background">@drawable/bg_field</item>
@@ -155,7 +155,7 @@
         <item name="android:layout_marginBottom">@dimen/space_6</item>
     </style>
 
-    <!-- Pill ป้ายสถานะ -->
+    <!-- Status pill -->
     <style name="Pill" parent="Txt.LabelS">
         <item name="android:layout_width">wrap_content</item>
         <item name="android:layout_height">@dimen/pill_height</item>
@@ -165,8 +165,7 @@
         <item name="android:drawablePadding">@dimen/space_6</item>
     </style>
 
-    <!-- เส้นคั่น -->
-    <!-- CheckBox เลือกวันเตือนไปวิ่ง (GridLayout 4 คอลัมน์ กว้างเท่ากัน) -->
+    <!-- Reminder day checkbox (4 equal columns in a GridLayout) -->
     <style name="DayCheck">
         <item name="android:layout_width">0dp</item>
         <item name="android:layout_height">wrap_content</item>
@@ -184,7 +183,7 @@
         <item name="android:background">@color/divider</item>
     </style>
 
-    <!-- Bottom navigation 4 แท็บ: หน้าหลัก · ประวัติ · สถิติ · ตั้งค่า -->
+    <!-- Bottom navigation -->
     <style name="Widget.RunTrail.BottomNav" parent="Widget.Material3.BottomNavigationView">
         <item name="backgroundTint">@color/bg_surface</item>
         <item name="itemIconTint">@color/nav_icon</item>
@@ -219,7 +218,7 @@
         <item name="fontFamily">@font/plex_semibold</item>
     </style>
 
-    <!-- SeekBar / Slider: track 6 · thumb วงกลมขาวขอบเขียว -->
+    <!-- SeekBar: 6 dp track, white thumb with a green ring -->
     <style name="Seek">
         <item name="android:progressDrawable">@drawable/progress_light</item>
         <item name="android:thumb">@drawable/seek_thumb</item>

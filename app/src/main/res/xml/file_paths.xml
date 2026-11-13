@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- ไฟล์ชั่วคราวที่ให้แอปกล้องเขียนรูปเต็มความละเอียด -->
+<!-- Temporary files the camera app writes full-size photos to -->
 <paths>
     <cache-path name="camera" path="camera/" />
-    <!-- ภาพแชร์ที่ส่งต่อไปแอปอื่น -->
+    <!-- Share images sent to other apps -->
     <cache-path name="share" path="share/" />
 </paths>

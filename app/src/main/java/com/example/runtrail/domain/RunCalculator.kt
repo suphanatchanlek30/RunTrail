@@ -4,20 +4,18 @@ import com.example.runtrail.data.PersonalRecord
 import com.example.runtrail.data.Run
 import kotlin.math.roundToInt
 
-/**
- * สูตรคำนวณ (ฟังก์ชันล้วน ไม่ผูก Android)
- */
+/** Pace, calorie and personal-record calculations. */
 object RunCalculator {
 
-    /** เพซ วินาทีต่อกม. */
+    /** Pace in seconds per km. */
     fun paceSecPerKm(movingTimeS: Long, distanceM: Double): Double =
         if (distanceM <= 0) 0.0 else movingTimeS / (distanceM / 1000.0)
 
     fun pace(run: Run): Double = paceSecPerKm(run.movingTimeS, run.distanceM)
 
     /**
-     * แคลอรี่ = MET × น้ำหนัก(กก.) × ชั่วโมง
-     * MET จากสมการ ACSM: VO2 = 0.2 × ความเร็ว(ม./นาที) + 3.5 → MET = VO2 / 3.5
+     * Calories = MET × weight (kg) × hours.
+     * MET from the ACSM running equation: VO2 = 0.2 × speed (m/min) + 3.5, MET = VO2 / 3.5.
      */
     fun calories(distanceM: Double, movingTimeS: Long, weightKg: Int): Double {
         if (movingTimeS <= 0) return 0.0
@@ -26,12 +24,12 @@ object RunCalculator {
         return met * weightKg * (movingTimeS / 3600.0)
     }
 
-    /** สถิติดีที่สุดจากทุกการวิ่ง */
+    /** Personal bests across [runs]. */
     fun records(runs: List<Run>, now: Long = System.currentTimeMillis(), miles: Boolean = false): List<PersonalRecord> {
         val recent = now - 7 * Periods.DAY_MS
         val out = mutableListOf<PersonalRecord>()
 
-        // 1 กม. เร็วสุด = split ที่เร็วที่สุด
+        // Fastest 1 km is the fastest split.
         var best1: Pair<Int, Run>? = null
         runs.forEach { run ->
             run.splits.filter { it.km <= run.distanceM / 1000.0 }.forEach { s ->
@@ -61,7 +59,7 @@ object RunCalculator {
         return out
     }
 
-    /** การวิ่งนี้ทำสถิติใหม่ไหม (ใช้กับป้าย "สถิติใหม่ 5 กม.") */
+    /** Label for a personal best set by [run] (e.g. "New 5 km record"), or null. */
     fun newRecordLabel(run: Run, all: List<Run>): String? {
         for (km in listOf(10.0, 5.0)) {
             if (run.distanceM < km * 1000) continue

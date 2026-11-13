@@ -9,12 +9,10 @@ import kotlin.math.hypot
 import kotlin.math.sqrt
 
 /**
- * ระยะที่บันทึกได้ เทียบระยะจริง เมื่อ GPS มีสัญญาณรบกวน — ใช้วัดผลก่อน/หลังเพิ่ม PositionSmoother
+ * Recorded vs true distance under simulated GPS noise, with and without [PositionSmoother].
  *
- * แบบจำลองความคลาดเคลื่อน:
- *  - realistic: ค่าคลาดเคลื่อนของชิป GPS ค่อย ๆ เลื่อน (AR(1), ρ = 0.95) — ใกล้ของจริง
- *  - white:     คลาดแบบสุ่มอิสระทุกวินาที — กรณีแย่สุด
- * เส้นทาง: เส้นตรง และวนรอบบล็อก 100 × 60 ม. (เลี้ยว 90° บ่อย → เห็นผลการตัดมุม)
+ * Noise models: "realistic" drifts like a real receiver (AR(1), ρ = 0.95); "white" is independent
+ * per second (worst case). Routes: a straight line and a 100 × 60 m block with frequent 90° turns.
  */
 class GpsNoiseDistanceTest {
 
@@ -33,7 +31,7 @@ class GpsNoiseDistanceTest {
         return 0.0 to 0.0
     }
 
-    /** คืน ระยะที่บันทึก ÷ ระยะจริง */
+    /** Returns recorded distance ÷ true distance. */
     fun simulate(speed: Double, sigma: Double, rho: Double, square: Boolean, smoother: PositionSmoother?, seed: Long, seconds: Int = 600): Double {
         val rnd = Random(seed)
         val state = LiveRunState(startTime = 0, smoother = smoother)
@@ -52,7 +50,7 @@ class GpsNoiseDistanceTest {
 
     private fun avg(f: (Long) -> Double) = (1L..5L).map(f).average()
 
-    /** ค่าที่ใช้จริงต้องคลาดไม่เกิน ±8 % (สมจริง) และ ±12 % (กรณีแย่สุด) ทุกสถานการณ์ · ไม่มีตัวกรองต้องแย่กว่าชัดเจน */
+    /** The recording settings stay within ±8% (realistic) and ±12% (worst case); no filter is clearly worse. */
     @Test fun recordingSmootherKeepsDistanceClose() {
         for (square in listOf(false, true)) for (speed in listOf(1.4, 3.0)) for (sigma in listOf(2.0, 4.0, 7.0)) {
             val realistic = avg { simulate(speed, sigma, 0.95, square, PositionSmoother.forRecording(), it) }
@@ -61,7 +59,7 @@ class GpsNoiseDistanceTest {
             assertTrue("$tag realistic $realistic", realistic in 0.92..1.08)
             assertTrue("$tag white $white", white in 0.90..1.12)
         }
-        // อ้างอิง: เดินกับ GPS แย่ ไม่มีตัวกรอง นับเกินจริงเกิน 20 %
+        // Baseline: walking with poor GPS and no filter over-counts by more than 20%.
         assertTrue(avg { simulate(1.4, 7.0, 0.95, false, null, it) } > 1.2)
     }
 

@@ -5,18 +5,17 @@ import kotlin.math.cos
 import kotlin.math.sqrt
 
 /**
- * ลดการสั่นของตำแหน่ง GPS ก่อนนำไปคิดระยะ (Kalman filter แบบตำแหน่งคงที่ + ความไม่แน่นอนที่โตตามเวลา)
+ * Kalman filter that smooths GPS positions before distance is measured.
  *
- * - จุดที่ GPS บอกว่าแม่นยำ (accuracy เล็ก) มีน้ำหนักมาก · จุดที่คลาดมากแทบไม่ดึงตำแหน่ง
- * - ความไม่แน่นอนโตขึ้น [processNoiseMps]² ต่อวินาที จึงตามคนวิ่งทัน และหลังหยุด/สัญญาณหายจะกระโดดไปตำแหน่งใหม่ได้เอง
- * - ทำงานเป็นเมตร (เหนือ/ตะวันออก) รอบจุดอ้างอิงแรก
+ * Accurate fixes pull the estimate strongly and noisy ones barely move it. Uncertainty grows by
+ * [processNoiseMps]² per second, so the estimate keeps up with a runner and recovers after gaps.
+ * Works in metres (north/east) around the first fix.
  *
- * เหตุผล: สัญญาณรบกวน ±4–7 ม. ทำให้การเดินถูกนับระยะเกินจริง 12–30 % (GpsNoiseDistanceTest)
- * ค่าที่ใช้จริง [forRecording]: ปรับตามความเร็ว ×1.5 → คลาดไม่เกิน −7 %…+4 % กับสัญญาณแบบสมจริง
+ * Without it, ±4–7 m noise inflates walking distance by 12–30% (see GpsNoiseDistanceTest).
  */
 class PositionSmoother(
     private val processNoiseMps: Double = DEFAULT_PROCESS_NOISE,
-    /** > 0 = ปรับตามความเร็วที่ GPS วัดได้ (Doppler): q = speed × ค่านี้ ในช่วง [MIN_Q, MAX_Q] */
+    /** When > 0, process noise follows GPS speed: q = speed × factor, clamped to [MIN_Q, MAX_Q]. */
     private val speedFactor: Double = 0.0,
 ) {
 
@@ -25,12 +24,12 @@ class PositionSmoother(
     private var kLng = 1.0
     private var n = 0.0
     private var e = 0.0
-    private var variance = -1.0     // < 0 = ยังไม่มีจุด
+    private var variance = -1.0     // < 0 until the first fix
     private var lastTime = 0L
 
     fun reset() { variance = -1.0 }
 
-    /** คืนจุดที่ปรับแล้ว (เวลา ความสูง และความแม่นยำเดิม) */
+    /** Returns the smoothed point; time, altitude and accuracy are kept. */
     fun update(p: TrackPoint, speedMps: Float? = null): TrackPoint {
         val acc = p.accuracy.toDouble().coerceAtLeast(MIN_ACCURACY)
         if (variance < 0) {
@@ -55,11 +54,11 @@ class PositionSmoother(
         return p.copy(lat = lat0 + n / METERS_PER_DEG, lng = lng0 + e / kLng)
     }
 
-    /** ความไม่แน่นอนปัจจุบัน (เมตร) */
+    /** Current position uncertainty in metres. */
     val uncertaintyM: Double get() = if (variance < 0) Double.NaN else sqrt(variance)
 
     companion object {
-        /** ค่าที่หน้าวิ่งใช้จริง (เลือกจากการวัดใน GpsNoiseDistanceTest) */
+        /** Settings used while recording, tuned in GpsNoiseDistanceTest. */
         fun forRecording() = PositionSmoother(speedFactor = 1.5)
 
         const val DEFAULT_PROCESS_NOISE = 3.0

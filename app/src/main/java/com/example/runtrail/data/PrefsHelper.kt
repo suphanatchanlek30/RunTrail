@@ -5,9 +5,7 @@ import android.content.SharedPreferences
 import androidx.core.content.edit
 import com.example.runtrail.BuildConfig
 
-/**
- * ค่าตั้งค่าและโปรไฟล์ทั้งหมด (MA09 SharedPreferences)
- */
+/** User profile and app settings backed by SharedPreferences. */
 class PrefsHelper(context: Context, name: String = PREFS_NAME) {
 
     private val prefs: SharedPreferences =
@@ -25,7 +23,6 @@ class PrefsHelper(context: Context, name: String = PREFS_NAME) {
         get() = prefs.getString(KEY_LAST, "") ?: ""
         set(value) = prefs.edit { putString(KEY_LAST, value.trim()); putBoolean(KEY_PROFILE_DIRTY, true) }
 
-    /** ชื่อ-นามสกุลเต็ม */
     val name: String get() = "$firstNameValue $lastName".trim()
 
     var weightKg: Int
@@ -40,7 +37,7 @@ class PrefsHelper(context: Context, name: String = PREFS_NAME) {
         get() = prefs.getInt(KEY_AGE, 21)
         set(value) = prefs.edit { putInt(KEY_AGE, value); putBoolean(KEY_PROFILE_DIRTY, true) }
 
-    /** true = ไมล์, false = กม. */
+    /** true = miles, false = kilometres. */
     var useMiles: Boolean
         get() = prefs.getBoolean(KEY_MILES, false)
         set(value) = prefs.edit { putBoolean(KEY_MILES, value); putBoolean(KEY_PROFILE_DIRTY, true) }
@@ -49,15 +46,12 @@ class PrefsHelper(context: Context, name: String = PREFS_NAME) {
         get() = prefs.getInt(KEY_GOAL, 20)
         set(value) = prefs.edit { putInt(KEY_GOAL, value); putBoolean(KEY_PROFILE_DIRTY, true) }
 
-    /** เพซเป้าหมาย วินาที/กม. */
+    /** Target pace in seconds per km. */
     var targetPaceSec: Int
         get() = prefs.getInt(KEY_TARGET_PACE, 6 * 60)
         set(value) = prefs.edit { putInt(KEY_TARGET_PACE, value); putBoolean(KEY_PROFILE_DIRTY, true) }
 
-    /**
-     * ธีมของแอป (CS364 เกณฑ์ 3.4) — ค่าตาม AppCompatDelegate:
-     * MODE_NIGHT_FOLLOW_SYSTEM (-1) · MODE_NIGHT_NO (1, Day) · MODE_NIGHT_YES (2, Night)
-     */
+    /** AppCompatDelegate night mode: FOLLOW_SYSTEM (-1), NO (1) or YES (2). */
     var themeMode: Int
         get() = prefs.getInt(KEY_THEME_MODE, -1)
         set(value) = prefs.edit { putInt(KEY_THEME_MODE, value) }
@@ -70,10 +64,7 @@ class PrefsHelper(context: Context, name: String = PREFS_NAME) {
         get() = prefs.getBoolean(KEY_KM_ALERT, true)
         set(value) = prefs.edit { putBoolean(KEY_KM_ALERT, value) }
 
-    /**
-     * ที่อยู่ backend แบบเต็ม เช่น http://10.0.2.2:8080
-     * (เวอร์ชันก่อนเก็บแค่ host เช่น "10.0.2.2" → แปลงให้อัตโนมัติ)
-     */
+    /** Backend base URL, e.g. http://10.0.2.2:8080. Migrates the legacy host-only setting. */
     var apiUrl: String
         get() {
             prefs.getString(KEY_API_URL, null)?.let { return it }
@@ -82,15 +73,12 @@ class PrefsHelper(context: Context, name: String = PREFS_NAME) {
         }
         set(value) = prefs.edit { putString(KEY_API_URL, value.trim().trimEnd('/')); remove(KEY_SERVER) }
 
-    /**
-     * บัญชีเจ้าของข้อมูลในเครื่อง — คงอยู่จนกว่าจะกดออกจากระบบ
-     * (ถ้า token หมดอายุ ผู้ใช้ยังเห็นการวิ่งของตัวเองได้ แค่ซิงก์ไม่ได้จนกว่าจะล็อกอินใหม่)
-     */
+    /** Account that owns the local data. Kept after the session expires so the user still sees their runs. */
     var accountUserId: String?
         get() = prefs.getString(KEY_ACCOUNT, null)
         set(value) = prefs.edit { putString(KEY_ACCOUNT, value) }
 
-    /** โปรไฟล์ถูกแก้ในเครื่องและยังไม่ได้ส่งขึ้น server */
+    /** Local profile edits not yet pushed to the server. */
     var profileDirty: Boolean
         get() = prefs.getBoolean(KEY_PROFILE_DIRTY, false)
         set(value) = prefs.edit { putBoolean(KEY_PROFILE_DIRTY, value) }
@@ -103,7 +91,7 @@ class PrefsHelper(context: Context, name: String = PREFS_NAME) {
         get() = prefs.getString(KEY_COUNTRY, "TH") ?: "TH"
         set(value) = prefs.edit { putString(KEY_COUNTRY, value); putBoolean(KEY_PROFILE_DIRTY, true) }
 
-    /** server_time ที่ได้จากการดึงข้อมูลครั้งล่าสุด (ใช้เป็น updated_since รอบหน้า) */
+    /** Server time of the last pull, sent as `updated_since` next time. */
     var lastPull: String?
         get() = prefs.getString(KEY_LAST_PULL, null)
         set(value) = prefs.edit { putString(KEY_LAST_PULL, value) }
@@ -116,12 +104,12 @@ class PrefsHelper(context: Context, name: String = PREFS_NAME) {
         get() = prefs.getString(KEY_LAST_SYNC_ERROR, null)
         set(value) = prefs.edit { putString(KEY_LAST_SYNC_ERROR, value) }
 
-    /** แจ้งเตือนข่าวสาร (สถิติใหม่ ถึงเป้า มีคนแซง มีคนดูลิงก์) ในแถบแจ้งเตือนของเครื่อง */
+    /** Show server notifications (records, goals, rank changes, link views) in the system tray. */
     var updatesAlert: Boolean
         get() = prefs.getBoolean(KEY_UPDATES_ALERT, true)
         set(value) = prefs.edit { putBoolean(KEY_UPDATES_ALERT, value) }
 
-    /** รายการแจ้งเตือนล่าสุดจาก server (JSON) สำหรับแสดงตอนออฟไลน์ */
+    /** Last notifications page (JSON) for offline display. */
     var notificationsCache: String?
         get() = prefs.getString(KEY_NOTIF_CACHE, null)
         set(value) = prefs.edit { putString(KEY_NOTIF_CACHE, value) }
@@ -130,12 +118,12 @@ class PrefsHelper(context: Context, name: String = PREFS_NAME) {
         get() = prefs.getInt(KEY_NOTIF_UNREAD, 0)
         set(value) = prefs.edit { putInt(KEY_NOTIF_UNREAD, value) }
 
-    /** id ของการแจ้งเตือนที่เคยขึ้นในแถบแจ้งเตือนแล้ว (กันเด้งซ้ำ) */
+    /** Notification ids already shown in the tray, to avoid duplicates. */
     var notifiedIds: Set<String>
         get() = prefs.getStringSet(KEY_NOTIFIED, emptySet()) ?: emptySet()
         set(value) = prefs.edit { putStringSet(KEY_NOTIFIED, value.toSet()) }
 
-    // ---------------- เตือนไปวิ่ง (MA13: AlarmManager) — ค่าของเครื่องนี้ ไม่ล้างตอนออกจากระบบ
+    // ---------------- Run reminder (device setting, kept on sign-out)
 
     var reminderEnabled: Boolean
         get() = prefs.getBoolean(KEY_REMINDER_ON, false)
@@ -149,16 +137,16 @@ class PrefsHelper(context: Context, name: String = PREFS_NAME) {
         get() = prefs.getInt(KEY_REMINDER_MINUTE, 0)
         set(value) = prefs.edit { putInt(KEY_REMINDER_MINUTE, value) }
 
-    /** วันที่เตือน: bitmask ตาม ReminderTime (bit 0 = อาทิตย์ … bit 6 = เสาร์) */
+    /** Reminder days as a [com.example.runtrail.domain.ReminderTime] bitmask (bit 0 = Sunday). */
     var reminderDays: Int
         get() = prefs.getInt(KEY_REMINDER_DAYS, com.example.runtrail.domain.ReminderTime.ALL_DAYS)
         set(value) = prefs.edit { putInt(KEY_REMINDER_DAYS, value) }
 
-    /** ผลอันดับโลกล่าสุด (JSON) เก็บไว้แสดงตอนออฟไลน์ */
+    /** Last leaderboard response (JSON) per filter, for offline display. */
     fun leaderboardCache(key: String): String? = prefs.getString("lb_$key", null)
     fun saveLeaderboardCache(key: String, json: String) = prefs.edit { putString("lb_$key", json) }
 
-    /** ใส่ค่าโปรไฟล์จาก server (ไม่นับเป็นการแก้ในเครื่อง) */
+    /** Stores the server profile without marking it as a local edit. */
     fun applyServerProfile(first: String?, last: String?, weight: Int?, height: Int?, birthYear: Int?,
                            miles: Boolean, goal: Int, pace: Int, optIn: Boolean, country: String?) {
         prefs.edit {
@@ -174,7 +162,7 @@ class PrefsHelper(context: Context, name: String = PREFS_NAME) {
         }
     }
 
-    /** ออกจากระบบ: ล้างข้อมูลส่วนตัวและสถานะซิงก์ (ค่าตั้งค่าเครื่อง เช่น ที่อยู่ server ยังอยู่) */
+    /** Clears personal and sync data on sign-out; device settings such as the server URL stay. */
     fun clearAccountData() {
         prefs.edit {
             listOf(KEY_FIRST, KEY_LAST, KEY_WEIGHT, KEY_HEIGHT, KEY_AGE, KEY_LAST_PULL, KEY_LAST_SYNC_AT,
@@ -188,7 +176,7 @@ class PrefsHelper(context: Context, name: String = PREFS_NAME) {
         get() = prefs.getInt(KEY_RECREATE, 0)
         set(value) = prefs.edit { putInt(KEY_RECREATE, value) }
 
-    /** ชื่อเล่นสำหรับทักทาย (คำแรกของชื่อ) */
+    /** First name for greetings, or a generic fallback. */
     val firstName: String get() = firstNameValue.ifEmpty { com.example.runtrail.domain.Lang.t("นักวิ่ง", "Runner") }
 
     val initial: String get() = firstName.take(1)

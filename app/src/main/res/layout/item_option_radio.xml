@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    แถวตัวเลือกแบบรายการ (MA08 RadioButton) — อยู่ใน RadioGroup จึงเลือกได้ทีละ 1 ค่า
-    ชื่อ + คำอธิบายใส่เป็นข้อความ 2 บรรทัด · วงกลมเลือกอยู่ด้านขวา (drawableEnd แทน button)
--->
+<!-- Single-choice row inside a RadioGroup: label and hint as two lines, indicator on the right -->
 <RadioButton xmlns:android="http://schemas.android.com/apk/res/android"
     style="@style/Txt.LabelL"
     android:layout_width="match_parent"

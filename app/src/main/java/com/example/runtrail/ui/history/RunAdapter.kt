@@ -16,9 +16,7 @@ import com.example.runtrail.ui.common.dp
 import com.example.runtrail.ui.common.setStartIcon
 import java.util.Calendar
 
-/**
- * RecyclerView.Adapter ของหน้าประวัติ (MA10) — มี 2 แบบ: หัวรายเดือน และการ์ดการวิ่ง
- */
+/** History list adapter with two row types: month headers and run cards. */
 class RunAdapter(
     private val onClick: (Run) -> Unit,
     private val onLongClick: (Run) -> Unit,
@@ -46,7 +44,7 @@ class RunAdapter(
         } else {
             runs.forEach { out += Row.Item(it) }
         }
-        // อัปเดตเฉพาะแถวที่เปลี่ยน (เดิม notifyDataSetChanged ผูกการ์ดใหม่ทั้งหมดทุกตัวอักษรที่พิมพ์, AUDIT P3)
+        // Diff so typing in search only rebinds the rows that changed.
         val old = rows
         val diff = DiffUtil.calculateDiff(object : DiffUtil.Callback() {
             override fun getOldListSize() = old.size

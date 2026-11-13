@@ -1,9 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    Shared dimensions. Values were moved here unchanged from layouts, styles and drawables
-    (every token is used at least twice, or is the size a component style defines).
-    One-off sizes stay in their layout on purpose.
--->
+<!-- Shared dimensions. Only values used in more than one place live here; one-off sizes stay in their layout. -->
 <resources>
 
     <!-- Spacing — margins and padding (4 dp scale; numbered names sit between scale steps) -->

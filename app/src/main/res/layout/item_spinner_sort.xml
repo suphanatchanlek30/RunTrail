@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Spinner เรียงลำดับ (ตอนปิด) — หน้าตาเหมือนชิป + ลูกศรลง · ตอนเปิดรายการใช้ item_dropdown
-     clickable=false: ให้ Spinner รับการแตะเอง (สไตล์ชิปตั้ง clickable=true ไว้) -->
+<!-- Closed sort spinner styled as a chip; not clickable itself so the Spinner receives the tap -->
 <TextView xmlns:android="http://schemas.android.com/apk/res/android"
     style="@style/ChipToggle"
     android:layout_width="wrap_content"

@@ -4,7 +4,7 @@ import android.app.Activity
 import com.example.runtrail.App
 import com.example.runtrail.R
 
-/** แก้ที่อยู่ backend (ใช้ทั้งหน้าเข้าสู่ระบบและหน้าตั้งค่า) */
+/** Dialog to change the backend address, used on sign-in and in settings. */
 fun Activity.editServerUrl(onSaved: () -> Unit) {
     val prefs = App.services.prefs
     Sheets.input(
@@ -19,13 +19,13 @@ fun Activity.editServerUrl(onSaved: () -> Unit) {
         if (url.trimEnd('/') == current) return@input
         if (!com.example.runtrail.data.Accounts.isLoggedIn) {
             prefs.apiUrl = url
-            prefs.lastPull = null   // เปลี่ยน server → ดึงข้อมูลใหม่ทั้งหมด
+            prefs.lastPull = null   // new server: pull everything again
             toast(getString(R.string.toast_saved))
             onSaved()
             return@input
         }
-        // ล็อกอินอยู่: ยอมเปลี่ยนเมื่อที่อยู่ใหม่เป็นเซิร์ฟเวอร์เดิมของบัญชีนี้ (เช่น IP ของ Mac เปลี่ยน) — ข้อมูลและ token ใช้ต่อได้
-        // ถ้าเป็นเซิร์ฟเวอร์อื่น token และสถานะ "ซิงก์แล้ว" ใช้ไม่ได้ → ให้ซิงก์และออกจากระบบก่อน (AUDIT K1)
+        // While signed in, only accept the same account's server (e.g. the host's IP changed).
+        // A different server would invalidate the tokens and sync state, so the user must sign out first.
         toast(getString(R.string.server_checking))
         runAsync({ App.services.api.sameAccountAt(url) }) { r ->
             if (r.getOrDefault(false)) {

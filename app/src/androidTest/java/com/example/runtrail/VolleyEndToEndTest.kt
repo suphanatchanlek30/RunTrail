@@ -29,10 +29,10 @@ import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 /**
- * MA11: คำขอจากหน้าจอผ่าน Volley ไปที่ backend จริง (ข้ามเมื่อไม่ได้ระบุ server):
+ * Volley requests against a real backend; skipped unless a server is given:
  *   ./gradlew connectedDebugAndroidTest -Pe2eApiUrl=http://10.0.2.2:8080
  *
- * GET (อันดับ) · PATCH (ประเทศ) · POST/DELETE 204 (แชร์) · token หมดอายุ → refresh แล้วส่งซ้ำ · error → ApiException
+ * GET, PATCH, POST and an empty 204 DELETE; expired-token refresh and retry; error mapping.
  */
 @RunWith(AndroidJUnit4::class)
 class VolleyEndToEndTest {
@@ -52,7 +52,7 @@ class VolleyEndToEndTest {
         assumeTrue("ระบุ -Pe2eApiUrl เพื่อรัน end-to-end test", url.isNotBlank())
         api = RunTrailApi(ApiClient({ url }, MemorySessionStore()))
         api.register("volley${System.currentTimeMillis()}@example.com", "password123", "Volley Runner", "TH", "emulator")
-        // ให้ Volley ใช้ server และ session ของ test นี้ (คืนค่าเดิมตอนจบ)
+        // Point Volley at this test's server and session; restored in tearDown.
         savedBase = ApiConfig.baseUrl
         savedClient = VolleyApi.client
         ApiConfig.baseUrl = { url }
@@ -67,7 +67,7 @@ class VolleyEndToEndTest {
         }
     }
 
-    /** ส่งคำขอด้วย Volley (สร้าง request แล้ว add เข้าคิว) แล้วรอผลจาก listener ④ หรือ errorListener ⑤ */
+    /** Sends a request through the Volley queue and waits for its success or error callback. */
     private fun send(method: Int, url: String, body: JSONObject? = null): Pair<JSONObject?, VolleyError?> {
         val latch = CountDownLatch(1)
         var ok: JSONObject? = null
@@ -103,7 +103,7 @@ class VolleyEndToEndTest {
         assertNull(e1)
         assertTrue(shared!!.getString("url").isNotBlank())
 
-        // DELETE ตอบ 204 ไม่มี body → ต้องได้ JSONObject ว่าง ไม่ใช่ ParseError
+        // DELETE returns 204 with no body: expect an empty object, not a parse error.
         val (gone, e2) = send(Request.Method.DELETE, ApiConfig.share(run.uuid))
         assertNull(e2)
         assertEquals(0, gone!!.length())

@@ -1,8 +1,6 @@
 package com.example.runtrail.domain
 
-/**
- * PACE SCALE จาก Figma: เร็ว (เขียว) → คงที่ (เขียวมะนาว) → ปานกลาง (เหลือง) → ช้า (ส้มแดง)
- */
+/** Pace colour scale: fast (green) → steady (lime) → moderate (yellow) → slow (orange-red). */
 object PaceColor {
 
     const val FAST = 0xFF0EDA62.toInt()
@@ -10,7 +8,7 @@ object PaceColor {
     const val MODERATE = 0xFFF5B83D.toInt()
     const val SLOW = 0xFFF0603F.toInt()
 
-    /** แบ่งระดับเพซ: เร็ว < 5:50 · คงที่ ≤ 6:15 · ปานกลาง ≤ 6:40 · ช้ากว่านั้น */
+    /** Bands: fast < 5:50, steady ≤ 6:15, moderate ≤ 6:40 per km, slow otherwise. */
     fun forPace(secPerKm: Int): Int = when {
         secPerKm < 350 -> FAST
         secPerKm <= 375 -> STEADY

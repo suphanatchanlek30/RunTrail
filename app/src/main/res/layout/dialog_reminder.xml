@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-    เตือนไปวิ่ง (หน้าตั้งค่า) — MA08 Input Controls + MA13 AlarmManager
-    SwitchCompat = เปิด/ปิด · TextView กดแล้วเปิด TimePickerDialog · CheckBox = เลือกได้หลายวัน
--->
+<!-- Run reminder settings: on/off, time, days -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
@@ -48,7 +45,7 @@
         android:layout_marginTop="@dimen/space_l"
         android:text="@string/reminder_days" />
 
-    <!-- 7 วัน: จันทร์ → อาทิตย์ (ข้อความตั้งในโค้ดตามภาษาที่เลือก) -->
+    <!-- Monday → Sunday; labels are set in code for the current language -->
     <GridLayout
         android:id="@+id/gridDays"
         android:layout_width="match_parent"
@@ -65,7 +62,7 @@
         <CheckBox android:id="@+id/cbSun" style="@style/DayCheck" />
     </GridLayout>
 
-    <!-- Android 12+: ยังไม่ได้สิทธิ์ตั้งเวลาแบบแม่นยำ → เตือนได้แต่อาจช้าเล็กน้อย -->
+    <!-- Shown when exact alarms are not allowed (Android 12+) -->
     <TextView
         android:id="@+id/tvExact"
         style="@style/Txt.BodyS"

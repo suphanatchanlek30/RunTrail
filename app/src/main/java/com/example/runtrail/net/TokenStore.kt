@@ -13,7 +13,7 @@ import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
-/** บัญชีที่ล็อกอินอยู่ */
+/** Signed-in account and its tokens. */
 data class Session(
     val userId: String,
     val email: String,
@@ -22,7 +22,7 @@ data class Session(
     val refreshToken: String,
 )
 
-/** ที่เก็บ session — แยกเป็น interface เพื่อให้ test ใช้แบบเก็บในหน่วยความจำได้ */
+/** Session storage; an interface so tests can use [MemorySessionStore]. */
 interface SessionStore {
     fun get(): Session?
     fun save(session: Session)
@@ -36,8 +36,8 @@ class MemorySessionStore(private var session: Session? = null) : SessionStore {
 }
 
 /**
- * เก็บ token แบบเข้ารหัส AES-GCM ด้วยกุญแจใน Android Keystore (กุญแจไม่ออกจากเครื่อง)
- * ถอดรหัสไม่ได้ (เช่น กู้คืนข้อมูลมาจากเครื่องอื่น) = ถือว่ายังไม่ได้ล็อกอิน
+ * Stores the session encrypted with an AES-GCM key from the Android Keystore.
+ * Data that cannot be decrypted (e.g. restored from another device) counts as signed out.
  */
 class TokenStore(context: Context) : SessionStore {
 
@@ -119,7 +119,7 @@ class TokenStore(context: Context) : SessionStore {
 
     companion object {
         private const val TAG = "TokenStore"
-        const val FILE = "runtrail_session"   // ถูกยกเว้นจาก backup (ดู res/xml/backup_rules.xml)
+        const val FILE = "runtrail_session"   // excluded from backups (res/xml/backup_rules.xml)
         private const val ALIAS = "runtrail_session_key"
         private const val TRANSFORM = "AES/GCM/NoPadding"
         private const val K_USER = "user_id"

@@ -13,13 +13,10 @@ import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.core.view.updatePadding
 
-/**
- * ตัวช่วยร่วมของทุกหน้าจอ: edge-to-edge + เว้นระยะ status bar / navigation bar
- * (ใน Figma แถบ 9:41 คือ status bar ของระบบ จึงไม่วาดซ้ำ แต่เว้นที่ให้ตามจริง)
- */
+/** Draws behind the system bars; screens add the insets with [applySystemBarsPadding]. */
 fun AppCompatActivity.setupEdgeToEdge(lightStatusBar: Boolean = true) {
     enableEdgeToEdge()
-    // ธีมกลางคืนพื้นหลังเข้ม → ไอคอนแถบระบบต้องเป็นสีสว่าง
+    // Dark theme needs light system bar icons.
     val lightBars = resources.getBoolean(com.example.runtrail.R.bool.light_system_bars)
     WindowCompat.getInsetsController(window, window.decorView).apply {
         isAppearanceLightStatusBars = lightStatusBar && lightBars
@@ -27,7 +24,7 @@ fun AppCompatActivity.setupEdgeToEdge(lightStatusBar: Boolean = true) {
     }
 }
 
-/** เพิ่ม padding เท่ากับความสูงแถบระบบ โดยคง padding เดิมที่กำหนดใน XML */
+/** Adds system bar insets to the padding defined in XML. */
 fun View.applySystemBarsPadding(top: Boolean = true, bottom: Boolean = false) {
     val startTop = paddingTop
     val startBottom = paddingBottom
@@ -41,7 +38,7 @@ fun View.applySystemBarsPadding(top: Boolean = true, bottom: Boolean = false) {
     }
 }
 
-/** เพิ่ม margin ด้านบนเท่ากับ status bar (ใช้กับปุ่มที่ลอยบนแผนที่) */
+/** Adds the status bar height to the top margin, for buttons floating over a map. */
 fun View.applyStatusBarMargin() {
     val lp = layoutParams as? android.view.ViewGroup.MarginLayoutParams ?: return
     val start = lp.topMargin
@@ -57,13 +54,13 @@ fun Context.toast(message: String) = Toast.makeText(this, message, Toast.LENGTH_
 
 fun Context.dp(value: Float): Int = (value * resources.displayMetrics.density).toInt()
 
-/** เปลี่ยนแท็บโดยไม่มีแอนิเมชันเลื่อนหน้า */
+/** Switches tabs without the default transition. */
 @Suppress("DEPRECATION")
 fun Activity.noTransition() {
     overridePendingTransition(0, 0)
 }
 
-/** ใส่ไอคอนหน้าข้อความด้วยขนาดตาม Figma (ค่าเริ่มต้น 14dp) */
+/** Sets a start drawable of [sizeDp], optionally tinted. */
 fun TextView.setStartIcon(resId: Int, sizeDp: Float = 14f, tintRes: Int? = null) {
     val d = ContextCompat.getDrawable(context, resId)?.mutate() ?: return
     val px = context.dp(sizeDp)
