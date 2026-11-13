@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- English UI strings (CS364 criterion 3.3) — the default values/strings.xml is Thai -->
+<!-- English strings; the default values/strings.xml is Thai. -->
 <resources>
     <string name="app_name">RunTrail</string>
 
-    <!-- ===== General ===== -->
+    <!-- General -->
     <string name="action_back">Back</string>
     <string name="action_next">Next</string>
     <string name="action_skip">Skip</string>
@@ -72,7 +72,7 @@
     <string name="title_evening_run">Evening Run</string>
     <string name="title_night_run">Night Run</string>
 
-    <!-- ===== 01 Welcome ===== -->
+    <!-- Welcome -->
     <string name="welcome_gps">GPS ±4 m</string>
     <string name="welcome_title_1">Run with more fun\nSee every step on the map</string>
     <string name="welcome_body_1">Record route, pace, calories and elevation with GPS. Data stays on your device and works without internet.</string>
@@ -82,7 +82,7 @@
     <string name="welcome_body_3">Sync to your own server when you share. Friends open the link to see the map and stats without installing the app.</string>
     <string name="welcome_cta">Get started</string>
 
-    <!-- ===== 02 Permissions ===== -->
+    <!-- Permissions -->
     <string name="step_1_of_2">Step 1 of 2</string>
     <string name="step_2_of_2">Step 2 of 2</string>
     <string name="perm_title">A few permissions before you run</string>
@@ -97,7 +97,7 @@
     <string name="perm_privacy">Location data is always stored on your device first and uploaded to your account when you sign in · Share links can hide start/end points</string>
     <string name="perm_location_denied">Location permission is needed to record routes (tap \"Skip\" to continue)</string>
 
-    <!-- ===== 03 Profile & Goal ===== -->
+    <!-- Profile and goal -->
     <string name="profile_title">About you</string>
     <string name="profile_edit_title">Edit profile</string>
     <string name="profile_body">Your name is used for greetings and on shared web pages. Weight is used to compute calories (MET × weight × time).</string>
@@ -119,7 +119,7 @@
     <string name="error_height">Enter a height of 100–250 cm</string>
     <string name="error_age">Enter an age of 8–100</string>
 
-    <!-- ===== 04 Sensor Check ===== -->
+    <!-- Sensor check -->
     <string name="sensor_title">Sensor check</string>
     <string name="sensor_ready">Ready to run</string>
     <string name="sensor_not_ready">Not ready to record routes</string>
@@ -139,7 +139,7 @@
     <string name="sensor_calibrate_title">Calibrate compass</string>
     <string name="sensor_calibrate_body">Hold your phone and move it in a figure 8 in the air 3–4 times, away from metal and magnets. Accuracy improves automatically.</string>
 
-    <!-- ===== 05 / 06 Home ===== -->
+    <!-- Home -->
     <string name="home_this_week">This week</string>
     <string name="home_goal_short">Goal %1$s %2$s</string>
     <string name="home_empty_title">No runs yet</string>
@@ -156,7 +156,7 @@
     <string name="home_bell_pending">%d runs waiting to sync to the server</string>
     <string name="home_bell_none">No new notifications</string>
 
-    <!-- ===== 07 / 08 Live Run ===== -->
+    <!-- Live run -->
     <string name="live_gps_good">GPS good · ±%d m</string>
     <string name="live_gps_fair">GPS fair · ±%d m</string>
     <string name="live_gps_weak">GPS weak · ±%d m</string>
@@ -189,14 +189,14 @@
     <string name="live_paused_manual_reason">Timer paused. Tap Resume when you\'re ready</string>
     <string name="live_paused_info">Data is saved continuously and can be recovered if the app is closed</string>
 
-    <!-- ===== 09 Run Summary ===== -->
+    <!-- Run summary -->
     <string name="detail_saved">Run saved</string>
     <string name="detail_photo_title">Run photo</string>
     <string name="detail_photo_has">1 photo · tap to change</string>
     <string name="detail_photo_none">No photo yet · tap to add</string>
     <string name="detail_menu_stats">Splits and charts</string>
 
-    <!-- ===== 10 Splits & Charts ===== -->
+    <!-- Splits and charts -->
     <string name="stats_title">Run details</string>
     <string name="stats_tab_overview">Overview</string>
     <string name="stats_tab_splits">Splits</string>
@@ -216,7 +216,7 @@
     <string name="stats_humidity">Humidity</string>
     <string name="stats_gps_points">GPS points</string>
 
-    <!-- ===== 11 Replay ===== -->
+    <!-- Replay -->
     <string name="replay_title">Replay · %s</string>
     <string name="replay_segment">%1$s · %3$s %2$d</string>
     <string name="replay_segment_pace">Pace %1$s %2$s</string>
@@ -226,7 +226,7 @@
     <string name="replay_back" formatted="false">Back 10%</string>
     <string name="replay_forward" formatted="false">Skip 10%</string>
 
-    <!-- ===== 12 Add / Edit ===== -->
+    <!-- Add / edit run -->
     <string name="edit_title_edit">Edit run</string>
     <string name="edit_title_add">Add past run</string>
     <string name="edit_camera">Camera</string>
@@ -255,7 +255,7 @@
     <string name="edit_keep_editing">Keep editing</string>
     <string name="edit_discard">Discard</string>
 
-    <!-- ===== 13 Share & Sync ===== -->
+    <!-- Share -->
     <string name="share_title">Share run</string>
     <string name="share_synced_title">Synced to server</string>
     <string name="share_synced_desc">%1$s · share code %2$s</string>
@@ -281,7 +281,7 @@
     <string name="share_remove_body">People with the link can no longer open it. The run stays on your device and the server.</string>
     <string name="share_message">%1$s · %2$s km — see my run route on RunTrail %3$s</string>
 
-    <!-- ===== 15 History ===== -->
+    <!-- History -->
     <string name="history_title">Run history</string>
     <string name="history_sort">Sort and filter</string>
     <string name="history_search_hint">Search name or note</string>
@@ -299,7 +299,7 @@
     <string name="sort_longest">Longest distance</string>
     <string name="sort_fastest">Fastest pace</string>
 
-    <!-- ===== 16 Personal Records ===== -->
+    <!-- Personal records -->
     <string name="records_title">Personal records</string>
     <string name="records_total_distance">Total distance</string>
     <string name="records_new">New</string>
@@ -308,7 +308,7 @@
     <string name="records_6_months">6 months</string>
     <string name="records_share_head">My running stats on RunTrail: %1$s total over %2$d runs</string>
 
-    <!-- ===== 17 Settings ===== -->
+    <!-- Settings -->
     <string name="settings_body">%1$d kg · %2$d cm · %3$d yrs</string>
     <string name="settings_group_run">Running</string>
     <string name="settings_group_data">Data and sync</string>
@@ -334,7 +334,7 @@
     <string name="setting_recreate">Test screen state restore</string>
     <string name="setting_recreate_value">Created %d times</string>
 
-    <!-- ===== 18 Recover ===== -->
+    <!-- Recover unfinished run -->
     <string name="recover_title">Unfinished run found</string>
     <string name="recover_body">The app was closed during a run at %s. The latest data was saved. What would you like to do?</string>
     <string name="recover_resume">Recover and continue</string>
@@ -343,13 +343,13 @@
     <string name="recover_discarded">Unfinished run discarded</string>
     <string name="recover_saved_title">Recovered run</string>
 
-    <!-- ===== 19 Delete ===== -->
+    <!-- Delete run -->
     <string name="delete_title">Delete this run?</string>
     <string name="delete_body">“%1$s · %2$s km” will be permanently deleted from this device, including its route and photos</string>
     <string name="delete_server">Also delete from server</string>
     <string name="delete_server_desc">This run is synced. Its share link will stop working</string>
 
-    <!-- ===== Backend / account / sync / leaderboard ===== -->
+    <!-- Account, sync and leaderboard -->
     <string name="channel_run">Recording run</string>
     <string name="channel_km">Alert every 1 km</string>
     <string name="notify_run_title">Running</string>
@@ -490,7 +490,7 @@
     <string name="detail_lb_counted">Counted on the global leaderboard</string>
     <string name="detail_lb_not_counted">Not counted: %s</string>
 
-    <!-- ===== CS364: Back / discard confirm / theme / language ===== -->
+    <!-- Back navigation, discard confirmation, theme and language -->
     <string name="back_again_to_exit">Press Back again to exit</string>
     <string name="recover_discard_confirm_title">Discard unfinished run?</string>
     <string name="recover_discard_confirm_body">The recorded route, time and distance of this run will be deleted permanently</string>
@@ -519,7 +519,7 @@
     <string name="server_checking">Checking server…</string>
     <string name="server_waking">The server is waking up (free hosting). This can take up to a minute…</string>
 
-    <!-- Run reminder (MA13) -->
+    <!-- Run reminder -->
     <string name="setting_reminder">Run reminder</string>
     <string name="setting_reminder_off">Off</string>
     <string name="reminder_enable">Remind me</string>
@@ -534,7 +534,7 @@
     <string name="reminder_notif_title">Time for your run 🏃</string>
     <string name="reminder_notif_body">Tap to open RunTrail and start running</string>
 
-    <!-- Export / import history (MA09 SAF + app-specific file) -->
+    <!-- Backup export / import -->
     <string name="setting_export">Export run history</string>
     <string name="setting_import">Import from backup</string>
     <string name="setting_backup_never">Never</string>

@@ -16,7 +16,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import java.io.File
 
-/** นำเข้ารูปใหญ่จากกล้อง: ย่อแบบไม่โหลดเต็มขนาด + หมุนตาม EXIF (AUDIT A3) */
+/** Importing a large camera photo: downsampled decode and EXIF rotation. */
 @RunWith(AndroidJUnit4::class)
 class ImageStoreTest {
 
@@ -37,7 +37,7 @@ class ImageStoreTest {
         assertNotNull(path)
         val opts = BitmapFactory.Options().apply { inJustDecodeBounds = true }
         BitmapFactory.decodeFile(path, opts)
-        assertEquals(960, opts.outWidth)    // หมุน 90° แล้ว: กว้าง < สูง
+        assertEquals(960, opts.outWidth)    // rotated 90°: width < height
         assertEquals(1280, opts.outHeight)
         ImageStore.delete(ctx, path)
         assertFalse(File(path!!).exists())

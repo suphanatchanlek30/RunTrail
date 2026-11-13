@@ -39,11 +39,11 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * ปุ่มที่มีเฉพาะตอนล็อกอิน กดผ่านหน้าจอจริงกับ backend จริง (AUDIT §6):
- * สมัคร → ประเทศ → ซ่อนจากอันดับ → แจ้งเตือนข่าวสาร → เปลี่ยนรหัสผ่าน → ออกจากระบบ → เข้าสู่ระบบ → ลบบัญชี
+ * Signed-in-only controls driven through the real UI against a real backend:
+ * sign up → country → hide from leaderboard → update alerts → change password → sign out → sign in → delete account.
  *
- * ใช้บัญชีทดสอบใหม่ทุกครั้ง · ค่าตั้ง (SharedPreferences) และ session ของผู้ใช้จริงบนเครื่องถูกสำรองไว้แล้วคืนให้ครบตอนจบ
- * การวิ่งอยู่ในฐานข้อมูลในหน่วยความจำ · รันเมื่อส่ง -e e2eApiUrl เท่านั้น
+ * Uses a fresh test account each time and restores the device's real settings and session afterwards.
+ * Runs use an in-memory database. Requires `-e e2eApiUrl`.
  */
 @RunWith(AndroidJUnit4::class)
 class AccountFlowTest {
@@ -79,7 +79,7 @@ class AccountFlowTest {
         savedSessionFile = snapshot("runtrail_session")
         savedSession = App.services.sessions.get()
         App.services.prefs.apiUrl = url
-        App.services.prefs.accountUserId = null      // ให้เครื่องนี้เป็น Guest ระหว่างทดสอบ
+        App.services.prefs.accountUserId = null      // act as a guest during the test
         App.services.sessions.clear()
         RunRepository.init(ctx, RunDb(ctx, null))
         RunRepository.currentUser = { App.services.prefs.accountUserId }
@@ -87,14 +87,14 @@ class AccountFlowTest {
 
     @After fun tearDown() {
         if (!::savedPrefs.isInitialized) return
-        // บัญชีทดสอบยังอยู่ (เช่น test ล้มกลางทาง) → ลบทิ้งที่ server
+        // Clean up the test account if the test failed midway.
         if (Accounts.isLoggedIn) try { App.services.api.deleteMe() } catch (_: Exception) {}
         SyncManager.cancelAll(ctx)
         restore("runtrail_prefs", savedPrefs)
         restore("runtrail_session", savedSessionFile)
         App.services.sessions.clear()
         savedSession?.let { App.services.sessions.save(it) }
-        SyncManager.schedulePeriodic(ctx)            // เหมือนตอนเปิดแอปปกติ
+        SyncManager.schedulePeriodic(ctx)            // as on a normal app start
         inst.runOnMainSync {
             androidx.test.runner.lifecycle.ActivityLifecycleMonitorRegistry.getInstance()
                 .getActivitiesInStage(androidx.test.runner.lifecycle.Stage.RESUMED).forEach { it.finish() }
@@ -111,11 +111,11 @@ class AccountFlowTest {
     private fun tap(a: Activity, id: Int) = inst.runOnMainSync { a.findViewById<View>(id).performClick() }
     private fun shown(a: Activity, id: Int): Boolean { var v = false; inst.runOnMainSync { v = a.findViewById<View>(id).isShown }; return v }
 
-    /** API แยกต่างหาก (ไม่แตะ session ของแอป) ใช้ตรวจผลที่ server */
+    /** Separate client (not the app session) for checking server state. */
     private fun probe() = RunTrailApi(ApiClient({ url }, MemorySessionStore()))
 
     @Test fun everyAccountControlWorksAgainstTheRealBackend() {
-        // 1) สมัครผ่านหน้าจอ
+        // 1) Sign up through the UI.
         ActivityScenario.launch(RegisterActivity::class.java).use { s ->
             var a: Activity? = null; s.onActivity { a = it }
             type(a!!, R.id.etName, "Account Test"); type(a!!, R.id.etEmail, email)
@@ -131,28 +131,28 @@ class AccountFlowTest {
                 assertTrue("account row visible", shown(st, id))
             }
 
-            // 2) ประเทศ → พิมพ์ "LA" ในช่อง AutoComplete → แตะ "LA · …" ในรายการ → ซิงก์ → server เก็บค่าใหม่
+            // 2) Country: type "LA", pick it from the dropdown, sync, check the server.
             tap(st, R.id.rowCountry)
-            Thread.sleep(800)   // รอ dialog แสดงจนนิ่ง
+            Thread.sleep(800)   // let the dialog settle
             onView(withId(R.id.etCountry)).inRoot(isDialog()).perform(typeText("LA"))
             onView(withText(startsWith("LA ·"))).inRoot(isPlatformPopup()).perform(click())
             waitUntil("country saved locally") { App.services.prefs.countryCode == "LA" }
             App.services.sync.sync()
             assertEquals("LA", App.services.api.me().optString("country_code"))
 
-            // 3) ซ่อนชื่อจากอันดับโลก
+            // 3) Hide from the leaderboard.
             assertTrue(App.services.prefs.leaderboardOptIn)
             inst.runOnMainSync { st.findViewById<View>(R.id.rowLeaderboard).performClick() }
             waitUntil("opt-out saved") { !App.services.prefs.leaderboardOptIn }
             App.services.sync.sync()
             assertFalse(App.services.api.me().optBoolean("leaderboard_opt_in", true))
 
-            // 4) แจ้งเตือนข่าวสาร เปิด/ปิด (เก็บในเครื่อง)
+            // 4) Toggle update alerts (local setting).
             val alerts = App.services.prefs.updatesAlert
             inst.runOnMainSync { st.findViewById<View>(R.id.rowUpdates).performClick() }
             waitUntil("updates toggled") { App.services.prefs.updatesAlert != alerts }
 
-            // 5) เปลี่ยนรหัสผ่านผ่าน dialog → รหัสใหม่เข้าได้ รหัสเก่าเข้าไม่ได้
+            // 5) Change password: the new one works, the old one doesn't.
             tap(st, R.id.rowPassword)
             Thread.sleep(500)
             onView(withId(R.id.etOld)).inRoot(isDialog()).perform(replaceText(password))
@@ -164,24 +164,24 @@ class AccountFlowTest {
             assertEquals(401, try { probe().login(email, password, "probe"); 0 } catch (e: ApiException) { e.status })
             assertTrue("still signed in after password change", Accounts.isLoggedIn)
 
-            // 6) ออกจากระบบ (ยืนยันใน dialog)
+            // 6) Sign out (confirm in the dialog).
             tap(st, R.id.rowLogout)
             Thread.sleep(500)
             onView(withId(R.id.btnConfirm)).inRoot(isDialog()).perform(click())
             waitUntil("logged out") { !Accounts.isLoggedIn }
         }
 
-        // 7) เข้าสู่ระบบด้วยรหัสใหม่ผ่านหน้าจอ
+        // 7) Sign in with the new password.
         ActivityScenario.launch(LoginActivity::class.java).use { s ->
             var a: Activity? = null; s.onActivity { a = it }
             type(a!!, R.id.etEmail, email); type(a!!, R.id.etPassword, newPassword)
             tap(a!!, R.id.btnLogin)
             waitUntil("logged in again") { Accounts.isLoggedIn }
         }
-        // โปรไฟล์จาก server กลับมา (ประเทศที่ตั้งไว้)
+        // The server profile (country) is restored.
         assertEquals("LA", App.services.prefs.countryCode)
 
-        // 8) ลบบัญชี (ยืนยันใน dialog) → เข้าสู่ระบบไม่ได้อีก
+        // 8) Delete the account (confirm); sign-in then fails.
         ActivityScenario.launch(SettingsActivity::class.java).use { s ->
             var a: Activity? = null; s.onActivity { a = it }
             tap(a!!, R.id.rowDeleteAccount)

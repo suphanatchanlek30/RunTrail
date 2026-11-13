@@ -1,5 +1,5 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Day / Night: สีทั้งหมดอ้างจาก @color/* ซึ่งมีชุดกลางคืนใน values-night/colors.xml (CS364 เกณฑ์ 3.4) -->
+    <!-- Day/night theme; every colour comes from @color, overridden in values-night/colors.xml -->
     <style name="Base.Theme.RunTrail" parent="Theme.Material3.DayNight.NoActionBar">
         <item name="colorPrimary">@color/run_green</item>
         <item name="colorOnPrimary">@color/run_ink</item>
@@ -25,7 +25,7 @@
         <item name="popupMenuStyle">@style/Widget.RunTrail.PopupMenu</item>
     </style>
 
-    <!-- เมนู ⋮ / ตัวกรอง: พื้นขาวมุมมน 16 -->
+    <!-- Overflow and filter menus: white, 16 dp corners -->
     <style name="Widget.RunTrail.PopupMenu" parent="Widget.Material3.PopupMenu">
         <item name="android:popupBackground">@drawable/bg_popup</item>
         <item name="android:popupElevation">@dimen/elevation_8</item>
@@ -33,7 +33,7 @@
 
     <style name="Theme.RunTrail" parent="Base.Theme.RunTrail" />
 
-    <!-- หน้า Welcome พื้นดำ (Ink) -->
+    <!-- Dark (ink) theme for the welcome screen -->
     <style name="Theme.RunTrail.Dark" parent="Theme.RunTrail">
         <item name="android:windowBackground">@color/run_ink</item>
         <item name="android:windowLightStatusBar">false</item>
@@ -51,14 +51,14 @@
         <item name="android:background">@android:color/transparent</item>
     </style>
 
-    <!-- Dialog แบบกำหนดเอง (ลบ/กู้คืน) ใช้ layout ของเราเอง -->
+    <!-- Dialogs that use the app's own layouts -->
     <style name="ThemeOverlay.RunTrail.Dialog" parent="ThemeOverlay.Material3.MaterialAlertDialog">
         <item name="android:backgroundDimAmount">0.55</item>
         <item name="colorPrimary">@color/run_green_dark</item>
         <item name="android:fontFamily">@font/plex_regular</item>
     </style>
 
-    <!-- ปฏิทิน / นาฬิกา (DatePicker · TimePicker) โทนเขียวมุมมน -->
+    <!-- Green, rounded date and time pickers -->
     <style name="ThemeOverlay.RunTrail.Picker" parent="Theme.Material3.DayNight.Dialog">
         <item name="colorAccent">@color/run_green_dark</item>
         <item name="android:colorAccent">@color/run_green_dark</item>

@@ -11,17 +11,14 @@ import org.json.JSONArray
 import org.json.JSONObject
 import java.time.Instant
 
-/**
- * แปลงการวิ่งระหว่างโมเดลในแอป ↔ JSON ของ backend (ดู backend/README.md)
- * Kotlin ล้วน ใช้ org.json → ทดสอบบน JVM ได้
- */
+/** Converts runs between the app model and the backend JSON format. */
 object RunJson {
 
     fun iso(millis: Long): String = Instant.ofEpochMilli(millis).toString()
 
     fun millis(iso: String): Long = Instant.parse(iso).toEpochMilli()
 
-    /** body ของ PUT /runs/{uuid} */
+    /** Body of `PUT /runs/{uuid}`. */
     fun toPutBody(run: Run, track: List<TrackPoint>): JSONObject = JSONObject().apply {
         put("title", run.title.ifBlank { Lang.t("การวิ่ง", "Run") })
         put("note", run.note ?: JSONObject.NULL)
@@ -47,8 +44,8 @@ object RunJson {
     }
 
     /**
-     * ใส่ค่าที่ server คำนวณ/ตรวจแล้วกลับเข้า Run (หลังส่งขึ้นสำเร็จ หรือดึงลงจาก server)
-     * local = การวิ่งในเครื่องที่มีอยู่แล้ว (null = เพิ่งดึงมาครั้งแรก)
+     * Merges server-computed fields into a run after upload or download.
+     * [local] is the existing local run, or null when the run is new on this device.
      */
     fun fromServer(o: JSONObject, local: Run?, owner: String?): Run {
         val share = o.optJSONObject("share")
@@ -100,7 +97,7 @@ object RunJson {
         TrackPoint(p.getDouble(0), p.getDouble(1), p.getLong(2), p.getDouble(3), p.getDouble(4).toFloat())
     }
 
-    /** ข้อความภาษาไทยของเหตุผลที่ server ไม่นับเข้าอันดับ */
+    /** User-facing text for the reason a run was not counted on the leaderboard. */
     fun verifyReasonText(reason: String?): String? = when (reason) {
         null, "" -> null
         "manual" -> Lang.t("บันทึกเอง ไม่มีเส้นทาง GPS", "Manual entry, no GPS route")

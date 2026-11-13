@@ -33,18 +33,14 @@ import com.example.runtrail.ui.sensor.SensorCheckActivity
 import com.example.runtrail.service.RunTrackingService
 import com.example.runtrail.sync.SyncManager
 
-/**
- * 05 / 06 · Home — สรุปสัปดาห์เทียบเป้า · กราฟ 7 วัน · การวิ่งล่าสุด · ปุ่มเริ่มวิ่ง
- * - ไม่มีข้อมูล → สถานะว่าง (05)
- * - มีการวิ่งค้างใน run_draft.properties → Dialog กู้คืน (18)
- */
+/** Home: weekly progress, 7-day chart, latest runs and the start button. Offers to recover an unfinished run. */
 class MainActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityMainBinding
     private lateinit var prefs: PrefsHelper
     private var recoverShown = false
 
-    /** server ในวง LAN (backend บน Mac) ต้องได้สิทธิ์เครือข่ายภายในก่อนซิงก์ได้ (Android 17+) */
+    /** Android 17+: a LAN server needs the local-network permission before sync can reach it. */
     private val askLocalNetwork = registerForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.RequestPermission(),
     ) { granted -> if (granted) SyncManager.requestSync(this) else toast(getString(R.string.local_network_denied)) }
@@ -109,18 +105,16 @@ class MainActivity : AppCompatActivity() {
         binding.tvGreeting.text = Fmt.greeting()
         binding.tvName.text = prefs.firstName
 
-        // หน้าหลักใช้แค่ 2 รายการล่าสุด + การวิ่ง 7 วันนี้ → ดึงเฉพาะที่ใช้จาก SQL (AUDIT P2)
         val latest = RunRepository.recent(2)
         val empty = latest.isEmpty()
         binding.groupEmpty.visibility = if (empty) View.VISIBLE else View.GONE
         binding.groupData.visibility = if (empty) View.GONE else View.VISIBLE
         binding.fabStart.visibility = if (empty) View.GONE else View.VISIBLE
-        // เป้าหมายเก็บเป็น กม. เสมอ (เหมือน server) — โหมดไมล์แค่แปลงเพื่อแสดง (AUDIT A6)
         binding.tvEmptyGoal.text = getString(R.string.home_goal_short, Units.goalText(prefs.weeklyGoalKm, miles), Fmt.unit(miles))
         binding.tvEmptyUnit.text = Fmt.unit(miles)
         if (empty) return
 
-        // ---- การ์ดสรุปสัปดาห์ ----
+        // ---- Weekly summary ----
         val now = System.currentTimeMillis()
         val week = RunRepository.since(RunRepository.startOfWeek(now), now)
         val weekM = week.sumOf { it.distanceM }
@@ -134,12 +128,12 @@ class MainActivity : AppCompatActivity() {
         bindStat(binding.statTime, Fmt.hours(week.sumOf { it.movingTimeS }), getString(R.string.unit_hours), getString(R.string.label_total_time))
         bindStat(binding.statKcal, Fmt.number(week.sumOf { it.calories }), getString(R.string.unit_kcal), getString(R.string.label_calories))
 
-        // ---- กราฟ 7 วัน ----
+        // ---- 7-day chart ----
         val weekStart = RunRepository.startOfWeek(now)
         binding.tvWeekRange.text = Fmt.weekRange(weekStart)
         binding.chartWeek.setData(RunRepository.weekDailyKm(now, week, miles), RunRepository.weekDayLetters(now), highlightIndex = 6)
 
-        // ---- การวิ่งล่าสุด 2 รายการ ----
+        // ---- Latest runs ----
         binding.recentList.removeAllViews()
         latest.forEachIndexed { index, run ->
             val item = ItemRunBinding.inflate(layoutInflater, binding.recentList, false)
@@ -162,12 +156,12 @@ class MainActivity : AppCompatActivity() {
         startActivity(Intent(this, RunDetailActivity::class.java).putExtra(RunDetailActivity.EXTRA_RUN_ID, run.id))
     }
 
-    /** มีการวิ่งที่กำลังบันทึกอยู่ → กลับไปหน้าวิ่ง ไม่เริ่มใหม่ */
+    /** Opens the live screen; returns to the run in progress instead of starting a new one. */
     private fun startRun() {
         startActivity(Intent(this, LiveRunActivity::class.java))
     }
 
-    /** 18 · กู้การวิ่งที่ค้าง (แอปถูกระบบปิดระหว่างวิ่ง) — ไม่ถามถ้ายังมีการวิ่งที่กำลังบันทึกอยู่ */
+    /** Offers to recover a run interrupted by the process being killed, unless one is still recording. */
     private fun checkUnfinishedRun() {
         if (recoverShown || RunTrackingService.isRunning) return
         val draft = RunRepository.activeDraft() ?: return
@@ -180,7 +174,7 @@ class MainActivity : AppCompatActivity() {
             },
             onSave = {
                 recoverShown = false
-                // บันทึกเท่าที่มีพร้อมจุด GPS ทั้งหมดที่เก็บไว้ (เดิมทิ้งจุดและใส่เส้นทางปลอม)
+                // Save what was recorded, with every stored GPS point.
                 RunRepository.finishDraft(
                     draft.copy(title = getString(R.string.recover_saved_title)),
                     draft.track.lastOrNull()?.time ?: draft.updatedAt, draft.track,
@@ -189,7 +183,7 @@ class MainActivity : AppCompatActivity() {
                 startActivity(Intent(this, RunDetailActivity::class.java).putExtra(RunDetailActivity.EXTRA_RUN_ID, draft.id))
             },
             onDiscard = {
-                // CS364 เกณฑ์ 4.3: การทิ้ง (ลบ) การวิ่งที่ค้าง ต้องยืนยันก่อนทุกครั้ง · ยกเลิก → กลับไปหน้าต่างกู้คืนเดิม
+                // Discarding needs confirmation; cancelling returns to the recovery dialog.
                 Sheets.confirm(
                     this, R.drawable.ic_trash, getString(R.string.recover_discard_confirm_title),
                     getString(R.string.recover_discard_confirm_body),

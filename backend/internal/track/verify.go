@@ -42,7 +42,7 @@ func Summarize(raw []Point, pauses []Pause) Summary {
 	return s
 }
 
-// Verification thresholds (plan 2.4).
+// Verification thresholds.
 const (
 	MinPoints         = 30
 	MaxDistanceDiff   = 0.05  // 5 % between app and server distance

@@ -1,8 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!--
-  debug เท่านั้น: อนุญาต HTTP เพื่อต่อ backend ใน Docker บนเครื่องตัวเอง
-  (10.0.2.2 จาก emulator หรือ IP วง Wi-Fi จากมือถือจริง ซึ่งเปลี่ยนได้ จึงระบุเป็นรายโดเมนไม่ได้)
--->
+<!-- Debug only: allow HTTP to a local backend (emulator host or a LAN IP, which changes, so no domain list). -->
 <network-security-config>
     <base-config cleartextTrafficPermitted="true" />
 </network-security-config>

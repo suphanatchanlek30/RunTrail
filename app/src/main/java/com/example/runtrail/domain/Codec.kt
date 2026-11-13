@@ -5,9 +5,10 @@ import com.example.runtrail.data.TrackPoint
 import kotlin.math.roundToInt
 
 /**
- * แปลงข้อมูลชุดเล็กเป็นข้อความเพื่อเก็บในคอลัมน์เดียว (Kotlin ล้วน ทดสอบบน JVM ได้)
- * - เส้นทางย่อ: "lat,lng,time,alt,acc;..."
- * - ช่วงหยุด: "start-end;..."
+ * Compact text encodings for single-column storage.
+ *
+ * - track: `lat,lng,time,alt,acc;...`
+ * - pauses: `start-end;...`
  */
 object Codec {
 
@@ -38,7 +39,7 @@ object Codec {
         }
     }
 
-    /** ลดจำนวนจุดให้เหลือไม่เกิน max โดยเก็บจุดแรกและจุดสุดท้ายไว้เสมอ (ใช้วาดภาพย่อในการ์ด) */
+    /** Reduces [points] to at most [max], always keeping the first and last point. */
     fun downsample(points: List<TrackPoint>, max: Int = 120): List<TrackPoint> {
         if (points.size <= max) return points
         val step = (points.size - 1) / (max - 1).toDouble()

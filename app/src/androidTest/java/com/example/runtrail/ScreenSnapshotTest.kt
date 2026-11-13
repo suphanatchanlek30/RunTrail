@@ -44,11 +44,11 @@ import java.io.File
 import java.util.Calendar
 
 /**
- * เก็บ "หน้าตา" ของทุกหน้าจอ แล้วเทียบก่อน-หลังการแก้ที่ไม่ควรเปลี่ยนหน้าตา (เช่น ย้ายค่า dp ไป dimens.xml)
+ * Captures every screen's layout and pixels to compare before/after a change that should not alter the UI.
  *
- *  -e snap before : บันทึกตำแหน่ง/ขนาด/padding/ขนาดตัวอักษรของทุก view และภาพของหน้าจอ
- *  -e snap after  : บันทึกอีกครั้ง แล้วเทียบกับ before — ตำแหน่งทุก view ต้องเท่าเดิม และภาพต้องตรงกันทุกพิกเซล
- * ผลอยู่ใน /sdcard/Android/data/<app>/files/snapshots/
+ *  -e snap before : record view geometry, text sizes and a screenshot of each screen
+ *  -e snap after  : record again and compare; geometry must match and images must be identical
+ * Output: /sdcard/Android/data/<app>/files/snapshots/
  */
 @RunWith(AndroidJUnit4::class)
 class ScreenSnapshotTest {
@@ -67,7 +67,7 @@ class ScreenSnapshotTest {
         prefs.onboarded = true
         RunRepository.init(ctx, RunDb(ctx, null))
         RunRepository.currentUser = { null }
-        // เวลาคงที่ (วันนี้ 06:30) → ข้อความวันที่เหมือนกันทั้งสองรอบ
+        // Fixed time (today 06:30) so dates render the same in both passes.
         val base = Calendar.getInstance().apply {
             set(Calendar.HOUR_OF_DAY, 6); set(Calendar.MINUTE, 30); set(Calendar.SECOND, 0); set(Calendar.MILLISECOND, 0)
         }.timeInMillis
@@ -84,7 +84,7 @@ class ScreenSnapshotTest {
 
     private fun name(v: View) = if (v.id == View.NO_ID) "" else try { v.resources.getResourceEntryName(v.id) } catch (e: Exception) { "" }
 
-    /** ตำแหน่งและขนาดของทุก view ที่มองเห็น (ไม่ขึ้นกับเวลาหรือการโหลดแผนที่) */
+    /** Position and size of every visible view (independent of time and map loading). */
     private fun geometry(root: View): String {
         val sb = StringBuilder()
         val xy = IntArray(2)
@@ -108,7 +108,7 @@ class ScreenSnapshotTest {
             var geo = ""
             var bmp: Bitmap? = null
             s.onActivity { a ->
-                // เคอร์เซอร์กะพริบทำให้ภาพไม่คงที่ → ซ่อนก่อนถ่าย
+                // The blinking cursor makes screenshots unstable.
                 fun hideCursor(v: View) { if (v is EditText) v.isCursorVisible = false; if (v is ViewGroup) for (i in 0 until v.childCount) hideCursor(v.getChildAt(i)) }
                 val root = a.findViewById<View>(android.R.id.content)
                 hideCursor(root)
@@ -140,7 +140,7 @@ class ScreenSnapshotTest {
                         for (i in 0 until n) if (p1[i] != p2[i]) diff++
                         Log.i(TAG, "$label: ${geo.lines().size - 1} views identical=${before == geo}, pixels differing $diff / $n")
                         if (diff > 0) problems += "$label: $diff pixels differ"
-                        // ภาพเทียบ ซ้าย = ก่อน · ขวา = หลัง
+                        // Side-by-side image: left = before, right = after.
                         val pair = Bitmap.createBitmap(old.width * 2 + 24, old.height, Bitmap.Config.ARGB_8888)
                         Canvas(pair).apply { drawColor(Color.MAGENTA); drawBitmap(old, 0f, 0f, null); drawBitmap(after, old.width + 24f, 0f, null) }
                         File(dir, "$label.compare.png").outputStream().use { pair.compress(Bitmap.CompressFormat.PNG, 100, it) }
@@ -165,12 +165,12 @@ class ScreenSnapshotTest {
             addAll(capture("records", i(RecordsActivity::class.java)))
             addAll(capture("settings", i(SettingsActivity::class.java)))
             addAll(capture("notifications", i(NotificationsActivity::class.java)))
-            addAll(capture("sensors", i(SensorCheckActivity::class.java), pixels = false))      // ค่าเซนเซอร์สดเปลี่ยนตลอด
+            addAll(capture("sensors", i(SensorCheckActivity::class.java), pixels = false))      // live sensor values change
             addAll(capture("detail_manual", i(RunDetailActivity::class.java, manualId)))
-            addAll(capture("detail_gps", i(RunDetailActivity::class.java, gpsId), pixels = false)) // แผนที่โหลด tile จากเน็ต
+            addAll(capture("detail_gps", i(RunDetailActivity::class.java, gpsId), pixels = false)) // map tiles load from the network
             addAll(capture("stats", i(RunStatsActivity::class.java, gpsId)))
             addAll(capture("edit", i(AddEditRunActivity::class.java, gpsId)))
-            addAll(capture("add_manual", i(AddEditRunActivity::class.java), pixels = false))   // แสดงเวลาปัจจุบัน (เปลี่ยนทุกนาที)
+            addAll(capture("add_manual", i(AddEditRunActivity::class.java), pixels = false))   // shows the current time
         }
         assertTrue(problems.joinToString("\n"), problems.isEmpty())
     }

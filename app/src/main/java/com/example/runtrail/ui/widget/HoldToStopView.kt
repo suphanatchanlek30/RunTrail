@@ -14,9 +14,7 @@ import android.view.animation.LinearInterpolator
 import androidx.core.content.ContextCompat
 import com.example.runtrail.R
 
-/**
- * ปุ่ม "กดค้างเพื่อจบ" — วงแหวนสีเหลืองมะนาวเติมเต็มใน 1.5 วินาที ปล่อยก่อนจะย้อนกลับ
- */
+/** Press-and-hold stop button: a ring fills over 1.5 s and rewinds if released early. */
 class HoldToStopView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -96,7 +94,7 @@ class HoldToStopView @JvmOverloads constructor(
         invalidate()
     }
 
-    private val arcRect = RectF()   // ใช้ซ้ำทุกเฟรม ไม่สร้างใหม่ใน onDraw (AUDIT P5)
+    private val arcRect = RectF()   // reused across frames to avoid allocating in onDraw
 
     override fun onDraw(canvas: Canvas) {
         val cx = width / 2f
@@ -106,7 +104,7 @@ class HoldToStopView @JvmOverloads constructor(
         ring.color = ContextCompat.getColor(context, R.color.bg_muted)
         canvas.drawArc(r, 0f, 360f, false, ring)
         ring.color = ContextCompat.getColor(context, R.color.run_lime)
-        // แสดงวงแหวนบางส่วนตอนยังไม่กด ตาม Figma (บอกว่ากดค้างได้)
+        // Show a partial ring at rest to hint that the button must be held.
         val shown = if (progress == 0f) 0.28f else progress
         ring.alpha = if (progress == 0f) 255 else 255
         canvas.drawArc(r, -90f, 360f * shown, false, ring)

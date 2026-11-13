@@ -3,14 +3,12 @@ package com.example.runtrail.domain
 import com.example.runtrail.data.RoutePoint
 import kotlin.math.min
 
-/**
- * ตำแหน่งต่าง ๆ บนภาพแชร์ (Kotlin ล้วน ทดสอบบน JVM ได้) — ตัววาดจริงอยู่ที่ ui/share/ShareImageRenderer
- */
+/** Geometry of the share image; drawing is done by ui/share/ShareImageRenderer. */
 object ShareImageLayout {
 
     enum class Format(val width: Int, val height: Int) {
-        STORY(1080, 1920),   // 9:16 IG Story / สถานะ LINE
-        SQUARE(1080, 1080),  // 1:1 โพสต์
+        STORY(1080, 1920),   // 9:16 story
+        SQUARE(1080, 1080),  // 1:1 post
     }
 
     enum class Background { PHOTO, ROUTE }
@@ -21,14 +19,10 @@ object ShareImageLayout {
         fun contains(x: Float, y: Float) = x in left..right && y in top..bottom
     }
 
-    /** ขอบซ้าย/ขวาของเนื้อหา */
+    /** Horizontal content margin. */
     fun margin(f: Format) = if (f == Format.STORY) 90f else 64f
 
-    /**
-     * พื้นที่วาดเส้นทาง
-     * - พื้นเข้ม: เส้นทางเป็นพระเอก อยู่กลางภาพส่วนบน
-     * - รูปถ่าย: เส้นทางเล็ก ๆ มุมขวาบน ไม่บังรูป
-     */
+    /** Route area: large in the upper half on the dark background, small in the top-right corner over a photo. */
     fun routeBox(f: Format, bg: Background): Box {
         val m = margin(f)
         val w = f.width.toFloat()
@@ -40,7 +34,7 @@ object ShareImageLayout {
         }
     }
 
-    /** แปลงจุดเส้นทาง (0..1 รักษาสัดส่วนแล้ว) ให้อยู่กลางกล่อง โดยไม่ยืด */
+    /** Centres an aspect-preserving 0..1 route inside [box] without stretching. */
     fun fitRoute(points: List<RoutePoint>, box: Box): List<Pair<Float, Float>> {
         if (points.isEmpty()) return emptyList()
         val side = min(box.width, box.height)

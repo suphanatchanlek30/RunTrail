@@ -12,7 +12,7 @@ import org.junit.Assert.assertSame
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
-/** ตรรกะการซิงก์ทุกกรณี บน JVM (ไม่ต้องมี SQLite / เครือข่าย) */
+/** Sync decisions for every case, without SQLite or network. */
 class SyncRulesTest {
 
     // ---------------------------------------------------------------- push errors
@@ -35,7 +35,7 @@ class SyncRulesTest {
         assertTrue(SyncRules.photoErrorAbortsRound(0))
         assertTrue(SyncRules.photoErrorAbortsRound(502))
         assertTrue(SyncRules.photoErrorAbortsRound(401))
-        assertFalse(SyncRules.photoErrorAbortsRound(400))   // รูปเสีย → ข้าม ไม่ค้างทั้งรอบ
+        assertFalse(SyncRules.photoErrorAbortsRound(400))   // broken photo: skip, don't block the round
     }
 
     @Test fun pendingPhotoWorkSurvivesTheServerReply() {
@@ -58,7 +58,7 @@ class SyncRulesTest {
     }
 
     @Test fun longTracksFitTheServerLimitAndKeepTheirShape() {
-        // 20 ชั่วโมงที่ 1 จุด/วินาที — เดิมได้ 400 ทุกครั้งที่ซิงก์
+        // Up to 7 days at 1 point/s.
         for (n in listOf(50_001, 72_000, 100_000, 604_800)) {
             val t = track(n)
             val thin = SyncRules.thinForUpload(t)
@@ -66,7 +66,7 @@ class SyncRulesTest {
             assertEquals(t.first(), thin.first())
             assertEquals(t.last(), thin.last())
             assertTrue("time order", thin.zipWithNext().all { (a, b) -> b.time > a.time })
-            // เส้นตรง → ระยะรวมต้องเท่าเดิม (ต่างไม่เกิน 0.1 %)
+            // On a straight line the total distance is unchanged (within 0.1%).
             val full = TrackMath.cumulative(t).last()
             assertEquals(full, TrackMath.cumulative(thin).last(), full * 0.001)
         }
@@ -84,7 +84,7 @@ class SyncRulesTest {
 
     @Test fun newerServerVersionWins() {
         assertEquals(PullAction.APPLY, SyncRules.onPulled(local(updatedAt = 1000), false, 2000))
-        assertEquals(PullAction.IGNORE, SyncRules.onPulled(local(updatedAt = 2000), false, 2000))   // ฉบับเดียวกัน
+        assertEquals(PullAction.IGNORE, SyncRules.onPulled(local(updatedAt = 2000), false, 2000))   // same version
         assertEquals(PullAction.IGNORE, SyncRules.onPulled(local(updatedAt = 3000), false, 2000))
     }
 
@@ -97,7 +97,7 @@ class SyncRulesTest {
 
     @Test fun deletionFromAnotherDevice() {
         assertEquals(PullAction.DELETE_LOCAL, SyncRules.onPulled(local(), serverDeleted = true, serverClientUpdatedAt = 0))
-        // มีการแก้ที่ยังไม่ได้ส่ง → เก็บไว้ (จะได้ 410 แล้วลบตอนส่ง)
+        // Unsent local edits are kept (the push will get 410 and delete then).
         assertEquals(PullAction.IGNORE, SyncRules.onPulled(local(status = SyncStatus.PENDING), true, 0))
         assertEquals(PullAction.IGNORE, SyncRules.onPulled(null, true, 0))
     }
@@ -105,7 +105,7 @@ class SyncRulesTest {
     @Test fun photoRemovedOnAnotherDevice() {
         assertTrue(SyncRules.photoRemovedElsewhere(local(photo = "/p.jpg", photoSync = PhotoSync.SYNCED), serverHasPhoto = false))
         assertFalse(SyncRules.photoRemovedElsewhere(local(photo = "/p.jpg", photoSync = PhotoSync.SYNCED), serverHasPhoto = true))
-        // รูปใหม่ที่ยังไม่ได้อัปโหลด → ห้ามลบ
+        // A new photo not yet uploaded must not be deleted.
         assertFalse(SyncRules.photoRemovedElsewhere(local(photo = "/p.jpg", photoSync = PhotoSync.PENDING), serverHasPhoto = false))
         assertFalse(SyncRules.photoRemovedElsewhere(local(), serverHasPhoto = false))
         assertFalse(SyncRules.photoRemovedElsewhere(null, serverHasPhoto = false))
@@ -135,7 +135,7 @@ class SyncRulesTest {
         val (firstShow, remembered) = SyncRules.notificationsToShow(page, old + page.map { it.id }, alertsOn = true)
         assertTrue(firstShow.isEmpty())
         assertTrue(remembered.size <= 400)
-        // ดึงหน้าเดิมอีกรอบ → ต้องไม่เด้งซ้ำ (เดิม take(300) จากชุดไม่มีลำดับอาจลืมแล้วเด้งซ้ำ)
+        // Fetching the same page again shows nothing twice.
         assertTrue(SyncRules.notificationsToShow(page, remembered, alertsOn = true).first.isEmpty())
     }
 }

@@ -45,7 +45,7 @@ class RunBackupTest {
         assertEquals(gps.pauses, g.pauses)
         assertEquals(gps.updatedAt, g.updatedAt)
         assertEquals(4, g.feel)
-        // นำเข้าแล้วต้องรอซิงก์ใหม่ และยังไม่มีเจ้าของ (ผูกกับบัญชีตอนบันทึก)
+        // Imported runs are pending and unowned until inserted.
         assertEquals(SyncStatus.PENDING, g.syncStatus)
         assertFalse(g.onServer)
         assertNull(g.ownerUserId)

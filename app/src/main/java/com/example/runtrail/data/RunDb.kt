@@ -5,11 +5,11 @@ import android.database.sqlite.SQLiteDatabase
 import android.database.sqlite.SQLiteOpenHelper
 
 /**
- * ฐานข้อมูลในเครื่อง (MA10 SQLite) — แหล่งข้อมูลหลักของแอป ใช้ได้แม้ไม่มีเน็ต
+ * Local SQLite database; the app's source of truth, usable offline.
  *
- * runs        การวิ่ง 1 แถวต่อรอบ (รวม draft ที่ยังวิ่งไม่จบ: end_time IS NULL)
- * run_points  จุด GPS ทั้งหมด (seq เรียงตามเวลา)
- * splits      ข้อมูลรายกิโลเมตร คำนวณครั้งเดียวตอนบันทึก
+ * - `runs`: one row per run, including unfinished drafts (`end_time IS NULL`)
+ * - `run_points`: GPS points ordered by `seq`
+ * - `splits`: per-km splits computed on save
  */
 class RunDb(context: Context, name: String? = NAME) : SQLiteOpenHelper(context, name, null, VERSION) {
 
@@ -81,7 +81,7 @@ class RunDb(context: Context, name: String? = NAME) : SQLiteOpenHelper(context, 
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        // v2: ความรู้สึกหลังวิ่ง 0–5 ดาว (RatingBar ในหน้าเพิ่ม/แก้ไข) — ข้อมูลเดิมไม่หาย ได้ค่า 0 = ยังไม่ให้คะแนน
+        // v2: per-run rating; existing rows default to 0 (not rated).
         if (oldVersion < 2) db.execSQL("ALTER TABLE runs ADD COLUMN feel INTEGER NOT NULL DEFAULT 0")
     }
 

@@ -24,8 +24,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * บันทึกการวิ่งต่อเนื่องขณะ "ปิดจอ" (foreground service) — ป้อนตำแหน่ง GPS จำลอง 1 จุด/วินาที
- * ครึ่งแรกเปิดจอ ครึ่งหลังสั่งจอดับ แล้วตรวจว่าจุดยังถูกบันทึกครบ และจบการวิ่งแล้วอยู่ใน SQLite
+ * Recording continues with the screen off: mock GPS at one fix per second, screen on for the first
+ * half and off for the second; every point is stored and the finished run is saved.
  */
 @RunWith(AndroidJUnit4::class)
 class RunTrackingServiceTest {
@@ -98,7 +98,7 @@ class RunTrackingServiceTest {
         assertTrue("moving time kept counting: ${service.state.movingS}", service.state.movingS >= 30)
         shell("input keyevent KEYCODE_WAKEUP")
 
-        // จุดถูกเขียนลง SQLite ระหว่างวิ่ง (กู้คืนได้ถ้าแอปถูกปิด)
+        // Points are written to SQLite while running, so the run can be recovered.
         waitFor(6_000) { (RunRepository.activeDraft()?.track?.size ?: 0) >= total - 5 }
         assertTrue((RunRepository.activeDraft()?.track?.size ?: 0) >= total - 5)
 
@@ -109,7 +109,7 @@ class RunTrackingServiceTest {
         assertEquals(total, run.track.size)
         assertEquals(service.state.distanceM, run.distanceM, 0.001)
         assertEquals("distance = 4 m × steps", (total - 1) * 4.0, run.distanceM, (total - 1) * 4.0 * 0.03)
-        assertEquals(1, run.splits.size)   // < 1 km → split บางส่วน 1 รายการ (สูตรเดิมของแอป)
+        assertEquals(1, run.splits.size)   // < 1 km gives one partial split
         assertEquals(null, RunTrackingService.current)
         scenario.close()
     }

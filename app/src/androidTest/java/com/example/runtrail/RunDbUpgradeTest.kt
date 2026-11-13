@@ -10,10 +10,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Test
 import org.junit.runner.RunWith
 
-/**
- * ฐานข้อมูลบนเครื่องผู้ใช้จริงเป็น v1 (ยังไม่มีคอลัมน์ feel) → เปิดแอปเวอร์ชันใหม่ต้อง onUpgrade ได้
- * โดยการวิ่งเดิมไม่หาย และอ่านได้ทุกหน้า (readRun ใช้ getColumnIndexOrThrow("feel"))
- */
+/** A v1 database on a user's device (no `feel` column) upgrades without losing runs. */
 @RunWith(AndroidJUnit4::class)
 class RunDbUpgradeTest {
 
@@ -26,21 +23,21 @@ class RunDbUpgradeTest {
 
     @Test fun v1DatabaseUpgradesWithoutLosingRuns() {
         ctx.deleteDatabase(name)
-        // 1) สร้างฐานข้อมูลแล้วใส่การวิ่ง 1 รายการ
+        // 1) Create a database with one run.
         val v2 = RunDb(ctx, name)
         RunRepository.init(ctx, v2)
         RunRepository.currentUser = { null }
         val now = System.currentTimeMillis()
         RunRepository.insert(Run(title = "ก่อนอัปเดตแอป", startTime = now - 3_600_000, endTime = now - 1_800_000,
             distanceM = 5000.0, movingTimeS = 1800))
-        // 2) ทำให้เหมือนไฟล์ v1: ลบคอลัมน์ feel แล้วตั้ง version = 1
+        // 2) Make it look like v1: drop `feel` and set version 1.
         v2.writableDatabase.apply {
             execSQL("ALTER TABLE runs DROP COLUMN feel")
             version = 1
         }
         v2.close()
 
-        // 3) เปิดด้วยแอปเวอร์ชันใหม่ → onUpgrade(1 → 2)
+        // 3) Reopen with the current schema → onUpgrade(1 → 2).
         val upgraded = RunDb(ctx, name)
         assertEquals(RunDb.VERSION, upgraded.readableDatabase.version)
         RunRepository.init(ctx, upgraded)
@@ -49,7 +46,7 @@ class RunDbUpgradeTest {
         assertEquals("ก่อนอัปเดตแอป", runs[0].title)
         assertEquals(0, runs[0].feel)
 
-        // ให้คะแนนหลังอัปเกรดได้ตามปกติ
+        // Ratings work after the upgrade.
         RunRepository.update(runs[0].copy(feel = 5))
         assertEquals(5, RunRepository.getById(runs[0].id, withTrack = false)!!.feel)
         upgraded.close()

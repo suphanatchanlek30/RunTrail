@@ -31,9 +31,8 @@ import com.example.runtrail.ui.detail.RunDetailActivity
 import java.io.File
 
 /**
- * 23 · ภาพแชร์ — สร้างภาพสรุปการวิ่งในเครื่อง (ไม่ต้องใช้เน็ต)
- * พื้นหลัง: รูปจากการวิ่ง หรือเส้นทางบนพื้นเข้ม · ขนาด 9:16 (Story) หรือ 1:1 (โพสต์)
- * บันทึกลงแกลเลอรี (Pictures/RunTrail) หรือส่งต่อไปแอปอื่น
+ * Builds a shareable run image offline: run photo or route on dark, 9:16 or 1:1.
+ * Saves to Pictures/RunTrail or shares to other apps.
  */
 class ShareImageActivity : AppCompatActivity() {
 
@@ -45,7 +44,7 @@ class ShareImageActivity : AppCompatActivity() {
     private var image: Bitmap? = null
     private var renderId = 0
 
-    /** การวิ่งไม่มีรูป → ให้เลือกรูปจากแกลเลอรีมาใช้เป็นพื้นหลัง (ใช้แค่ในภาพนี้) */
+    /** Lets the user pick a background photo for this image only, when the run has none. */
     private val pickPhoto = registerForActivityResult(ActivityResultContracts.GetContent()) { uri: Uri? ->
         if (uri == null) return@registerForActivityResult
         binding.progress.visibility = View.VISIBLE
@@ -90,7 +89,7 @@ class ShareImageActivity : AppCompatActivity() {
         update()
     }
 
-    /** วาดภาพใหม่บน background thread ทุกครั้งที่เปลี่ยนตัวเลือก */
+    /** Re-renders off the main thread whenever an option changes. */
     private fun update() {
         binding.segPhoto.isSelected = usePhoto
         binding.segRoute.isSelected = !usePhoto
@@ -107,7 +106,7 @@ class ShareImageActivity : AppCompatActivity() {
             val photo = path?.let { ImageStore.load(it) }
             ShareImageRenderer(this).render(run, photo, f, miles)
         }) { result ->
-            if (id != renderId) return@runAsync   // มีการเปลี่ยนตัวเลือกระหว่างวาด
+            if (id != renderId) return@runAsync   // options changed while rendering
             binding.progress.visibility = View.GONE
             result.onSuccess {
                 image = it
@@ -123,7 +122,7 @@ class ShareImageActivity : AppCompatActivity() {
 
     private fun fileName() = "RunTrail_${run.startTime}_${format.name.lowercase()}.jpg"
 
-    /** บันทึกลงแกลเลอรี: Android 10+ ไม่ต้องขอสิทธิ์ · Android 9 ต้องขอสิทธิ์เขียนไฟล์ */
+    /** Saves to the gallery; only Android 9 needs the storage permission. */
     private fun save() {
         val bmp = image ?: return
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q &&
@@ -156,13 +155,13 @@ class ShareImageActivity : AppCompatActivity() {
         }
     }
 
-    /** ส่งต่อไปแอปอื่น (LINE, IG, Facebook ฯลฯ) ผ่าน FileProvider */
+    /** Shares the image through FileProvider. */
     private fun share() {
         val bmp = image ?: return
         setButtons(false)
         runAsync({
             val dir = File(cacheDir, "share").apply { mkdirs() }
-            dir.listFiles()?.forEach { it.delete() }   // เก็บแค่ไฟล์ล่าสุด
+            dir.listFiles()?.forEach { it.delete() }   // keep only the latest file
             val file = File(dir, fileName())
             file.outputStream().use { bmp.compress(Bitmap.CompressFormat.JPEG, 92, it) }
             FileProvider.getUriForFile(this, "$packageName.files", file)

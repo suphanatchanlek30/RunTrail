@@ -19,8 +19,8 @@ import com.example.runtrail.ui.common.setupEdgeToEdge
 import com.example.runtrail.ui.common.toast
 
 /**
- * 14 · Shared Web Page — เปิดหน้าเว็บแชร์จริงจาก server (/s/{code}) แบบที่เพื่อนจะเห็น
- * หน้าเว็บใช้ Leaflet วาดแผนที่ จึงต้องเปิด JavaScript · ลิงก์ออกนอกโดเมนเปิดในเบราว์เซอร์
+ * Opens the public share page (/s/{code}) as friends will see it.
+ * The page draws its map with Leaflet, so JavaScript is enabled; external links open in the browser.
  */
 class WebPreviewActivity : AppCompatActivity() {
 

@@ -11,12 +11,8 @@ import com.example.runtrail.ui.settings.SettingsActivity
 import com.google.android.material.bottomnavigation.BottomNavigationView
 
 /**
- * Bottom navigation ที่ใช้ร่วมกัน 5 หน้า (หน้าหลัก · ประวัติ · อันดับ · สถิติ · ตั้งค่า)
- * แต่ละแท็บเป็น Activity แยกตามแบบในคาบเรียน และสลับแท็บโดยไม่มีแอนิเมชัน
- *
- * Back navigation (CS364 เกณฑ์ 4.1 / 4.2):
- *  - แท็บอื่นที่ไม่ใช่หน้าหลัก: กด Back → กลับหน้าหลักเสมอ (ไม่กระโดดไปแท็บที่เคยเปิดค้างไว้)
- *  - หน้าหลัก: กด Back → ต้องกดซ้ำภายใน 2 วินาทีจึงออกจากแอป
+ * Bottom navigation shared by the top-level tabs, each a separate activity switched without animation.
+ * Back from any tab returns to Home; Back on Home needs a second press to exit.
  */
 object BottomNav {
 
@@ -48,7 +44,7 @@ object BottomNav {
         }
     }
 
-    /** กลับหน้าหลัก และปิดแท็บอื่นที่ค้างอยู่ด้านบน (stack จึงเหลือหน้าหลักเป็นหน้าเดียว) */
+    /** Returns to Home and clears the tabs above it. */
     fun goHome(activity: AppCompatActivity) {
         activity.startActivity(
             Intent(activity, MainActivity::class.java)

@@ -1,7 +1,7 @@
 <resources>
     <string name="app_name">RunTrail</string>
 
-    <!-- ===== ทั่วไป ===== -->
+    <!-- General -->
     <string name="action_back">ย้อนกลับ</string>
     <string name="action_next">ถัดไป</string>
     <string name="action_skip">ข้าม</string>
@@ -70,7 +70,7 @@
     <string name="title_evening_run">วิ่งเย็น</string>
     <string name="title_night_run">วิ่งค่ำ</string>
 
-    <!-- ===== 01 Welcome ===== -->
+    <!-- Welcome -->
     <string name="welcome_gps">GPS ±4 ม.</string>
     <string name="welcome_title_1">วิ่งให้สนุกขึ้น\nเห็นทุกก้าวบนแผนที่</string>
     <string name="welcome_body_1">บันทึกเส้นทาง เพซ แคลอรี่ และความสูงด้วย GPS ข้อมูลเก็บในเครื่องของคุณ ใช้ได้แม้ไม่มีอินเทอร์เน็ต</string>
@@ -80,7 +80,7 @@
     <string name="welcome_body_3">ซิงก์ขึ้นเซิร์ฟเวอร์ของคุณเองเมื่อกดแชร์ เพื่อนเปิดลิงก์ดูแผนที่และสถิติได้โดยไม่ต้องติดตั้งแอป</string>
     <string name="welcome_cta">เริ่มต้นใช้งาน</string>
 
-    <!-- ===== 02 Permissions ===== -->
+    <!-- Permissions -->
     <string name="step_1_of_2">ขั้นตอน 1 จาก 2</string>
     <string name="step_2_of_2">ขั้นตอน 2 จาก 2</string>
     <string name="perm_title">ขออนุญาตก่อนออกวิ่ง</string>
@@ -95,7 +95,7 @@
     <string name="perm_privacy">ข้อมูลตำแหน่งเก็บในเครื่องก่อนเสมอ และอัปโหลดเข้าบัญชีของคุณเมื่อเข้าสู่ระบบ · ลิงก์แชร์ซ่อนจุดเริ่ม/จบได้</string>
     <string name="perm_location_denied">ต้องอนุญาตตำแหน่งก่อนจึงจะบันทึกเส้นทางได้ (กด "ข้าม" เพื่อไปต่อ)</string>
 
-    <!-- ===== 03 Profile & Goal ===== -->
+    <!-- Profile and goal -->
     <string name="profile_title">ข้อมูลของคุณ</string>
     <string name="profile_edit_title">แก้ไขโปรไฟล์</string>
     <string name="profile_body">ชื่อใช้ทักทายและแสดงบนหน้าเว็บแชร์ ส่วนน้ำหนักใช้คำนวณแคลอรี่ (MET × น้ำหนัก × เวลา)</string>
@@ -117,7 +117,7 @@
     <string name="error_height">กรอกส่วนสูง 100–250 ซม.</string>
     <string name="error_age">กรอกอายุ 8–100 ปี</string>
 
-    <!-- ===== 04 Sensor Check ===== -->
+    <!-- Sensor check -->
     <string name="sensor_title">ตรวจเซนเซอร์</string>
     <string name="sensor_ready">พร้อมออกวิ่ง</string>
     <string name="sensor_not_ready">ยังไม่พร้อมบันทึกเส้นทาง</string>
@@ -137,7 +137,7 @@
     <string name="sensor_calibrate_title">ปรับเทียบเข็มทิศ</string>
     <string name="sensor_calibrate_body">ถือโทรศัพท์แล้วหมุนเป็นรูปเลข 8 ในอากาศ 3–4 รอบ ห่างจากโลหะและแม่เหล็ก ความแม่นยำจะดีขึ้นอัตโนมัติ</string>
 
-    <!-- ===== 05 / 06 Home ===== -->
+    <!-- Home -->
     <string name="home_this_week">สัปดาห์นี้</string>
     <string name="home_goal_short">เป้า %1$s %2$s</string>
     <string name="home_empty_title">ยังไม่มีการวิ่ง</string>
@@ -154,7 +154,7 @@
     <string name="home_bell_pending">มี %d การวิ่งที่รอซิงก์ขึ้นเซิร์ฟเวอร์</string>
     <string name="home_bell_none">ไม่มีการแจ้งเตือนใหม่</string>
 
-    <!-- ===== 07 / 08 Live Run ===== -->
+    <!-- Live run -->
     <string name="live_gps_good">GPS ดี · ±%d ม.</string>
     <string name="live_gps_fair">GPS พอใช้ · ±%d ม.</string>
     <string name="live_gps_weak">GPS อ่อน · ±%d ม.</string>
@@ -187,14 +187,14 @@
     <string name="live_paused_manual_reason">หยุดจับเวลาไว้ กดวิ่งต่อเมื่อพร้อม</string>
     <string name="live_paused_info">ข้อมูลถูกบันทึกต่อเนื่อง ถ้าแอปถูกปิดจะกู้คืนได้</string>
 
-    <!-- ===== 09 Run Summary ===== -->
+    <!-- Run summary -->
     <string name="detail_saved">บันทึกการวิ่งแล้ว</string>
     <string name="detail_photo_title">รูปจากการวิ่ง</string>
     <string name="detail_photo_has">ถ่าย 1 รูป · แตะเพื่อเปลี่ยน</string>
     <string name="detail_photo_none">ยังไม่มีรูป · แตะเพื่อเพิ่ม</string>
     <string name="detail_menu_stats">Splits และกราฟ</string>
 
-    <!-- ===== 10 Splits & Charts ===== -->
+    <!-- Splits and charts -->
     <string name="stats_title">รายละเอียดการวิ่ง</string>
     <string name="stats_tab_overview">ภาพรวม</string>
     <string name="stats_tab_splits">Splits</string>
@@ -214,7 +214,7 @@
     <string name="stats_humidity">ความชื้น</string>
     <string name="stats_gps_points">จุด GPS</string>
 
-    <!-- ===== 11 Replay ===== -->
+    <!-- Replay -->
     <string name="replay_title">Replay · %s</string>
     <string name="replay_segment">%1$s · %3$s %2$d</string>
     <string name="replay_segment_pace">เพซ %1$s %2$s</string>
@@ -224,7 +224,7 @@
     <string name="replay_back" formatted="false">ย้อน 10%</string>
     <string name="replay_forward" formatted="false">ข้าม 10%</string>
 
-    <!-- ===== 12 Add / Edit ===== -->
+    <!-- Add / edit run -->
     <string name="edit_title_edit">แก้ไขการวิ่ง</string>
     <string name="edit_title_add">เพิ่มการวิ่งย้อนหลัง</string>
     <string name="edit_camera">กล้อง</string>
@@ -253,7 +253,7 @@
     <string name="edit_keep_editing">แก้ไขต่อ</string>
     <string name="edit_discard">ทิ้ง</string>
 
-    <!-- ===== 13 Share & Sync ===== -->
+    <!-- Share -->
     <string name="share_title">แชร์การวิ่ง</string>
     <string name="share_synced_title">ซิงก์ขึ้นเซิร์ฟเวอร์แล้ว</string>
     <string name="share_synced_desc">%1$s · รหัสแชร์ %2$s</string>
@@ -279,7 +279,7 @@
     <string name="share_remove_body">คนที่มีลิงก์จะเปิดดูไม่ได้ทันที ส่วนการวิ่งยังอยู่ทั้งในเครื่องและบนเซิร์ฟเวอร์</string>
     <string name="share_message">%1$s · %2$s กม. — ดูเส้นทางการวิ่งของฉันบน RunTrail %3$s</string>
 
-    <!-- ===== 15 History ===== -->
+    <!-- History -->
     <string name="history_title">ประวัติการวิ่ง</string>
     <string name="history_sort">เรียงและตัวกรอง</string>
     <string name="history_search_hint">ค้นหาชื่อหรือโน้ต</string>
@@ -297,7 +297,7 @@
     <string name="sort_longest">ระยะทางมากสุด</string>
     <string name="sort_fastest">เพซเร็วสุด</string>
 
-    <!-- ===== 16 Personal Records ===== -->
+    <!-- Personal records -->
     <string name="records_title">สถิติส่วนตัว</string>
     <string name="records_total_distance">ระยะทางทั้งหมด</string>
     <string name="records_new">ใหม่</string>
@@ -306,7 +306,7 @@
     <string name="records_6_months">6 เดือน</string>
     <string name="records_share_head">สถิติการวิ่งของฉันบน RunTrail: รวม %1$s จาก %2$d ครั้ง</string>
 
-    <!-- ===== 17 Settings ===== -->
+    <!-- Settings -->
     <string name="settings_body">%1$d กก. · %2$d ซม. · %3$d ปี</string>
     <string name="settings_group_run">การวิ่ง</string>
     <string name="settings_group_data">ข้อมูลและการซิงก์</string>
@@ -332,7 +332,7 @@
     <string name="setting_recreate">ทดสอบคืนสถานะหน้าจอ</string>
     <string name="setting_recreate_value">สร้าง %d ครั้ง</string>
 
-    <!-- ===== 18 Recover ===== -->
+    <!-- Recover unfinished run -->
     <string name="recover_title">พบการวิ่งที่ยังไม่จบ</string>
     <string name="recover_body">แอปถูกปิดระหว่างวิ่งเมื่อ %s น. ข้อมูลล่าสุดถูกเก็บไว้แล้ว ต้องการทำอะไรต่อ?</string>
     <string name="recover_resume">กู้คืนและวิ่งต่อ</string>
@@ -341,13 +341,13 @@
     <string name="recover_discarded">ทิ้งการวิ่งที่ค้างแล้ว</string>
     <string name="recover_saved_title">การวิ่งที่กู้คืน</string>
 
-    <!-- ===== 19 Delete ===== -->
+    <!-- Delete run -->
     <string name="delete_title">ลบการวิ่งนี้?</string>
     <string name="delete_body">“%1$s · %2$s กม.” จะถูกลบออกจากเครื่องถาวร รวมถึงเส้นทางและรูปภาพ</string>
     <string name="delete_server">ลบจากเซิร์ฟเวอร์ด้วย</string>
     <string name="delete_server_desc">การวิ่งนี้ซิงก์แล้ว ลิงก์แชร์จะใช้ไม่ได้</string>
 
-    <!-- ===== Backend / บัญชี / ซิงก์ / อันดับ ===== -->
+    <!-- Account, sync and leaderboard -->
     <string name="channel_run">กำลังบันทึกการวิ่ง</string>
     <string name="channel_km">แจ้งเตือนทุก 1 กม.</string>
     <string name="notify_run_title">กำลังวิ่ง</string>
@@ -488,7 +488,7 @@
     <string name="detail_lb_counted">นับในอันดับโลก</string>
     <string name="detail_lb_not_counted">ไม่นับในอันดับ: %s</string>
 
-    <!-- ===== CS364: Back / ยืนยันการทิ้ง / ธีม / ภาษา ===== -->
+    <!-- Back navigation, discard confirmation, theme and language -->
     <string name="back_again_to_exit">กด Back อีกครั้งเพื่อออกจากแอป</string>
     <string name="recover_discard_confirm_title">ทิ้งการวิ่งที่ค้าง?</string>
     <string name="recover_discard_confirm_body">เส้นทาง เวลา และระยะทางที่บันทึกไว้ของการวิ่งนี้จะถูกลบถาวร</string>
@@ -517,7 +517,7 @@
     <string name="server_checking">กำลังตรวจเซิร์ฟเวอร์…</string>
     <string name="server_waking">เซิร์ฟเวอร์กำลังตื่น (โฮสต์ฟรี) อาจใช้เวลาถึง 1 นาที…</string>
 
-    <!-- เตือนไปวิ่ง (MA13) -->
+    <!-- Run reminder -->
     <string name="setting_reminder">เตือนไปวิ่ง</string>
     <string name="setting_reminder_off">ปิด</string>
     <string name="reminder_enable">เปิดการเตือน</string>
@@ -532,7 +532,7 @@
     <string name="reminder_notif_title">ได้เวลาออกไปวิ่งแล้ว 🏃</string>
     <string name="reminder_notif_body">แตะเพื่อเปิด RunTrail แล้วเริ่มวิ่งได้เลย</string>
 
-    <!-- ส่งออก / นำเข้าประวัติ (MA09 SAF + ไฟล์ส่วนตัวของแอป) -->
+    <!-- Backup export / import -->
     <string name="setting_export">ส่งออกประวัติการวิ่ง</string>
     <string name="setting_import">นำเข้าจากไฟล์สำรอง</string>
     <string name="setting_backup_never">ยังไม่เคย</string>

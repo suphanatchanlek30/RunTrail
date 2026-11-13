@@ -9,10 +9,8 @@ import kotlin.math.sin
 import kotlin.random.Random
 
 /**
- * เส้นทางสำหรับวาดภาพย่อ/กราฟ
- * - การวิ่งจริง: แปลงจุด GPS (หรือเส้นทางย่อ) เป็นพิกัด 0..1
- * - การวิ่งที่เพิ่มเอง: ไม่มีเส้นทาง (คืนรายการว่าง ไม่สร้างเส้นปลอม)
- * - demoRoute: เส้นตัวอย่างสำหรับหน้า Welcome เท่านั้น
+ * Normalised routes for previews and charts.
+ * Manual runs have no route and return an empty list.
  */
 object RouteGenerator {
 
@@ -24,7 +22,7 @@ object RouteGenerator {
         return TrackMath.normalize(points, RunCalculator.pace(run).roundToInt().coerceAtLeast(1))
     }
 
-    /** เส้นทางวนรอบสวนแบบคงที่ ใช้ประกอบภาพในหน้าแนะนำแอป */
+    /** Fixed sample loop used only on the welcome screen. */
     fun demoRoute(seed: Int = 1): List<RoutePoint> {
         val rnd = Random(seed * 7919 + 13)
         val p1 = rnd.nextDouble(0.0, 2 * PI)

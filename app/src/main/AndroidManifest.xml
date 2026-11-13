@@ -2,30 +2,30 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- ตำแหน่ง (GPS) · กิจกรรมทางกาย (Step Counter) · แจ้งเตือน -->
+    <!-- Location for GPS tracking, activity recognition for the step counter, notifications -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
 
-    <!-- บันทึกการวิ่งต่อเนื่องขณะปิดจอ (foreground service ชนิด location) -->
+    <!-- Keeps recording with the screen off -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
 
-    <!-- บันทึกภาพแชร์ลงแกลเลอรี: Android 9 เท่านั้นที่ต้องขอ (10+ ใช้ MediaStore ได้เลย) -->
+    <!-- Saving share images to the gallery needs this only on Android 9 -->
     <uses-permission
         android:name="android.permission.WRITE_EXTERNAL_STORAGE"
         android:maxSdkVersion="28" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION" />
 
-    <!-- แผนที่ OpenStreetMap (osmdroid) และการซิงก์กับ backend -->
+    <!-- Map tiles and backend sync -->
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
-    <!-- เตือนไปวิ่ง (MA13): ตั้งเวลาแบบแม่นยำ (Android 12+ ผู้ใช้ต้องอนุญาตเอง) · ตั้งเวลากลับหลังเปิดเครื่องใหม่ -->
+    <!-- Run reminder: exact alarms (user-granted on Android 12+) and re-arming after reboot -->
     <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" />
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 
-    <!-- เซนเซอร์ไม่บังคับ — เครื่องที่ไม่มีจะใช้ค่าทดแทน (MA12) -->
+    <!-- All sensors are optional; the app falls back when one is missing -->
     <uses-feature android:name="android.hardware.location.gps" android:required="false" />
     <uses-feature android:name="android.hardware.sensor.stepcounter" android:required="false" />
     <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="false" />
@@ -47,7 +47,7 @@
         android:localeConfig="@xml/locales_config"
         android:theme="@style/Theme.RunTrail">
 
-        <!-- เก็บภาษาที่ผู้ใช้เลือกในแอปให้คงอยู่บน Android 9–12 (AppCompat per-app language) -->
+        <!-- Persists the per-app language on Android 9–12 -->
         <service
             android:name="androidx.appcompat.app.AppLocalesMetadataHolderService"
             android:enabled="false"
@@ -57,7 +57,7 @@
                 android:value="true" />
         </service>
 
-        <!-- หน้าหลัก (ถ้ายังไม่ตั้งค่าครั้งแรกจะเปิด Welcome) -->
+        <!-- Launcher; redirects to onboarding on first launch -->
         <activity
             android:name=".ui.home.MainActivity"
             android:screenOrientation="portrait"
@@ -69,7 +69,7 @@
             </intent-filter>
         </activity>
 
-        <!-- 01–03 เริ่มต้นใช้งาน -->
+        <!-- Onboarding -->
         <activity
             android:name=".ui.onboarding.WelcomeActivity"
             android:screenOrientation="portrait"
@@ -85,20 +85,17 @@
             android:exported="false"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- 04 ตรวจเซนเซอร์ -->
         <activity
             android:name=".ui.sensor.SensorCheckActivity"
             android:screenOrientation="portrait"
             android:exported="false" />
 
-        <!-- 07–08 บันทึกการวิ่งสด -->
         <activity
             android:name=".ui.live.LiveRunActivity"
             android:screenOrientation="portrait"
             android:exported="false"
             android:launchMode="singleTask" />
 
-        <!-- 09–10 สรุปผล / Splits และกราฟ -->
         <activity
             android:name=".ui.detail.RunDetailActivity"
             android:screenOrientation="portrait"
@@ -108,7 +105,6 @@
             android:screenOrientation="portrait"
             android:exported="false" />
 
-        <!-- 11 Replay · 12 เพิ่ม/แก้ไข · 14 หน้าเว็บแชร์ -->
         <activity
             android:name=".ui.replay.ReplayActivity"
             android:screenOrientation="portrait"
@@ -123,7 +119,6 @@
             android:screenOrientation="portrait"
             android:exported="false" />
 
-        <!-- 15–17 แท็บ ประวัติ · สถิติ · ตั้งค่า -->
         <activity
             android:name=".ui.history.HistoryActivity"
             android:screenOrientation="portrait"
@@ -137,7 +132,6 @@
             android:name=".ui.settings.SettingsActivity"
             android:screenOrientation="portrait"
             android:exported="false" />
-        <!-- 20–22 บัญชี · อันดับโลก -->
         <activity
             android:name=".ui.auth.LoginActivity"
             android:screenOrientation="portrait"
@@ -168,12 +162,12 @@
             android:exported="false"
             android:foregroundServiceType="location" />
 
-        <!-- MA13: AlarmManager ส่ง Broadcast มาที่นี่เมื่อถึงเวลาเตือน (รับจาก PendingIntent ของแอปเองเท่านั้น) -->
+        <!-- Run reminder alarm; only the app's own PendingIntent reaches it -->
         <receiver
             android:name=".reminder.ReminderReceiver"
             android:exported="false" />
 
-        <!-- MA13: เครื่อง reboot / อัปเดตแอป / เปลี่ยนเวลา → ตั้ง Alarm กลับ (เหตุการณ์มาจากระบบ จึง exported="true") -->
+        <!-- Re-arms the reminder after reboot, app update, time or timezone change, or exact-alarm permission change -->
         <receiver
             android:name=".reminder.BootReceiver"
             android:exported="true">

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- RunCard 350×92 : ภาพย่อเส้นทาง · ชื่อ · วันเวลา · ระยะ/เวลา/เพซ · ไอคอนสถานะซิงก์ -->
+<!-- Run card: route thumbnail, name, date, distance/time/pace, sync icon -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"

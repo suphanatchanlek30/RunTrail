@@ -5,12 +5,7 @@ import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 
-/**
- * Alarm ทั้งหมดหายเมื่อเครื่อง reboot → รับ BOOT_COMPLETED แล้วตั้งเวลาเตือนกลับ (MA13: BootReceiver)
- * exported="true" เพราะเหตุการณ์มาจากระบบปฏิบัติการ
- *
- * รับเพิ่ม: อัปเดตแอป (alarm ก็หายเช่นกัน) · ผู้ใช้เปลี่ยนเวลา/โซนเวลา · ได้/ถูกถอนสิทธิ์ exact alarm
- */
+/** Re-arms the run reminder after events that clear or invalidate alarms: reboot, app update, time or timezone change, exact-alarm permission change. */
 class BootReceiver : BroadcastReceiver() {
 
     override fun onReceive(context: Context, intent: Intent) {

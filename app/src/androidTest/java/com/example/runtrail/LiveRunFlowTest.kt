@@ -32,13 +32,11 @@ import org.junit.runner.RunWith
 import kotlin.concurrent.thread
 
 /**
- * บันทึกการวิ่งผ่านหน้าจอจริงตั้งแต่ต้นจนจบ: เริ่ม → ระยะขึ้นจาก GPS → หยุดชั่วคราว (ระยะไม่เพิ่ม) → วิ่งต่อ →
- * หยุด → กดค้าง 1.5 วินาทีด้วยการแตะจริงเพื่อจบ → ได้การวิ่งที่มีเส้นทาง ช่วงหยุด และเปิดหน้าสรุป
+ * Records a run through the real UI: start → GPS distance → pause (no distance) → resume → pause →
+ * hold 1.5 s with real touches to finish → a run with a track and pauses, and the summary opens.
  *
- * ตำแหน่ง GPS:
- *  - ค่าเริ่มต้น: test provider "gps" ของ LocationManager (ผ่าน API เดียวกับ GPS จริง)
- *  - `-e gpsSource host`: ไม่จำลองในเครื่อง ใช้ GPS ของ emulator ที่ส่งจาก Mac ด้วย `adb emu geo fix` ทุก 1 วินาที
- * ใช้ฐานข้อมูลในหน่วยความจำ → ไม่มีการวิ่งของ test ไปปนในแอปของผู้ใช้
+ * GPS comes from a LocationManager test provider, or with `-e gpsSource host` from `adb emu geo fix`
+ * sent by the host every second. Uses an in-memory database.
  */
 @RunWith(AndroidJUnit4::class)
 class LiveRunFlowTest {
@@ -71,7 +69,7 @@ class LiveRunFlowTest {
 
     private fun shell(cmd: String) = inst.uiAutomation.executeShellCommand(cmd).close()
 
-    /** วิ่งไปทางเหนือ 4 ม./วิ (เกินเกณฑ์ตัดจุดสั่น 3 ม. ของ GpsFilter) จุดละ 1 วินาที (ความแม่นยำ 5 ม.) */
+    /** Runs north at 4 m/s (above the 3 m jitter threshold), one fix per second with 5 m accuracy. */
     @Suppress("DEPRECATION")
     private fun startMockGps() {
         shell("appops set ${ctx.packageName} android:mock_location allow")
@@ -110,7 +108,7 @@ class LiveRunFlowTest {
 
     private fun click(a: Activity, id: Int) = inst.runOnMainSync { a.findViewById<View>(id).performClick() }
 
-    /** กดค้างด้วยการแตะจริง (ส่ง MotionEvent ผ่านระบบ ไม่ได้เรียกฟังก์ชันตรง ๆ) */
+    /** Press-and-hold with real MotionEvents rather than calling the view directly. */
     private fun holdToStop(view: View) {
         val xy = IntArray(2)
         inst.runOnMainSync { view.getLocationOnScreen(xy) }
@@ -129,31 +127,31 @@ class LiveRunFlowTest {
             s.onActivity { activity = it }
             val a = activity!!
 
-            // 1) เริ่มแล้วระยะขึ้นจาก GPS และแสดงบนหน้าจอ
+            // 1) Distance rises from GPS and is shown.
             waitUntil("service started", 10_000) { service() != null }
             waitUntil("distance > 30 m", 60_000) { (service()?.state?.distanceM ?: 0.0) > 30 }
             waitUntil("distance shown", 5_000) { a.findViewById<TextView>(R.id.tvDistance).text.toString() != "0.00" }
 
-            // 2) หยุดชั่วคราว → ระยะไม่เพิ่ม แม้ GPS ยังเคลื่อนที่
+            // 2) Paused: distance does not grow while GPS still moves.
             click(a, R.id.btnPause)
             waitUntil("paused sheet", 5_000) { a.findViewById<View>(R.id.sheetPaused).visibility == View.VISIBLE }
             val pausedAt = service()!!.state.distanceM
             Thread.sleep(4_000)
             assertEquals("no distance while paused", pausedAt, service()!!.state.distanceM, 0.01)
 
-            // 3) วิ่งต่อ → ระยะเพิ่มอีก
+            // 3) Resumed: distance grows again.
             click(a, R.id.btnResume)
             waitUntil("running sheet", 5_000) { a.findViewById<View>(R.id.sheetRunning).visibility == View.VISIBLE }
             waitUntil("distance grows after resume", 30_000) { service()!!.state.distanceM > pausedAt + 15 }
 
-            // 4) หยุด แล้วกดค้างเพื่อจบ
+            // 4) Pause, then hold to finish.
             click(a, R.id.btnPause)
             waitUntil("paused again", 5_000) { a.findViewById<View>(R.id.sheetPaused).visibility == View.VISIBLE }
             holdToStop(a.findViewById(R.id.btnHoldStop))
             waitUntil("recording stopped", 10_000) { !RunTrackingService.isRunning }
         }
 
-        // 5) ได้การวิ่งจริง 1 รายการ พร้อมเส้นทางและช่วงหยุด และเปิดหน้าสรุปให้
+        // 5) One saved run with track and pauses; the summary opens.
         val run = RunRepository.getAll().single()
         val full = RunRepository.getById(run.id)!!
         Log.i("RunTrailLive", "finished: ${"%.1f".format(run.distanceM)} m, ${run.movingTimeS} s, ${full.track.size} points, ${run.pauses.size} pauses (gps=${if (hostGps) "host" else "mock"})")

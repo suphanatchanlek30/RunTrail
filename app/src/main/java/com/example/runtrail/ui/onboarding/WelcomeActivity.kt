@@ -14,9 +14,7 @@ import com.example.runtrail.ui.common.dp
 import com.example.runtrail.ui.common.installExitGuard
 import com.example.runtrail.ui.common.setupEdgeToEdge
 
-/**
- * 01 · Welcome — หน้าแรกเมื่อเปิดแอปครั้งแรก (มี 3 สไลด์ แตะจุดหรือรอให้เลื่อนเอง)
- */
+/** First-launch welcome carousel. */
 class WelcomeActivity : AppCompatActivity() {
 
     private lateinit var binding: ActivityWelcomeBinding
@@ -59,7 +57,6 @@ class WelcomeActivity : AppCompatActivity() {
         binding.btnStart.setOnClickListener {
             startActivity(Intent(this, PermissionsActivity::class.java))
         }
-        // หน้าแรกของการเปิดครั้งแรก (อยู่ล่างสุดของ task) → กด Back ต้องกดซ้ำก่อนออก
         installExitGuard(onlyWhenTaskRoot = true)
     }
 

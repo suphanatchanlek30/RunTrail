@@ -17,13 +17,10 @@ import org.osmdroid.views.MapView
 import org.osmdroid.views.overlay.CopyrightOverlay
 import org.osmdroid.views.overlay.Overlay
 
-/**
- * แผนที่จริง OpenStreetMap (osmdroid) + เส้นทาง GPS ไล่สีตามเพซ
- * ใช้ในหน้า วิ่งสด · สรุปผล · Replay
- */
+/** OpenStreetMap (osmdroid) helpers and a pace-coloured route overlay for the live, detail and replay screens. */
 object OsmRoute {
 
-    /** ตั้งค่าครั้งเดียวก่อนสร้าง MapView (ข้อกำหนดการใช้ tile ของ OSM) */
+    /** One-time osmdroid setup. Tiles come from tile.openstreetmap.org, whose policy requires an app User-Agent and visible attribution. */
     fun init(context: Context) {
         val config = Configuration.getInstance()
         config.userAgentValue = "RunTrail/${BuildConfig.VERSION_NAME} (Android; CS364 student project)"
@@ -35,7 +32,7 @@ object OsmRoute {
         map.setTileSource(TileSourceFactory.MAPNIK)
         map.setMultiTouchControls(interactive)
         map.zoomController.setVisibility(org.osmdroid.views.CustomZoomButtonsController.Visibility.NEVER)
-        map.isTilesScaledToDpi = true    // tile OSM เป็น 256 px ขยายตามความหนาแน่นจอให้อ่านง่าย
+        map.isTilesScaledToDpi = true    // scale 256 px tiles to screen density
         map.minZoomLevel = 3.0
         map.maxZoomLevel = 19.0
         map.controller.setZoom(17.0)
@@ -43,13 +40,7 @@ object OsmRoute {
         map.overlays.add(CopyrightOverlay(map.context).apply { setTextSize(9) })
     }
 
-    /*
-     * ภาพแผนที่จาก tile.openstreetmap.org (ฟรี ไม่ต้องใช้ key) — ต้องตั้ง User-Agent ของแอปเอง (ทำใน init)
-     * และแสดงเครดิต OpenStreetMap ตาม Tile Usage Policy · เหมาะกับงานสาธิต ถ้าผู้ใช้เยอะควรใช้ผู้ให้บริการแผนที่ของตัวเอง
-     * (เคยใช้ CARTO สำหรับโหมดมืด แต่ตอนนี้ CARTO ต้องมี API key และส่งภาพลายน้ำกลับมาแทน)
-     */
-
-    /** กลับสี + ลดความสว่างเล็กน้อย ให้ถนนเป็นเส้นสว่างบนพื้นเข้ม */
+    /** Inverts and slightly dims tiles so roads read as light lines on a dark map. */
     private val INVERT = android.graphics.ColorMatrixColorFilter(
         floatArrayOf(
             -0.85f, 0f, 0f, 0f, 230f,
@@ -59,13 +50,13 @@ object OsmRoute {
         ),
     )
 
-    /** โหมดกลางคืน: กลับสีภาพแผนที่ OSM ให้เป็นโทนมืด (ไม่ต้องพึ่งผู้ให้บริการแผนที่อื่น) */
+    /** Applies the dark tile filter for night mode. */
     fun setDark(map: MapView, dark: Boolean) {
         map.overlayManager.tilesOverlay.setColorFilter(if (dark) INVERT else null)
         map.invalidate()
     }
 
-    /** ซูมให้เห็นเส้นทางทั้งหมด เว้นขอบล่างตามความสูงของ sheet */
+    /** Zooms to fit the whole track, leaving room at the bottom for the sheet. */
     fun fit(map: MapView, track: List<TrackPoint>, padTopPx: Int, padBottomPx: Int) {
         if (track.isEmpty()) return
         if (track.size == 1) {
@@ -74,7 +65,7 @@ object OsmRoute {
         val box = BoundingBox.fromGeoPoints(track.map { GeoPoint(it.lat, it.lng) })
         map.post {
             val h = map.height.toFloat().coerceAtLeast(1f)
-            // ขยายกรอบลงล่างตามพื้นที่ที่ถูก sheet บัง
+            // Extend the box downward by the area hidden behind the sheet.
             val latSpan = (box.latNorth - box.latSouth).coerceAtLeast(0.0008)
             val visible = (h - padTopPx - padBottomPx).coerceAtLeast(h * 0.25f)
             val extraBottom = latSpan * padBottomPx / visible
@@ -87,18 +78,15 @@ object OsmRoute {
         }
     }
 
-    /**
-     * Overlay วาดเส้นทาง — progress 0..1 (Replay: ส่วนที่ยังไม่ถึงเป็นสีเทา), showCurrent = จุดตำแหน่งปัจจุบัน
-     */
+    /** Draws a track; [progress] (0..1) greys out the unreached part during replay. */
     class RouteOverlay(private val density: Float) : Overlay() {
         var track: List<TrackPoint> = emptyList()
             set(value) { field = value; paces = TrackMath.paces(value, 360) }
         var progress = 1f
         var showCurrent = false
         /**
-         * ตำแหน่ง GPS ล่าสุดของเครื่อง (หน้าวิ่งสด) — หมุดวาดที่นี่ ไม่ใช่ที่จุดสุดท้ายของเส้นทาง
-         * เส้นทางเก็บเฉพาะจุดที่ผ่านตัวกรอง (ขยับเกินค่าคลาดเคลื่อน, แม่นยำพอ) หมุดจึงเคยค้างแล้วกระโดด
-         * และไม่ตรงกับกลางแผนที่ที่เลื่อนตามตำแหน่งล่าสุด
+         * Latest device fix on the live screen. The marker is drawn here rather than at the track's last
+         * point, because the track only keeps filtered points and would lag behind the camera.
          */
         var current: TrackPoint? = null
         var trimFraction = 0f
@@ -111,7 +99,7 @@ object OsmRoute {
         private val p1 = Point()
         private val p2 = Point()
 
-        /** จุดที่วาดหมุดตำแหน่งปัจจุบัน (null = ไม่วาด) — ใช้ทั้งตอนวาดและใน test */
+        /** Where the position marker is drawn, or null for none. */
         fun markerPoint(): TrackPoint? {
             if (!showCurrent) return null
             current?.let { return it }
@@ -135,17 +123,17 @@ object OsmRoute {
             val reached = ((n - 1) * progress).toInt().coerceIn(from, to)
             val w = 6 * density
 
-            // ขอบขาว
+            // White casing.
             line.strokeWidth = w + 4 * density
             line.color = Color.WHITE
             for (i in from until to) segment(canvas, proj, i, line)
 
-            // ส่วนที่ยังไม่ถึง
+            // Not yet reached.
             line.strokeWidth = w
             line.color = 0xFFB9C2CB.toInt()
             for (i in reached until to) segment(canvas, proj, i, line)
 
-            // ส่วนที่วิ่งแล้ว ไล่สีตามเพซ
+            // Covered part, coloured by pace.
             for (i in from until reached) {
                 line.color = PaceColor.forPace(paces[i])
                 segment(canvas, proj, i, line)
@@ -172,7 +160,7 @@ object OsmRoute {
 
         private fun drawCurrent(canvas: Canvas, map: MapView, p: TrackPoint) {
             map.projection.toPixels(GeoPoint(p.lat, p.lng), p1)
-            // วงความแม่นยำ: ใหญ่ตามค่าคลาดเคลื่อนของ GPS (เล็กสุดเท่าวงเดิม 22dp) แบบแผนที่ทั่วไป
+            // Accuracy halo scaled to the GPS error, never smaller than the 22 dp marker.
             val accuracyPx = if (p.accuracy > 0f) map.projection.metersToPixels(p.accuracy) else 0f
             dot.color = 0x3300D47A
             canvas.drawCircle(p1.x.toFloat(), p1.y.toFloat(), maxOf(22 * density, accuracyPx), dot)

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 19 · Delete Confirmation — Dialog 342×355 -->
+<!-- Delete run confirmation -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -53,7 +53,7 @@
         android:paddingStart="@dimen/space_14"
         android:paddingEnd="@dimen/space_14">
 
-        <!-- MA08 CheckBox: ติ๊ก = ลบจากเซิร์ฟเวอร์ด้วย (แตะทั้งแถวก็สลับได้) -->
+        <!-- Also delete from the server; the whole row toggles it -->
         <CheckBox
             android:id="@+id/checkServer"
             android:layout_width="wrap_content"

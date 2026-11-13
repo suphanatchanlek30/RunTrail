@@ -11,10 +11,7 @@ import android.widget.Switch
 import androidx.core.content.ContextCompat
 import com.example.runtrail.R
 
-/**
- * Toggle 46×28 ตาม Figma (Toggle/On · Toggle/Off) — track มน + ปุ่มกลมขาว 22 ระยะขอบ 3
- * สืบทอด CompoundButton จึงใช้ isChecked / toggle() / setOnCheckedChangeListener ได้เหมือน Switch
- */
+/** 46×28 dp toggle with a rounded track and a white knob. A [CompoundButton], so it works like a Switch. */
 class ToggleSwitch @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
@@ -34,13 +31,13 @@ class ToggleSwitch @JvmOverloads constructor(
         buttonDrawable = null
         background = null
         text = null
-        setLayerType(LAYER_TYPE_SOFTWARE, null)   // ให้เงาของปุ่มกลมแสดงผล
+        setLayerType(LAYER_TYPE_SOFTWARE, null)   // software layer so the knob shadow renders
     }
 
     override fun setChecked(checked: Boolean) {
         val changed = checked != isChecked
         super.setChecked(checked)
-        // ระหว่าง constructor ฟิลด์ยังไม่พร้อม → วาดตามค่าโดยตรง
+        // Fields are not initialised yet during construction; skip the animation.
         if (changed && isAttachedToWindow && isLaidOut) {
             animator?.cancel()
             animator = ValueAnimator.ofFloat(if (checked) 0f else 1f, if (checked) 1f else 0f).apply {

@@ -3,7 +3,7 @@ package com.example.runtrail.domain
 import com.example.runtrail.data.TrackPoint
 import kotlin.math.PI
 
-/** เส้นทางสำหรับทดสอบ: เดินขึ้นทิศเหนือจากสวนลุมพินีด้วยความเร็วคงที่ */
+/** Test tracks heading north from Lumphini Park at constant speed. */
 object TestTracks {
     const val M_PER_DEG_LAT = 6_371_000.0 * PI / 180
     const val T0 = 1_762_772_530_000L

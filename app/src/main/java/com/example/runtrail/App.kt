@@ -16,17 +16,14 @@ import com.example.runtrail.sync.SyncEngine
 import com.example.runtrail.sync.SyncManager
 import java.util.concurrent.Executors
 
-/**
- * จุดเริ่มต้นของแอป: เปิดฐานข้อมูล สร้างตัวเชื่อม backend และตั้งเวลาซิงก์
- */
+/** Application entry point: wires shared services, opens the database and schedules background work. */
 class App : Application() {
 
     override fun onCreate() {
         super.onCreate()
         services = Services(this)
-        // ใช้ธีมที่ผู้ใช้เลือกไว้ (ระบบ / กลางวัน / กลางคืน) ก่อนเปิดหน้าจอแรก
         androidx.appcompat.app.AppCompatDelegate.setDefaultNightMode(services.prefs.themeMode)
-        // ภาษาของข้อความที่สร้างในโค้ด (Fmt, PaceColor, ข้อความ error) ให้ตรงกับภาษาที่เลือก
+        // Formatting helpers in domain/ read the UI language through this hook.
         com.example.runtrail.domain.Lang.english = { englishUi }
         refreshLanguage()
         registerActivityLifecycleCallbacks(object : SimpleActivityCallbacks() {
@@ -35,7 +32,7 @@ class App : Application() {
         RunRepository.init(this)
         RunRepository.currentUser = { services.prefs.accountUserId }
         RunTrackingService.createChannels(this)
-        // MA13: สร้าง Channel ของการเตือน และตั้ง Alarm กลับ (เผื่อถูกล้าง เช่น ผู้ใช้กด Force stop)
+        // Re-arm the reminder; alarms are cleared by force-stop and app updates.
         com.example.runtrail.reminder.ReminderNotifier.createChannel(this)
         com.example.runtrail.reminder.ReminderScheduler.schedule(this)
         services.onSessionExpired = {
@@ -55,7 +52,7 @@ class App : Application() {
 
     @Volatile private var englishUi = false
 
-    /** อ่านภาษาที่ผู้ใช้เลือก (ถ้าไม่ได้เลือก = ภาษาของเครื่อง) แล้วเก็บไว้ ไม่ต้องถามระบบทุกครั้งที่จัดรูปแบบข้อความ */
+    /** Caches whether the UI language is English (app locale, else system locale). */
     fun refreshLanguage() {
         val app = androidx.appcompat.app.AppCompatDelegate.getApplicationLocales()
         val locale = if (!app.isEmpty) app[0]
@@ -63,7 +60,7 @@ class App : Application() {
         englishUi = locale?.language == "en"
     }
 
-    /** ระหว่าง instrumented test ไม่ตั้งงานซิงก์เอง (test เรียก SyncEngine ตรง ๆ) */
+    /** Instrumented tests drive sync themselves, so background scheduling is skipped. */
     private fun isInstrumentationTest(): Boolean = try {
         Class.forName("androidx.test.platform.app.InstrumentationRegistry")
         true
@@ -77,13 +74,13 @@ class App : Application() {
     }
 }
 
-/** ของที่ใช้ร่วมกันทั้งแอป (สร้างครั้งเดียว) */
+/** App-wide singletons, created once in [App.onCreate]. */
 class Services(val context: Context) {
     val prefs = PrefsHelper(context)
     val sessions = TokenStore(context)
     private val main = Handler(Looper.getMainLooper())
 
-    /** ถูกเรียกเมื่อ refresh token ใช้ไม่ได้แล้ว → ต้องล็อกอินใหม่ (ข้อมูลในเครื่องยังอยู่) */
+    /** Called on the main thread when the refresh token is rejected and the user must sign in again. */
     @Volatile var onSessionExpired: (() -> Unit)? = null
 
     val api = RunTrailApi(ApiClient({ prefs.apiUrl }, sessions, onSessionExpired = {
@@ -93,18 +90,15 @@ class Services(val context: Context) {
     val sync = SyncEngine(context, api, prefs)
 
     init {
-        // MA11: หน้าจอเรียก API ผ่าน Volley — ใช้ที่อยู่เซิร์ฟเวอร์และ token ชุดเดียวกับ OkHttp
+        // Volley requests share the server address and session with the OkHttp client.
         com.example.runtrail.net.ApiConfig.baseUrl = { prefs.apiUrl }
         com.example.runtrail.net.VolleyApi.client = api.client
     }
 
-    /** thread สำหรับงานเครือข่ายที่สั่งจากหน้าจอ */
+    /** Background pool for network calls started from screens. */
     val io = Executors.newFixedThreadPool(3)
 
-    /**
-     * ปลุกเซิร์ฟเวอร์ล่วงหน้า (ไม่รอผล) — โฮสต์ฟรีอย่าง Render หลับเมื่อว่าง ถ้าปลุกตั้งแต่เปิดแอป
-     * พอผู้ใช้กดเข้าสู่ระบบ/เปิดอันดับ เซิร์ฟเวอร์ก็ตื่นแล้วหรือใกล้ตื่น
-     */
+    /** Fire-and-forget health check so a sleeping free-tier server starts waking before the user needs it. */
     fun wakeServer() {
         io.execute { api.health() }
     }
@@ -113,7 +107,7 @@ class Services(val context: Context) {
         get() = (Settings.Global.getString(context.contentResolver, Settings.Global.DEVICE_NAME) ?: Build.MODEL).take(100)
 }
 
-/** ActivityLifecycleCallbacks ที่ไม่ต้อง override ทุกเมธอด */
+/** [Application.ActivityLifecycleCallbacks] with empty defaults. */
 open class SimpleActivityCallbacks : Application.ActivityLifecycleCallbacks {
     override fun onActivityCreated(activity: android.app.Activity, savedInstanceState: android.os.Bundle?) {}
     override fun onActivityStarted(activity: android.app.Activity) {}

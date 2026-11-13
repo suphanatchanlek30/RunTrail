@@ -32,8 +32,8 @@ import org.junit.Test
 import org.junit.runner.RunWith
 
 /**
- * เซิร์ฟเวอร์ติดต่อไม่ได้ (ออฟไลน์ / server ล่ม): ทุกหน้าที่ใช้เน็ตต้องไม่ค้าง ไม่เด้ง และแสดงข้อมูลที่เก็บไว้ (AUDIT §6)
- * ชี้แอปไปที่อยู่ที่ไม่มีใครฟัง (127.0.0.1:9) · ค่าตั้งและ session ของผู้ใช้จริงถูกสำรองแล้วคืนให้ครบ
+ * With the server unreachable (pointed at 127.0.0.1:9), every network screen must not hang or crash
+ * and must show cached data. The device's real settings and session are restored afterwards.
  */
 @RunWith(AndroidJUnit4::class)
 class OfflineScreensTest {
@@ -103,14 +103,14 @@ class OfflineScreensTest {
     }
 
     @Test fun screensKeepWorkingWhenTheServerIsUnreachable() {
-        // อันดับโลก: แสดงผลล่าสุดที่เก็บไว้ หลังโหลดใหม่ไม่สำเร็จ
+        // Leaderboard: cached result stays after the refresh fails.
         ActivityScenario.launch(LeaderboardActivity::class.java).use { s ->
             waitForText(s, "Cached Runner")
-            Thread.sleep(2_000)      // ให้คำขอเครือข่ายล้มเหลวก่อน แล้วยังต้องเห็นข้อมูลเดิม
+            Thread.sleep(2_000)      // let the request fail first
             waitForText(s, "Cached Runner")
             assertEquals(Lifecycle.State.RESUMED, s.state)
         }
-        // การแจ้งเตือน: รายการที่เก็บไว้ + ป้ายออฟไลน์
+        // Notifications: cached list plus the offline label.
         ActivityScenario.launch(NotificationsActivity::class.java).use { s ->
             waitForText(s, "Cached note")
             var status = ""
@@ -121,12 +121,12 @@ class OfflineScreensTest {
             }
             assertTrue("offline status shown", status.isNotEmpty())
         }
-        // หน้าหลัก: เปิดได้ปกติ (ดึงการแจ้งเตือนล้มเหลวแบบเงียบ)
+        // Home opens normally; the notification fetch fails silently.
         ActivityScenario.launch(MainActivity::class.java).use { s ->
             Thread.sleep(1_500)
             assertEquals(Lifecycle.State.RESUMED, s.state)
         }
-        // ซิงก์: บอกให้ลองใหม่ การวิ่งยังรอส่ง ไม่หาย
+        // Sync reports a retry; the run stays pending.
         val id = RunRepository.insert(Run(title = "offline", startTime = System.currentTimeMillis() - 3_600_000,
             endTime = System.currentTimeMillis() - 1_800_000, distanceM = 5000.0, movingTimeS = 1800, source = RunSource.MANUAL))
         val outcome = App.services.sync.sync()
@@ -134,7 +134,7 @@ class OfflineScreensTest {
         assertEquals(SyncStatus.PENDING, RunRepository.getById(id, withTrack = false)!!.syncStatus)
         assertTrue("session kept while offline", App.services.sessions.get() != null)
 
-        // เข้าสู่ระบบ: แสดงข้อความ "เชื่อมต่อเซิร์ฟเวอร์ไม่ได้" ไม่ค้างที่ปุ่มหมุน
+        // Sign-in shows "can't reach the server" instead of spinning forever.
         App.services.sessions.clear()
         ActivityScenario.launch(LoginActivity::class.java).use { s ->
             s.onActivity {

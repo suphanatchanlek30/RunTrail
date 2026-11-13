@@ -2,13 +2,13 @@ package com.example.runtrail.domain
 
 import java.util.Calendar
 
-/** ช่วงเวลาที่ใช้ร่วมกันหลายหน้าจอ (Kotlin ล้วน) */
+/** Time ranges shared by several screens. */
 object Periods {
 
     const val DAY_MS = 24L * 60 * 60 * 1000
     const val WEEK_MS = 7 * DAY_MS
 
-    /** เที่ยงคืนของ 6 วันก่อน (ช่วง 7 วันล่าสุด รวมวันนี้) */
+    /** Midnight six days ago: the start of the rolling 7-day window that includes today. */
     fun startOfWeek(now: Long): Long = Calendar.getInstance().apply {
         timeInMillis = now
         set(Calendar.HOUR_OF_DAY, 0); set(Calendar.MINUTE, 0)

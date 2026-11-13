@@ -28,9 +28,8 @@ import com.example.runtrail.ui.common.userMessage
 import org.json.JSONObject
 
 /**
- * 22 · อันดับโลก — ระยะรวม / 5K / 10K · สัปดาห์ / เดือน / ทั้งหมด · ทั่วโลก / ประเทศ
- * - ต้องใช้เน็ต แต่เก็บผลล่าสุดไว้แสดงตอนออฟไลน์
- * - นับเฉพาะการวิ่ง GPS ที่ server ตรวจแล้ว (การวิ่งที่เพิ่มเองไม่นับ)
+ * Global and country leaderboards by distance or best 5K/10K, per week, month or all time.
+ * Only server-verified GPS runs count. The last result is cached for offline viewing.
  */
 class LeaderboardActivity : AppCompatActivity() {
 
@@ -101,26 +100,25 @@ class LeaderboardActivity : AppCompatActivity() {
         loading = true
         if (cached == null) binding.progress.visibility = View.VISIBLE
         val key = cacheKey
-        // MA11 Get All: GET + url + body null → ④ สำเร็จ / ⑤ ผิดพลาด แล้ว add เข้าคิวจึงถูกส่งจริง
         val q = ApiRequest(
-            Request.Method.GET,                             // ① อ่านข้อมูลอย่างเดียว
-            ApiConfig.leaderboard(metric, period, scope),   // ② /leaderboard?metric=…
-            null,                                           // ③ ไม่มี body
-            { o ->                                          // ④ สำเร็จ: o = JSON ที่ server ตอบ
+            Request.Method.GET,
+            ApiConfig.leaderboard(metric, period, scope),
+            null,
+            { o ->
                 loading = false
                 binding.progress.visibility = View.GONE
                 o.put("fetched_at", System.currentTimeMillis())
                 prefs.saveLeaderboardCache(key, o.toString())
                 if (key == cacheKey) render(o, offline = false)
-                else load()   // ผู้ใช้เปลี่ยนตัวกรองระหว่างโหลด
+                else load()   // filters changed while loading
             },
-            { error ->                                      // ⑤ ผิดพลาด: เน็ตหลุด / server ตอบ error
+            { error ->
                 loading = false
                 binding.progress.visibility = View.GONE
                 val e = error.toApiException()
                 when {
                     key != cacheKey -> load()
-                    // บัญชีนี้ยังไม่มีประเทศบน server → ให้ตั้งได้ทันทีจากตรงนี้ (AUDIT A7)
+                    // The account has no country yet: let the user set it right here.
                     e.fields.containsKey("country") ->
                         showEmpty(getString(R.string.lb_country_needed), getString(R.string.lb_set_country)) { setCountry() }
                     cached != null -> {
@@ -137,7 +135,7 @@ class LeaderboardActivity : AppCompatActivity() {
 
     private fun setCountry() {
         com.example.runtrail.ui.common.CountryPicker.show(this, App.services.prefs.countryCode) { code ->
-            // จำว่าก่อนหน้านี้มีโปรไฟล์ที่แก้แล้วยังไม่ได้ส่งไหม (น้ำหนัก เป้าหมาย ฯลฯ) — ห้ามล้างทิ้ง
+            // Keep any other unsent profile edits pending.
             val otherEditsPending = App.services.prefs.profileDirty
             App.services.prefs.countryCode = code
             binding.progress.visibility = View.VISIBLE
@@ -151,7 +149,7 @@ class LeaderboardActivity : AppCompatActivity() {
                 },
                 { e ->
                     binding.progress.visibility = View.GONE
-                    toast(e.userMessage())   // ยังเป็น dirty → การซิงก์รอบหน้าจะส่งประเทศให้
+                    toast(e.userMessage())   // still dirty, so the next sync sends it
                 },
             )
             q.setTag(this)
@@ -217,7 +215,7 @@ class LeaderboardActivity : AppCompatActivity() {
         return if (metric == "distance") "${Fmt.distance(value, miles, 1)} ${Fmt.unit(miles)}" else Fmt.duration(value.toLong())
     }
 
-    /** แตะรายชื่อ → สรุปของนักวิ่งคนนั้น (ระยะสัปดาห์/เดือน/ทั้งหมด · สถิติ 5K/10K) */
+    /** Shows a runner's distance totals and 5K/10K bests. */
     private fun showRunner(e: Entry) {
         val b = com.example.runtrail.databinding.SheetRunnerBinding.inflate(layoutInflater)
         val dialog = com.google.android.material.bottomsheet.BottomSheetDialog(this).apply { setContentView(b.root) }
@@ -225,7 +223,6 @@ class LeaderboardActivity : AppCompatActivity() {
         b.tvName.text = if (e.isMe) getString(R.string.lb_you, e.name) else e.name
         b.tvSub.text = getString(R.string.lb_rank, e.rank) + (e.country?.let { " · $it" } ?: "")
         dialog.show()
-        // MA11 Get One: GET + id ต่อท้าย URL + body null → อ่าน JSONObject แล้ว setText
         val q = ApiRequest(
             Request.Method.GET, ApiConfig.userSummary(e.userId), null,
             { s ->
@@ -267,7 +264,7 @@ class LeaderboardActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        VolleyApi.getQueue(this).cancelAll(this)   // ยกเลิกคำขอที่ค้างของหน้านี้
+        VolleyApi.getQueue(this).cancelAll(this)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {

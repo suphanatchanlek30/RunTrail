@@ -4,25 +4,22 @@ import com.example.runtrail.data.PhotoSync
 import com.example.runtrail.data.SyncStatus
 import com.example.runtrail.data.TrackPoint
 
-/**
- * การตัดสินใจทั้งหมดของ [SyncEngine] แยกเป็นฟังก์ชันล้วน (ไม่แตะ SQLite / เครือข่าย / Context)
- * → ทดสอบบน JVM ได้ครบทุกกรณี (SyncRulesTest) ส่วน SyncEngine เหลือแค่ทำตามผลที่ได้
- */
+/** Pure decision logic for [SyncEngine], kept free of I/O so it can be unit tested. */
 object SyncRules {
 
-    /** จำนวนจุดสูงสุดที่ server รับต่อการวิ่ง (backend: api.MaxPoints) */
+    /** Maximum points the server accepts per run. */
     const val MAX_UPLOAD_POINTS = 50_000
 
-    // ---------------------------------------------------------------- ส่งการวิ่งขึ้น
+    // ---------------------------------------------------------------- Push
 
     enum class PushFailure {
-        /** เน็ต/เซิร์ฟเวอร์มีปัญหาชั่วคราว หรือ token ใช้ไม่ได้ → หยุดทั้งรอบ ให้ WorkManager ลองใหม่ (ข้อมูลไม่หาย) */
+        /** Temporary network/server problem or unusable token: stop the round and let WorkManager retry. */
         ABORT_ROUND,
-        /** UUID ชนกับการวิ่งของคนอื่น → สุ่มรหัสใหม่แล้วส่งรอบหน้า */
+        /** UUID collides with another user's run: assign a new one and upload next round. */
         NEW_UUID,
-        /** server บอกว่าการวิ่งนี้ถูกลบแล้ว (จากอีกเครื่อง) → ลบในเครื่องตาม */
+        /** The run was deleted on another device: delete it locally too. */
         DROP_LOCAL,
-        /** ข้อมูลผิดรูปแบบ → ทำเครื่องหมาย "ซิงก์ไม่สำเร็จ" พร้อมข้อความ (จะลองอีกเมื่อมีการซิงก์ครั้งถัดไป) */
+        /** Invalid data: mark as failed with the server message. */
         MARK_FAILED,
     }
 
@@ -33,30 +30,26 @@ object SyncRules {
         else -> PushFailure.MARK_FAILED
     }
 
-    /** ข้อผิดพลาดตอนส่ง/ลบรูปที่ต้องหยุดทั้งรอบ (ที่เหลือ เช่น รูปเสีย ข้ามไปได้) */
+    /** Photo errors that abort the round; others (e.g. a broken file) are skipped. */
     fun photoErrorAbortsRound(status: Int): Boolean = status == 0 || status >= 500 || status == 429 || status == 401
 
-    /**
-     * ลดจำนวนจุดให้ไม่เกินที่ server รับ (วิ่งเกิน ~13.9 ชม. ที่ 1 จุด/วินาที)
-     * เก็บจุดแรกและจุดสุดท้ายเสมอ เว้นช่วงเท่า ๆ กัน → ระยะที่ server คำนวณใหม่ต่างจากเดิมเพียงเล็กน้อย
-     * เดิมส่งเกินแล้วได้ 400 ทุกครั้ง การวิ่งนั้นซิงก์ไม่ได้เลย
-     */
+    /** Evenly thins a track to at most [max] points, keeping the first and last, so the server accepts it. */
     fun thinForUpload(points: List<TrackPoint>, max: Int = MAX_UPLOAD_POINTS): List<TrackPoint> {
         if (points.size <= max) return points
-        // ระยะห่างแบบทศนิยม → ได้ครบ max จุดพอดี (ระยะห่างจำนวนเต็มจะเหลือแค่ครึ่งเดียวเมื่อเกินมาไม่มาก)
+        // Fractional step so exactly [max] points are kept.
         val step = (points.size - 1).toDouble() / (max - 1)
         return List(max) { i -> points[Math.round(i * step).toInt().coerceAtMost(points.lastIndex)] }
     }
 
-    /** หลังส่งสำเร็จ: สถานะรูปที่เก็บในเครื่อง — งานรูปที่ค้าง (ส่ง/ลบ) ต้องไม่หายเพราะคำตอบของ server */
+    /** Local photo state after a successful upload; pending photo work must survive the server response. */
     fun photoStateAfterPush(local: PhotoSync, serverHasPhoto: Boolean): PhotoSync = when (local) {
         PhotoSync.PENDING, PhotoSync.DELETE -> local
         else -> if (serverHasPhoto) PhotoSync.SYNCED else PhotoSync.NONE
     }
 
-    // ---------------------------------------------------------------- ดึงการวิ่งลงเครื่อง
+    // ---------------------------------------------------------------- Pull
 
-    /** สถานะของการวิ่งเดียวกันในเครื่อง (null = ยังไม่มี) */
+    /** Local state of the same run; null when it is not on the device. */
     data class Local(
         val syncStatus: SyncStatus,
         val deleted: Boolean,
@@ -69,29 +62,27 @@ object SyncRules {
     enum class PullAction { IGNORE, DELETE_LOCAL, APPLY }
 
     fun onPulled(local: Local?, serverDeleted: Boolean, serverClientUpdatedAt: Long): PullAction = when {
-        // ลบจากอีกเครื่อง: ลบในเครื่องเฉพาะเมื่อไม่มีการแก้ที่ยังไม่ได้ส่ง
+        // Deleted elsewhere: delete locally only if there are no unsent edits.
         serverDeleted -> if (local != null && local.syncStatus == SyncStatus.SYNCED) PullAction.DELETE_LOCAL else PullAction.IGNORE
         local == null -> PullAction.APPLY
-        // แก้ในเครื่องแล้วยังไม่ได้ส่ง / รอลบ / ยังวิ่งไม่จบ → ฝั่งเครื่องชนะ จะถูกส่งขึ้นไปรอบหน้า
+        // Unsent local edits, pending deletion or still recording: the local copy wins and is pushed later.
         local.syncStatus != SyncStatus.SYNCED || local.deleted || !local.finished -> PullAction.IGNORE
-        // มีฉบับเดียวกันหรือใหม่กว่าอยู่แล้ว (เช่น เพิ่งส่งขึ้นไปเอง)
+        // Already have this version or newer.
         local.updatedAt >= serverClientUpdatedAt -> PullAction.IGNORE
         else -> PullAction.APPLY
     }
 
-    /** เครื่องอื่นลบรูปไปแล้ว: เครื่องนี้มีรูปที่เคยซิงก์ แต่ server ไม่มีรูปแล้ว */
+    /** True when this device has a synced photo that the server no longer has. */
     fun photoRemovedElsewhere(local: Local?, serverHasPhoto: Boolean): Boolean =
         !serverHasPhoto && local?.photoPath != null && local.photoSync == PhotoSync.SYNCED
 
-    // ---------------------------------------------------------------- การแจ้งเตือน
+    // ---------------------------------------------------------------- Notifications
 
     data class Note(val id: String, val read: Boolean)
 
     /**
-     * การแจ้งเตือนที่ควรเด้งในแถบแจ้งเตือนของเครื่อง (items เรียงใหม่ → เก่าแบบที่ server ส่ง)
-     * - ครั้งแรกหลังล็อกอิน (ยังไม่เคยจำอะไรไว้) ไม่เด้งของเก่าทั้งหมด
-     * - ไม่เด้งซ้ำ ไม่เด้งรายการที่อ่านแล้ว และไม่เด้งเมื่อผู้ใช้ปิดการแจ้งเตือนข่าวสาร
-     * คืน (รายการที่ต้องเด้ง เรียงเก่า → ใหม่, ชุด id ที่จำไว้ชุดใหม่)
+     * Notifications to post to the tray, oldest first, and the updated set of shown ids.
+     * Nothing is posted on the first fetch after sign-in, for read items, or when alerts are off.
      */
     fun notificationsToShow(items: List<Note>, shown: Set<String>, alertsOn: Boolean): Pair<List<Note>, Set<String>> {
         val remembered = shown.toMutableSet()
@@ -103,8 +94,7 @@ object SyncRules {
             if (!firstFetch && !n.read && alertsOn) show += n
         }
         remembered += INIT_MARK
-        // ตัดให้เล็กลงโดยเก็บ id ของหน้าปัจจุบันไว้เสมอ (เดิม take(300) จากชุดที่ไม่มีลำดับ อาจลืม id ที่ยังอยู่บน server
-        // แล้วเด้งซ้ำ) — รายการที่หลุดจากหน้าล่าสุดไปแล้วจะไม่กลับมาอีก จึงลืมได้
+        // Bound the set by keeping only ids still on the latest page; older ones never come back.
         val trimmed = if (remembered.size > 400) items.map { it.id }.toSet() + INIT_MARK else remembered
         return show to trimmed
     }

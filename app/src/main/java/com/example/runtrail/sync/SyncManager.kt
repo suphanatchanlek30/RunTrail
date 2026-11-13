@@ -14,10 +14,7 @@ import androidx.work.WorkerParameters
 import com.example.runtrail.App
 import java.util.concurrent.TimeUnit
 
-/**
- * ตั้งเวลาซิงก์ด้วย WorkManager: ทำงานเมื่อมีเน็ตเท่านั้น ถ้าไม่มีเน็ตจะรอจนต่อได้แล้วทำเอง
- * (แบบ Strava: วิ่งตอนออฟไลน์ แล้วอัปโหลดเองเมื่อกลับมามีเน็ต)
- */
+/** Schedules sync with WorkManager; work runs only when a network is available. */
 object SyncManager {
 
     private const val ONE_TIME = "sync_now"
@@ -25,7 +22,7 @@ object SyncManager {
 
     private val online = Constraints.Builder().setRequiredNetworkType(NetworkType.CONNECTED).build()
 
-    /** ขอซิงก์ (เช่น หลังจบการวิ่ง แก้ไข หรือลบ) — ถ้ากำลังซิงก์อยู่จะต่อคิวอีกรอบ */
+    /** Requests a sync, e.g. after a run is saved, edited or deleted. Queues another round if one is running. */
     fun requestSync(context: Context) {
         val req = OneTimeWorkRequestBuilder<SyncWorker>()
             .setConstraints(online)
@@ -34,13 +31,13 @@ object SyncManager {
         WorkManager.getInstance(context).enqueueUniqueWork(ONE_TIME, ExistingWorkPolicy.APPEND_OR_REPLACE, req)
     }
 
-    /** ซิงก์ทุก 6 ชั่วโมงเพื่อดึงข้อมูลจากเครื่องอื่น */
+    /** Periodic sync every 6 hours to pick up changes from other devices. */
     fun schedulePeriodic(context: Context) {
         val req = PeriodicWorkRequestBuilder<SyncWorker>(6, TimeUnit.HOURS).setConstraints(online).build()
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(PERIODIC, ExistingPeriodicWorkPolicy.KEEP, req)
     }
 
-    /** ออกจากระบบ: หยุดงานซิงก์ทั้งหมดก่อนล้างข้อมูล */
+    /** Cancels all sync work (sign-out). */
     fun cancelAll(context: Context) {
         WorkManager.getInstance(context).cancelUniqueWork(ONE_TIME)
         WorkManager.getInstance(context).cancelUniqueWork(PERIODIC)

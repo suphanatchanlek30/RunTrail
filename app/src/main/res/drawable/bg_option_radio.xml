@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- พื้นหลัง RadioButton ใน sheet ตัวเลือก: ปกติ = เทาอ่อน · เลือกอยู่ = เขียวอ่อน + ขอบเขียว (เหมือน bg_option) -->
+<!-- Option row background keyed on the checked state -->
 <selector xmlns:android="http://schemas.android.com/apk/res/android">
     <item android:state_checked="true">
         <shape android:shape="rectangle">

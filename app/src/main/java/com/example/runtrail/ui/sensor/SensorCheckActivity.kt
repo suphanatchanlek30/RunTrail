@@ -23,11 +23,7 @@ import com.example.runtrail.ui.common.Sheets
 import java.util.Locale
 import kotlin.math.sqrt
 
-/**
- * 04 · Sensor Check (MA12) — เครื่องมี/ไม่มีเซนเซอร์อะไร + ค่าสด
- * - register ใน onResume / unregister ใน onPause
- * - onAccuracyChanged: เข็มทิศความแม่นยำต่ำ → แสดงป้าย "ปรับเทียบ"
- */
+/** Lists the device's sensors with live readings; flags the compass when it needs calibration. */
 class SensorCheckActivity : AppCompatActivity(), SensorEventListener {
 
     private lateinit var binding: ActivitySensorCheckBinding
@@ -35,7 +31,7 @@ class SensorCheckActivity : AppCompatActivity(), SensorEventListener {
     private val rows = mutableMapOf<String, ItemSensorBinding>()
     private val sensorKeys = mutableMapOf<Int, String>()
 
-    /** แตะแถวที่ "ต้องขอสิทธิ์" → ขอสิทธิ์ได้จากหน้านี้เลย (เดิมแตะแล้วไม่มีอะไรเกิดขึ้น, AUDIT A11) */
+    /** Rows that need a permission request it when tapped. */
     private val askPermission = registerForActivityResult(
         androidx.activity.result.contract.ActivityResultContracts.RequestMultiplePermissions(),
     ) { updateGps(); updateStepPermission() }
@@ -129,7 +125,7 @@ class SensorCheckActivity : AppCompatActivity(), SensorEventListener {
             else -> {
                 row.tvValue.setText(R.string.sensor_gps_on)
                 setStatus(row, R.string.sensor_status_ready, R.color.run_green_dark, R.drawable.dot_green_s)
-                row.row.setOnClickListener(null); row.row.isClickable = false   // setOnClickListener(null) ตั้ง clickable = true ให้เอง
+                row.row.setOnClickListener(null); row.row.isClickable = false   // null listener still sets clickable
             }
         }
     }
@@ -144,7 +140,7 @@ class SensorCheckActivity : AppCompatActivity(), SensorEventListener {
             row.row.setOnClickListener { askPermission.launch(arrayOf(Manifest.permission.ACTIVITY_RECOGNITION)) }
         } else if (SensorHelper.isAvailable(this, SensorHelper.specs[1])) {
             setStatus(row, R.string.sensor_status_ready, R.color.run_green_dark, R.drawable.dot_green_s)
-            row.row.setOnClickListener(null); row.row.isClickable = false   // setOnClickListener(null) ตั้ง clickable = true ให้เอง
+            row.row.setOnClickListener(null); row.row.isClickable = false   // null listener still sets clickable
         }
     }
 
@@ -188,7 +184,7 @@ class SensorCheckActivity : AppCompatActivity(), SensorEventListener {
         } else {
             row.tvValue.setTextColor(getColor(R.color.text_primary))
             setStatus(row, R.string.sensor_status_ready, R.color.run_green_dark, R.drawable.dot_green_s)
-            row.row.setOnClickListener(null); row.row.isClickable = false   // setOnClickListener(null) ตั้ง clickable = true ให้เอง
+            row.row.setOnClickListener(null); row.row.isClickable = false   // null listener still sets clickable
         }
     }
 }

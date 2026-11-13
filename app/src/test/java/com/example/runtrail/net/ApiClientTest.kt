@@ -41,7 +41,7 @@ class ApiClientTest {
 
     @After fun tearDown() = server.close()
 
-    /** เซิร์ฟเวอร์ฟรีที่เพิ่งตื่น (Render) ตอบช้าเกือบนาที — เดิม readTimeout 30 s ทำให้ครั้งแรกล้มทุกครั้ง */
+    /** A waking free-tier server can take almost a minute to answer the first request. */
     @Test fun waitsForASleepingServerToWakeUp() {
         assertTrue("read timeout covers a ~60 s cold start", ApiClient.READ_TIMEOUT_S >= 75)
         server.enqueue(MockResponse.Builder().code(200).addHeader("Content-Type", "application/json")
@@ -108,7 +108,7 @@ class ApiClientTest {
         assertEquals(1, expired)
     }
 
-    /** UI กับ SyncWorker เจอ 401 พร้อมกัน → refresh ครั้งเดียว (ไม่ให้ server มองว่า token ถูกขโมย) */
+    /** Simultaneous 401s from the UI and the sync worker trigger a single refresh (refresh-token reuse is treated as theft). */
     @Test fun concurrent401sShareOneRefresh() {
         val refreshes = AtomicInteger()
         server.dispatcher = object : Dispatcher() {

@@ -10,7 +10,7 @@ class LiveRunStateTest {
 
     private val t0 = TestTracks.T0
 
-    /** ป้อนจุดทีละวินาที เหมือน LocationManager + ตัวจับเวลาของ service */
+    /** Feeds one point per second, like LocationManager plus the service timer. */
     private fun LiveRunState.feed(points: List<com.example.runtrail.data.TrackPoint>, speed: Float, mono0: Long): Long {
         var mono = mono0
         points.forEach { p ->
@@ -33,7 +33,7 @@ class LiveRunStateTest {
     @Test fun movingTimeUsesClockNotTicks() {
         val s = LiveRunState(t0)
         s.tick(0, t0)
-        s.tick(30_000, t0 + 30_000)   // ตัวจับเวลาช้าไป 30 วินาที (เครื่องหลับ) ก็ยังนับครบ
+        s.tick(30_000, t0 + 30_000)   // a late tick (device asleep) still counts the full 30 s
         assertEquals(30, s.movingS.toInt())
     }
 
@@ -89,12 +89,12 @@ class LiveRunStateTest {
         assertEquals(2, s.allPauses(t0 + 70_000).size)
     }
 
-    /** จอดับ: ตำแหน่งมาเป็นชุดหลังจากระบบหยุดอัตโนมัติไปแล้ว → ต้องยกเลิกการหยุดและนับครบ */
+    /** Screen off: fixes arrive in a batch after an auto-pause, which must be undone. */
     @Test fun batchedFixesUndoSpuriousAutoPause() {
         val s = LiveRunState(t0) { true }
         var mono = s.feed(TestTracks.north(20, 3.0), 3f, 0)
         val pending = TestTracks.north(20, 3.0, startLat = s.lastFix!!.lat, t0 = s.lastFix!!.time + 1000)
-        // 12 วินาทีไม่มีจุดเข้ามา (ถูกเก็บไว้ส่งทีเดียว)
+        // No fixes for 12 s (held back and delivered together).
         var wall = pending.first().time
         repeat(12) { mono += 1000; wall += 1000; s.tick(mono, wall) }
         assertTrue("auto-paused while fixes were delayed", s.paused)
@@ -102,24 +102,24 @@ class LiveRunStateTest {
         pending.forEach { s.onLocation(it, 3f, wall) }
         assertFalse(s.paused)
         assertTrue("no pause recorded for a delay", s.pauses.isEmpty())
-        assertEquals(before + 19 * 3.0, s.distanceM, 1.0)   // จุดแรกของชุดอยู่ที่เดียวกับจุดก่อนหน้า
+        assertEquals(before + 19 * 3.0, s.distanceM, 1.0)   // the batch's first point equals the previous one
         assertTrue("moving time restored: ${s.movingS}", s.movingS >= 30)
     }
 
-    /** จุดแรกเป็นตำแหน่งเก่าค้าง (ห่างจริง 700 ม.) → เริ่มจุดอ้างอิงใหม่ ไม่นับระยะช่วงกระโดด */
+    /** A stale first fix 700 m away re-anchors the filter without counting the jump. */
     @Test fun staleFirstFixIsReanchored() {
         val s = LiveRunState(t0) { false }
         val stale = TestTracks.north(1, 0.0, startLat = 13.7350).single()
         s.onLocation(stale, 0f, t0)
         val real = TestTracks.north(60, 3.0, t0 = t0 + 15_000)
         real.forEach { s.onLocation(it, 3f, it.time) }
-        assertEquals((60 - 1 - 4) * 3.0, s.distanceM, 4.0)   // 4 จุดแรกถูกทิ้งก่อนเริ่มอ้างอิงใหม่
-        assertEquals(s.distanceM, TrackMath.cumulative(s.track).last(), 0.5)   // splits ใช้ระยะเดียวกัน
+        assertEquals((60 - 1 - 4) * 3.0, s.distanceM, 4.0)   // first 4 points dropped before re-anchoring
+        assertEquals(s.distanceM, TrackMath.cumulative(s.track).last(), 0.5)   // splits use the same distance
     }
 
     /**
-     * เดินช้า + GPS แม่นยำ ±15 ม. → ตัวกรองข้ามจุดหลายจุดติดกัน (ต้องขยับ ≥ 7.5 ม.) และสัญญาณหาย 5 วินาที
-     * ความเร็วจาก GPS ยังบอกว่ากำลังเคลื่อนที่ จึงต้องไม่หยุดอัตโนมัติ (เคยหยุดเองระหว่างเดิน)
+     * Slow walk with ±15 m accuracy: the filter skips several points in a row and the signal drops for 5 s.
+     * GPS speed still shows movement, so the run must not auto-pause.
      */
     @Test fun slowWalkWithPoorAccuracyNeverAutoPauses() {
         val s = LiveRunState(t0) { true }
@@ -129,7 +129,7 @@ class LiveRunStateTest {
             val t = p.time
             s.tick(i * 1000L, t)
             if (s.paused) pausedTicks++
-            if (i !in 40..44) s.onLocation(p, 1.4f, t)       // สัญญาณหาย 5 วินาที
+            if (i !in 40..44) s.onLocation(p, 1.4f, t)       // 5 s signal gap
         }
         assertEquals("auto-paused while walking", 0, pausedTicks)
         assertTrue("distance ${s.distanceM}", s.distanceM > 100)
