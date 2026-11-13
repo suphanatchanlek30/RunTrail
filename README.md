@@ -78,13 +78,13 @@ RunTrail มี 2 ส่วนที่ทำงานร่วมกัน
 
 ## สถาปัตยกรรม
 
-```
-แอป Android ──► SQLite (ข้อมูลหลัก ใช้ได้ออฟไลน์)
-     │
-     │ HTTPS /api/v1   (Volley จากหน้าจอ · OkHttp + WorkManager สำหรับซิงก์)
-     ▼
-Backend Go ──► PostgreSQL
-     └───────► S3 (มือถืออัปโหลดรูปตรงด้วย presigned URL)
+```mermaid
+flowchart LR
+    App["แอป Android"] --> Local[("SQLite<br/>ใช้ได้ออฟไลน์")]
+    App -- "HTTPS /api/v1" --> API["Backend Go"]
+    API --> PG[("PostgreSQL")]
+    API --> S3[("S3<br/>รูปภาพ")]
+    App -. "อัปโหลดรูปตรง" .-> S3
 ```
 
 👉 [ดูแผนภาพเต็มและคำอธิบาย](docs/ARCHITECTURE.md#สถาปัตยกรรม)
