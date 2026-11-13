@@ -35,6 +35,9 @@ class App : Application() {
         RunRepository.init(this)
         RunRepository.currentUser = { services.prefs.accountUserId }
         RunTrackingService.createChannels(this)
+        // MA13: สร้าง Channel ของการเตือน และตั้ง Alarm กลับ (เผื่อถูกล้าง เช่น ผู้ใช้กด Force stop)
+        com.example.runtrail.reminder.ReminderNotifier.createChannel(this)
+        com.example.runtrail.reminder.ReminderScheduler.schedule(this)
         services.onSessionExpired = {
             android.widget.Toast.makeText(this, R.string.session_expired, android.widget.Toast.LENGTH_LONG).show()
         }
@@ -88,6 +91,12 @@ class Services(val context: Context) {
     }))
 
     val sync = SyncEngine(context, api, prefs)
+
+    init {
+        // MA11: หน้าจอเรียก API ผ่าน Volley — ใช้ที่อยู่เซิร์ฟเวอร์และ token ชุดเดียวกับ OkHttp
+        com.example.runtrail.net.ApiConfig.baseUrl = { prefs.apiUrl }
+        com.example.runtrail.net.VolleyApi.client = api.client
+    }
 
     /** thread สำหรับงานเครือข่ายที่สั่งจากหน้าจอ */
     val io = Executors.newFixedThreadPool(3)

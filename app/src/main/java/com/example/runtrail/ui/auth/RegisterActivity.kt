@@ -9,7 +9,6 @@ import com.example.runtrail.App
 import com.example.runtrail.R
 import com.example.runtrail.data.Accounts
 import com.example.runtrail.databinding.ActivityRegisterBinding
-import com.example.runtrail.ui.common.Sheets
 import com.example.runtrail.ui.common.applySystemBarsPadding
 import com.example.runtrail.ui.common.runAsync
 import com.example.runtrail.ui.common.showWakeHintIfSlow
@@ -48,12 +47,8 @@ class RegisterActivity : AppCompatActivity() {
     }
 
     private fun chooseCountry() {
-        Sheets.choose(
-            this, R.drawable.ic_globe, getString(R.string.auth_country), getString(R.string.auth_country_desc),
-            COUNTRIES.map { Sheets.Option(it.second, it.first) },
-            selected = COUNTRIES.indexOfFirst { it.first == country },
-        ) { which ->
-            country = COUNTRIES[which].first
+        com.example.runtrail.ui.common.CountryPicker.show(this, country) { code ->
+            country = code
             renderCountry()
         }
     }

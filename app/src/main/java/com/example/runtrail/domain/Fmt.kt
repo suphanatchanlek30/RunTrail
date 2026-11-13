@@ -47,6 +47,23 @@ object Fmt {
 
     const val KM_PER_MILE = 1.609344
 
+    /** ชื่อวันย่อ เช่น "จ." / "Mon" (dayOfWeek = Calendar.SUNDAY..SATURDAY) */
+    fun dayShort(dayOfWeek: Int): String = DAY_SHORT[dayOfWeek - 1]
+
+    /** สรุปการเตือนไปวิ่ง เช่น "18:00 · ทุกวัน" / "06:30 · จ. พ. ศ." */
+    fun reminderSummary(hour: Int, minute: Int, daysMask: Int): String {
+        val time = String.format(Locale.US, "%02d:%02d", hour, minute)
+        val mondayFirst = listOf(Calendar.MONDAY, Calendar.TUESDAY, Calendar.WEDNESDAY, Calendar.THURSDAY,
+            Calendar.FRIDAY, Calendar.SATURDAY, Calendar.SUNDAY)
+        val weekdays = mondayFirst.take(5).sumOf { ReminderTime.bit(it) }
+        val days = when (daysMask and ReminderTime.ALL_DAYS) {
+            ReminderTime.ALL_DAYS -> Lang.t("ทุกวัน", "Every day")
+            weekdays -> Lang.t("จ.–ศ.", "Weekdays")
+            else -> mondayFirst.filter { ReminderTime.has(daysMask, it) }.joinToString(" ") { dayShort(it) }
+        }
+        return "$time · $days"
+    }
+
     /** ระยะทางตามหน่วยที่เลือก เช่น 4.62 */
     fun distance(meters: Double, miles: Boolean = false, decimals: Int = 2): String {
         val v = if (miles) meters / 1000.0 / KM_PER_MILE else meters / 1000.0

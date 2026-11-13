@@ -37,7 +37,7 @@
 11. [สูตรคำนวณและการตรวจการวิ่ง](#สูตรคำนวณและการตรวจการวิ่ง)
 12. [ความเป็นส่วนตัวและความปลอดภัย](#ความเป็นส่วนตัวและความปลอดภัย)
 13. [สิทธิ์ที่แอปขอ](#สิทธิ์ที่แอปขอ)
-14. [การนำเนื้อหา MA09–MA12 มาใช้](#การนำเนื้อหา-ma09ma12-มาใช้)
+14. [การนำเนื้อหา MA08–MA13 มาใช้](#การนำเนื้อหา-ma08ma13-มาใช้)
 15. [ระบบออกแบบ (Design System)](#ระบบออกแบบ-design-system)
 16. [ข้อจำกัดและแผนถัดไป](#ข้อจำกัดและแผนถัดไป)
 17. [เอกสารเพิ่มเติม](#เอกสารเพิ่มเติม) · ผลการตรวจทั้งระบบ: [`docs/AUDIT.md`](docs/AUDIT.md)
@@ -154,6 +154,8 @@ RunTrail จึงประกอบด้วย 2 ส่วนที่ทำ�
 │  RunTrackingService (foreground, location) ── GPS ทำงานตอนปิดจอ    │
 │  SyncEngine + WorkManager ── ส่ง/ดึงข้อมูลเมื่อมีเน็ต                  │
 │     │ OkHttp + JWT (refresh token อัตโนมัติ, gzip)                  │
+│  หน้าจอ (อันดับ · แจ้งเตือน · แชร์ · รหัสผ่าน) ── Volley              │
+│  ReminderScheduler ── AlarmManager → ReminderReceiver → แจ้งเตือน  │
 └─────┼──────────────────────────────────────────────────────────────┘
       │ HTTPS /api/v1
       ▼
@@ -180,7 +182,7 @@ RunTrail จึงประกอบด้วย 2 ส่วนที่ทำ�
 | ภาษา / UI | Kotlin 100% · XML Layout + ViewBinding · Material Components (Material3) |
 | Build | Gradle Kotlin DSL · Version Catalog · AGP 9.3.3 · `compileSdk 37` · `minSdk 28` · `targetSdk 37` |
 | ฐานข้อมูล | SQLite (`SQLiteOpenHelper`) |
-| เครือข่าย | OkHttp 5 · `org.json` · token เข้ารหัส AES-GCM ด้วย Android Keystore |
+| เครือข่าย | Volley (คำขอจากหน้าจอ) · OkHttp 5 (ซิงก์เบื้องหลัง) · `org.json` · token เข้ารหัส AES-GCM ด้วย Android Keystore |
 | งานเบื้องหลัง | WorkManager (ซิงก์) · Foreground Service (บันทึกการวิ่ง) |
 | แผนที่ / ตำแหน่ง | osmdroid 6.1 (OpenStreetMap) · `LocationManager` (GPS) |
 | เซนเซอร์ | Step Counter · Rotation Vector · Magnetometer · Accelerometer · Barometer · Light · Temperature |
@@ -208,11 +210,12 @@ RunTrail/
 │   └── src/
 │       ├── main/java/com/example/runtrail/
 │       │   ├── App.kt                    เริ่มแอป: เปิด DB · สร้างตัวเชื่อม backend · ตั้งเวลาซิงก์
-│       │   ├── data/                     Run · RunDb (SQLite) · RunRepository · PrefsHelper · Accounts
+│       │   ├── data/                     Run · RunDb (SQLite) · RunRepository · PrefsHelper · Accounts · RunBackup · BackupInfo
 │       │   ├── domain/                   Kotlin ล้วน (ทดสอบบน JVM ได้)
 │       │   │                             TrackMath · RunCalculator · LiveRunState · Codec · Fmt ·
 │       │   │                             PaceColor · Periods · RouteGenerator · ShareImageLayout
-│       │   ├── net/                      ApiClient (OkHttp + refresh) · RunTrailApi · RunJson · TokenStore
+│       │   ├── net/                      ApiConfig · VolleyApi (Volley) · ApiClient (OkHttp + refresh) · RunTrailApi · RunJson · TokenStore
+│       │   ├── reminder/                 ReminderScheduler (AlarmManager) · ReminderReceiver · BootReceiver · ReminderNotifier
 │       │   ├── sync/                     SyncEngine · SyncManager (WorkManager)
 │       │   ├── service/                  RunTrackingService (foreground, type=location)
 │       │   ├── sensor/                   LocationTracker · CadenceTracker · CompassHelper · SensorHelper
@@ -324,8 +327,8 @@ iPhone (Safari) → Cloudflare Tunnel (HTTPS) → bridge.py → adb emu geo fix 
 
 | ชุด | คำสั่ง | ครอบคลุม |
 |---|---|---|
-| แอป · JVM (61 ข้อ) | `./gradlew testDebugUnitTest` | สูตร TrackMath/RunCalculator · สถานะการวิ่งสด (auto-pause, ช่วงหยุด, จุด GPS มาเป็นชุด, จุดแรกค้าง) · JSON · HTTP client (refresh token พร้อมกันแล้ว refresh ครั้งเดียว, gzip) · ตำแหน่งในภาพแชร์ · หน่วย กม./ไมล์ · cadence/แคลอรี่/เข็มทิศ · เลือกแหล่ง GPS · ย่อรูป |
-| แอป · บนเครื่อง (33 ข้อ) | `./gradlew connectedDebugAndroidTest -Pe2eApiUrl=http://10.0.2.2:8080` | SQLite · **บันทึกต่อเนื่องตอนปิดจอ** · วาดภาพแชร์ · **ซิงก์กับ backend จริงทั้งวงจร** (ออฟไลน์ → ซิงก์ครั้งเดียว → รูปขึ้น S3 → ลิงก์แชร์ → แก้/ลบ → เครื่องใหม่ดึงคืน) · **ตรวจทุกปุ่มทุกหน้า** (ไม่มีปุ่มตาย · กดแล้วไม่เด้ง) · วัดความเร็วกับข้อมูล 1,000 รอบ · **บันทึกการวิ่งผ่านหน้าจอด้วย GPS ของ emulator** · เซนเซอร์ที่ตั้งค่าจาก Mac · ปุ่มเฉพาะบัญชีกับ backend จริง · หน้าจอตอนออฟไลน์ · การวิ่ง 60,000 จุด |
+| แอป · JVM (77 ข้อ) | `./gradlew testDebugUnitTest` | เวลาเตือนไปวิ่งรอบถัดไป (ข้ามวันที่ไม่เลือก) · ไฟล์สำรอง JSON ส่งออก/นำเข้า · สูตร TrackMath/RunCalculator · สถานะการวิ่งสด (auto-pause, ช่วงหยุด, จุด GPS มาเป็นชุด, จุดแรกค้าง) · JSON · HTTP client (refresh token พร้อมกันแล้ว refresh ครั้งเดียว, gzip) · ตำแหน่งในภาพแชร์ · หน่วย กม./ไมล์ · cadence/แคลอรี่/เข็มทิศ · เลือกแหล่ง GPS · ย่อรูป |
+| แอป · บนเครื่อง (41 ข้อ) | `./gradlew connectedDebugAndroidTest -Pe2eApiUrl=http://10.0.2.2:8080` | SQLite · **อัปเกรดฐานข้อมูล v1 → v2 ข้อมูลไม่หาย** · **Volley กับ backend จริง** (GET/PATCH/POST · DELETE ตอบ 204 · token หมดอายุแล้ว refresh + ส่งซ้ำ · error 404) · **บันทึกต่อเนื่องตอนปิดจอ** · วาดภาพแชร์ · **ซิงก์กับ backend จริงทั้งวงจร** (ออฟไลน์ → ซิงก์ครั้งเดียว → รูปขึ้น S3 → ลิงก์แชร์ → แก้/ลบ → เครื่องใหม่ดึงคืน) · **ตรวจทุกปุ่มทุกหน้า** (ไม่มีปุ่มตาย · กดแล้วไม่เด้ง) · วัดความเร็วกับข้อมูล 1,000 รอบ · **บันทึกการวิ่งผ่านหน้าจอด้วย GPS ของ emulator** · เซนเซอร์ที่ตั้งค่าจาก Mac · ปุ่มเฉพาะบัญชีกับ backend จริง · หน้าจอตอนออฟไลน์ · การวิ่ง 60,000 จุด |
 | Backend · Go | `cd backend && make test` | unit + integration กับ PostgreSQL จริง: auth, last-write-wins, UUID ของคนอื่น, gzip bomb, sync cursor, รูป, อันดับ, แชร์ซ่อนบ้าน, การแจ้งเตือน, ลบบัญชี |
 | Backend · smoke (29 ข้อ) | `cd backend && make smoke` | ทั้ง flow ผ่าน HTTP กับ Docker จริง |
 
@@ -391,6 +394,8 @@ iPhone (Safari) → Cloudflare Tunnel (HTTPS) → bridge.py → adb emu geo fix 
 | `ACTIVITY_RECOGNITION` | อ่าน Step Counter เพื่อคำนวณ Cadence |
 | `POST_NOTIFICATIONS` | สถานะการวิ่ง · เพซทุก 1 กม. · สถิติใหม่และอันดับ |
 | `INTERNET` / `ACCESS_NETWORK_STATE` | แผนที่ OpenStreetMap และซิงก์กับ backend |
+| `SCHEDULE_EXACT_ALARM` | เตือนไปวิ่งตรงเวลา (Android 12+ ผู้ใช้ต้องอนุญาตเอง ถ้าไม่อนุญาตจะเตือนแบบไม่แม่นยำแทน) |
+| `RECEIVE_BOOT_COMPLETED` | ตั้งเวลาเตือนไปวิ่งกลับหลังเปิดเครื่องใหม่ |
 | `WRITE_EXTERNAL_STORAGE` (Android 9 เท่านั้น) | บันทึกภาพแชร์ลงแกลเลอรี |
 | `ACCESS_LOCAL_NETWORK` (debug เท่านั้น) | Android 17: ต่อ backend ที่รันในวง Wi-Fi / Emulator |
 
@@ -398,10 +403,25 @@ iPhone (Safari) → Cloudflare Tunnel (HTTPS) → bridge.py → adb emu geo fix 
 
 ---
 
-## การนำเนื้อหา MA09–MA12 มาใช้
+## การนำเนื้อหา MA08–MA13 มาใช้
 
 | บทเรียน | ใช้ในโปรเจค |
 |---|---|
+| **MA08** Input Controls | `EditText` ทุกฟอร์ม · `RadioGroup` + `RadioButton` ใน sheet เลือกค่า (`Sheets.choose`: หน่วย ธีม ภาษา) · `CheckBox` เลือกวันเตือนไปวิ่ง และ "ลบจากเซิร์ฟเวอร์ด้วย" · `SwitchCompat` เปิด/ปิดการเตือน · `Spinner` เรียงลำดับในหน้าประวัติ (layout 2 ตัว) · `AutoCompleteTextView` เลือกประเทศ (`setThreshold(1)`) · `RatingBar` ความรู้สึกหลังวิ่ง · `DatePickerDialog` / `TimePickerDialog` |
+| **MA09** ข้อมูลภายในเครื่อง + คืนสถานะ | `SharedPreferences` (โปรไฟล์ ตั้งค่า เวลาเตือน) · App-specific Storage: `openFileOutput` + `Properties` (`BackupInfo` บันทึกการส่งออก/นำเข้าล่าสุด) · SAF: `CreateDocument` ส่งออก / `OpenDocument` นำเข้าประวัติเป็นไฟล์ JSON · `onSaveInstanceState` ทุกหน้าที่มีสถานะ |
+| **MA10** SQLite + RecyclerView + รูปภาพ | `RunDb` (`SQLiteOpenHelper` v2: runs · run_points · splits) · `RunRepository` CRUD/ค้นหา/กรอง/เรียง · RecyclerView ในประวัติ อันดับ การแจ้งเตือน · กล้อง/แกลเลอรี + EXIF · แก้ไขแล้ว `setResult(RESULT_OK)` กลับหน้ารายละเอียด |
+| **MA11** ฐานข้อมูลออนไลน์ | แอปไม่ต่อฐานข้อมูลตรง เรียกผ่าน REST API (Go + PostgreSQL) แล้วรับ JSON · **Volley** สำหรับคำขอจากหน้าจอ: `ApiConfig` (รวม URL) · `VolleyApi.getQueue()` · `JsonObjectRequest` 5 พารามิเตอร์ (อันดับ สรุปนักวิ่ง ประเทศ การแจ้งเตือน เปลี่ยนรหัสผ่าน แชร์/ยกเลิกแชร์) · **OkHttp** สำหรับซิงก์ใน WorkManager (ต้องเรียกแบบรอผล) |
+| **MA12** เซนเซอร์ | GPS (`LocationTracker` + foreground service) · Step Counter (Cadence) · เข็มทิศ · หน้าตรวจเซนเซอร์ · register ใน `onResume` / unregister ใน `onPause` |
+| **MA13** Scheduler + Notification | เตือนไปวิ่ง: `ReminderScheduler` → `AlarmManager.setExactAndAllowWhileIdle(RTC_WAKEUP)` → `ReminderReceiver` แสดงแจ้งเตือนแล้วตั้งรอบถัดไป · `BootReceiver` (BOOT_COMPLETED) ตั้งเวลากลับหลังรีบูต · ตรวจ `canScheduleExactAlarms()` · ขอ `POST_NOTIFICATIONS` ตอนรัน |
+
+**ต่างจากตัวอย่างในสไลด์ (ตั้งใจ)**
+- เขียนด้วย Kotlin แทน Java (API ของ Android ชุดเดียวกัน)
+- backend เป็น Go + PostgreSQL แทน PHP + MySQL แต่หลักการเดียวกัน: แอป → HTTP → สคริปต์ฝั่งเซิร์ฟเวอร์ → ฐานข้อมูล → JSON กลับมา
+- รูปเก็บเป็นไฟล์ (SQLite เก็บแค่ path) และอัปโหลดตรงไป S3 แทน Base64 ใน JSON: แถวที่ใหญ่เกิน ~2 MB อ่านจาก SQLite ไม่ได้ และ Base64 ทำให้ข้อมูลใหญ่ขึ้นราว 33%
+- อนุญาต HTTP ด้วย `network_security_config` เฉพาะ build debug แทน `usesCleartextTraffic="true"` (release ใช้ HTTPS เท่านั้น)
+- `ApiConfig.BASE_URL` อ่านค่าตอนรัน ไม่ใช่ค่าคงที่ เพราะผู้ใช้เปลี่ยนที่อยู่เซิร์ฟเวอร์ได้
+
+---|---|
 | **MA09** ข้อมูลภายในเครื่อง + คืนสถานะ | `SharedPreferences` (โปรไฟล์ ตั้งค่า สถานะซิงก์) · ไฟล์รูปในพื้นที่แอป · `onSaveInstanceState` ทุกหน้าที่มีสถานะ |
 | **MA10** SQLite + RecyclerView + รูปภาพ | `RunDb` (`SQLiteOpenHelper`: runs · run_points · splits) · `RunRepository` CRUD/ค้นหา/กรอง/เรียง · RecyclerView ในประวัติ อันดับ การแจ้งเตือน · กล้อง/แกลเลอรี + EXIF |
 | **MA11** ฐานข้อมูลออนไลน์ | Backend Go + PostgreSQL · REST API + JWT · ซิงก์ด้วย OkHttp + WorkManager · ลิงก์แชร์และหน้าเว็บ |
@@ -461,7 +481,7 @@ Text styles อยู่ใน `res/values/styles_text.xml` และ component 
 | ทรัพยากร | สัญญาอนุญาต |
 |---|---|
 | ข้อมูลแผนที่ © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright) | ODbL |
-| [osmdroid](https://github.com/osmdroid/osmdroid) · [ZXing](https://github.com/zxing/zxing) · [OkHttp](https://github.com/square/okhttp) · AndroidX · Material Components | Apache License 2.0 |
+| [osmdroid](https://github.com/osmdroid/osmdroid) · [ZXing](https://github.com/zxing/zxing) · [OkHttp](https://github.com/square/okhttp) · [Volley](https://github.com/google/volley) · AndroidX · Material Components | Apache License 2.0 |
 | [Leaflet](https://leafletjs.com) (หน้าเว็บแชร์) | BSD-2-Clause |
 | [Fiber](https://github.com/gofiber/fiber) · [pgx](https://github.com/jackc/pgx) · [goose](https://github.com/pressly/goose) | MIT |
 | [aws-sdk-go-v2](https://github.com/aws/aws-sdk-go-v2) · [RustFS](https://github.com/rustfs/rustfs) | Apache License 2.0 |

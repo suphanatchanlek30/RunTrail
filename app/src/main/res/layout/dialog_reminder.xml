@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    เตือนไปวิ่ง (หน้าตั้งค่า) — MA08 Input Controls + MA13 AlarmManager
+    SwitchCompat = เปิด/ปิด · TextView กดแล้วเปิด TimePickerDialog · CheckBox = เลือกได้หลายวัน
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="@dimen/space_xxl"
+    android:paddingTop="@dimen/space_s"
+    android:paddingEnd="@dimen/space_xxl">
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/swReminder"
+        style="@style/Txt.LabelL"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:minHeight="48dp"
+        android:text="@string/reminder_enable"
+        app:thumbTint="@color/white"
+        app:trackTint="@color/reminder_track" />
+
+    <TextView
+        style="@style/FieldLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_m"
+        android:text="@string/reminder_time" />
+
+    <TextView
+        android:id="@+id/tvTime"
+        style="@style/Field"
+        android:layout_width="match_parent"
+        android:layout_marginTop="@dimen/space_xs"
+        android:background="@drawable/bg_field"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="?attr/selectableItemBackground"
+        android:gravity="center_vertical"
+        android:textSize="@dimen/text_size_xl" />
+
+    <TextView
+        style="@style/FieldLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_l"
+        android:text="@string/reminder_days" />
+
+    <!-- 7 วัน: จันทร์ → อาทิตย์ (ข้อความตั้งในโค้ดตามภาษาที่เลือก) -->
+    <GridLayout
+        android:id="@+id/gridDays"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_xs"
+        android:columnCount="4">
+
+        <CheckBox android:id="@+id/cbMon" style="@style/DayCheck" />
+        <CheckBox android:id="@+id/cbTue" style="@style/DayCheck" />
+        <CheckBox android:id="@+id/cbWed" style="@style/DayCheck" />
+        <CheckBox android:id="@+id/cbThu" style="@style/DayCheck" />
+        <CheckBox android:id="@+id/cbFri" style="@style/DayCheck" />
+        <CheckBox android:id="@+id/cbSat" style="@style/DayCheck" />
+        <CheckBox android:id="@+id/cbSun" style="@style/DayCheck" />
+    </GridLayout>
+
+    <!-- Android 12+: ยังไม่ได้สิทธิ์ตั้งเวลาแบบแม่นยำ → เตือนได้แต่อาจช้าเล็กน้อย -->
+    <TextView
+        android:id="@+id/tvExact"
+        style="@style/Txt.BodyS"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_m"
+        android:background="?attr/selectableItemBackground"
+        android:minHeight="48dp"
+        android:gravity="center_vertical"
+        android:text="@string/reminder_exact_hint"
+        android:textColor="@color/warning"
+        android:visibility="gone" />
+</LinearLayout>

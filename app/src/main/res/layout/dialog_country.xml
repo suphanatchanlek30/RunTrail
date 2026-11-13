@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+    เลือกประเทศ (สมัครสมาชิก / ตั้งค่า / อันดับ) — MA08 AutoCompleteTextView
+    พิมพ์ชื่อหรือรหัสประเทศแล้วมีรายการให้เลือก (setThreshold(1)) · แตะช่องว่างเพื่อดูทั้งหมด
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:paddingStart="@dimen/space_xxl"
+    android:paddingTop="@dimen/space_s"
+    android:paddingEnd="@dimen/space_xxl">
+
+    <TextView
+        style="@style/Txt.BodyS"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/auth_country_desc"
+        android:textColor="@color/text_secondary" />
+
+    <AutoCompleteTextView
+        android:id="@+id/etCountry"
+        style="@style/Field"
+        android:layout_width="match_parent"
+        android:layout_marginTop="@dimen/space_m"
+        android:completionThreshold="1"
+        android:dropDownHeight="240dp"
+        android:fontFamily="@font/plex_medium"
+        android:hint="@string/country_search_hint"
+        android:imeOptions="actionDone"
+        android:importantForAutofill="no"
+        android:inputType="textCapWords|textNoSuggestions"
+        android:maxLines="1"
+        android:textSize="@dimen/text_size_l" />
+</LinearLayout>

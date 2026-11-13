@@ -1,6 +1,17 @@
 package com.example.runtrail.ui.settings
 
+import android.Manifest
+import android.app.TimePickerDialog
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
+import android.os.Build
+import android.provider.Settings
+import androidx.activity.result.contract.ActivityResultContracts
+import com.example.runtrail.databinding.DialogReminderBinding
+import com.example.runtrail.domain.ReminderTime
+import com.example.runtrail.reminder.ReminderScheduler
+import java.util.Calendar
 import android.os.Bundle
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
@@ -8,8 +19,15 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.LocaleListCompat
 import com.example.runtrail.R
 import com.example.runtrail.App
+import com.android.volley.Request
+import com.example.runtrail.net.ApiConfig
+import com.example.runtrail.net.ApiRequest
+import com.example.runtrail.net.VolleyApi
+import org.json.JSONObject
 import com.example.runtrail.data.Accounts
+import com.example.runtrail.data.BackupInfo
 import com.example.runtrail.data.PrefsHelper
+import com.example.runtrail.data.RunBackup
 import com.example.runtrail.data.RunRepository
 import com.example.runtrail.sync.SyncManager
 import com.example.runtrail.ui.auth.LoginActivity
@@ -56,6 +74,7 @@ class SettingsActivity : AppCompatActivity() {
         setupRow(binding.rowPace, R.drawable.ic_gauge, R.string.setting_target_pace)
         setupRow(binding.rowAutoPause, R.drawable.ic_pause, R.string.setting_auto_pause, toggle = true)
         setupRow(binding.rowKmAlert, R.drawable.ic_bell, R.string.setting_km_alert, toggle = true)
+        setupRow(binding.rowReminder, R.drawable.ic_clock, R.string.setting_reminder)
         setupRow(binding.rowTheme, R.drawable.ic_sun, R.string.setting_theme)
         setupRow(binding.rowLanguage, R.drawable.ic_globe, R.string.setting_language)
         setupRow(binding.rowAccount, R.drawable.ic_shield, R.string.setting_account)
@@ -64,6 +83,8 @@ class SettingsActivity : AppCompatActivity() {
         setupRow(binding.rowUpdates, R.drawable.ic_bell, R.string.setting_updates, toggle = true)
         setupRow(binding.rowCountry, R.drawable.ic_globe, R.string.setting_country)
         setupRow(binding.rowServer, R.drawable.ic_server, R.string.setting_server)
+        setupRow(binding.rowExport, R.drawable.ic_download, R.string.setting_export)
+        setupRow(binding.rowImport, R.drawable.ic_upload, R.string.setting_import)
         setupRow(binding.rowPassword, R.drawable.ic_lock, R.string.setting_password)
         setupRow(binding.rowLogout, R.drawable.ic_x, R.string.setting_logout)
         setupRow(binding.rowDeleteAccount, R.drawable.ic_trash, R.string.setting_delete_account)
@@ -83,6 +104,13 @@ class SettingsActivity : AppCompatActivity() {
         binding.rowKmAlert.root.setOnClickListener { binding.rowKmAlert.swToggle.toggle() }
         binding.rowAutoPause.swToggle.setOnCheckedChangeListener { _, checked -> prefs.autoPause = checked }
         binding.rowKmAlert.swToggle.setOnCheckedChangeListener { _, checked -> prefs.kmAlert = checked }
+        binding.rowReminder.root.setOnClickListener { editReminder() }
+        // MA09 SAF: ให้ผู้ใช้เลือกเองว่าจะบันทึก/เปิดไฟล์ที่ไหน
+        binding.rowExport.root.setOnClickListener {
+            val date = java.text.SimpleDateFormat("yyyy-MM-dd", java.util.Locale.US).format(java.util.Date())
+            exportLauncher.launch(getString(R.string.backup_file_name, date))
+        }
+        binding.rowImport.root.setOnClickListener { importLauncher.launch(arrayOf(RunBackup.MIME, "text/plain", "application/octet-stream")) }
         binding.rowServer.root.setOnClickListener { editServerUrl { render() } }
         binding.rowAccount.root.setOnClickListener {
             if (!Accounts.isLoggedIn) startActivity(Intent(this, LoginActivity::class.java))
@@ -143,6 +171,14 @@ class SettingsActivity : AppCompatActivity() {
         binding.rowLanguage.tvValue.text = getString(LANGUAGE_LABELS[currentLanguageIndex()])
         binding.rowAutoPause.swToggle.isChecked = prefs.autoPause
         binding.rowKmAlert.swToggle.isChecked = prefs.kmAlert
+        binding.rowReminder.tvValue.text = if (prefs.reminderEnabled)
+            Fmt.reminderSummary(prefs.reminderHour, prefs.reminderMinute, prefs.reminderDays)
+        else getString(R.string.setting_reminder_off)
+        val info = BackupInfo(this)
+        fun backupText(e: BackupInfo.Entry?) =
+            e?.let { getString(R.string.setting_backup_last, Fmt.cardDate(it.at), it.count) } ?: getString(R.string.setting_backup_never)
+        binding.rowExport.tvValue.text = backupText(info.lastExport)
+        binding.rowImport.tvValue.text = backupText(info.lastImport)
         binding.rowServer.tvValue.text = prefs.apiUrl.removePrefix("http://").removePrefix("https://")
         val session = Accounts.session
         binding.rowAccount.tvValue.text = session?.email ?: getString(R.string.setting_account_guest)
@@ -246,6 +282,129 @@ class SettingsActivity : AppCompatActivity() {
         },
     )
 
+    // ---------------- ส่งออก / นำเข้า (MA09: SAF CreateDocument / OpenDocument)
+
+    /** ระบบเปิดหน้าเลือกที่บันทึกไฟล์ → ได้ Uri กลับมา (null = ผู้ใช้กดยกเลิก) */
+    private val exportLauncher = registerForActivityResult(ActivityResultContracts.CreateDocument(RunBackup.MIME)) { uri ->
+        if (uri != null) exportTo(uri)
+    }
+
+    private val importLauncher = registerForActivityResult(ActivityResultContracts.OpenDocument()) { uri ->
+        if (uri != null) importFrom(uri)
+    }
+
+    private fun exportTo(uri: Uri) {
+        runAsync({
+            val runs = RunRepository.allWithTracks()
+            if (runs.isNotEmpty()) {
+                // เขียนผ่าน ContentResolver → OutputStream (ไฟล์อยู่ที่ผู้ใช้เลือก เช่น Downloads / Google Drive)
+                contentResolver.openOutputStream(uri, "wt")!!.use { out ->
+                    out.write(RunBackup.toJson(runs).toString().toByteArray(Charsets.UTF_8))
+                }
+                BackupInfo(this).recordExport(runs.size)    // บันทึกลงไฟล์ส่วนตัวของแอป
+            }
+            runs.size
+        }) { r ->
+            r.onSuccess { n -> toast(if (n == 0) getString(R.string.backup_export_empty) else getString(R.string.backup_exported, n)); render() }
+                .onFailure { toast(getString(R.string.backup_failed)) }
+        }
+    }
+
+    private fun importFrom(uri: Uri) {
+        runAsync({
+            val text = contentResolver.openInputStream(uri)!!.use { it.readBytes().toString(Charsets.UTF_8) }
+            val added = RunRepository.importRuns(RunBackup.parse(text))
+            BackupInfo(this).recordImport(added)
+            added
+        }) { r ->
+            r.onSuccess { n ->
+                toast(if (n == 0) getString(R.string.backup_imported_none) else getString(R.string.backup_imported, n))
+                if (n > 0 && Accounts.isLoggedIn) SyncManager.requestSync(this)
+                render()
+            }.onFailure { e ->
+                toast(getString(if (e is IllegalArgumentException) R.string.backup_invalid else R.string.backup_failed))
+            }
+        }
+    }
+
+    // ---------------- เตือนไปวิ่ง (MA13 AlarmManager + MA08 SwitchCompat / CheckBox / TimePickerDialog)
+
+    /** Android 13+: ขอสิทธิ์แจ้งเตือนตอนเปิดการเตือน (ประกาศใน Manifest อย่างเดียวไม่พอ) */
+    private val notifPermission = registerForActivityResult(ActivityResultContracts.RequestPermission()) { granted ->
+        if (!granted) toast(getString(R.string.reminder_need_notif))
+    }
+
+    private fun editReminder() {
+        val b = DialogReminderBinding.inflate(layoutInflater)
+        var hour = prefs.reminderHour
+        var minute = prefs.reminderMinute
+        // CheckBox ของแต่ละวัน จันทร์ → อาทิตย์ คู่กับ Calendar.DAY_OF_WEEK
+        val days = listOf(
+            b.cbMon to Calendar.MONDAY, b.cbTue to Calendar.TUESDAY, b.cbWed to Calendar.WEDNESDAY,
+            b.cbThu to Calendar.THURSDAY, b.cbFri to Calendar.FRIDAY, b.cbSat to Calendar.SATURDAY,
+            b.cbSun to Calendar.SUNDAY,
+        )
+        fun showTime() { b.tvTime.text = String.format(java.util.Locale.US, "%02d:%02d", hour, minute) }
+        fun enableInputs(on: Boolean) {
+            b.tvTime.isEnabled = on
+            b.tvTime.alpha = if (on) 1f else 0.4f
+            days.forEach { (cb, _) -> cb.isEnabled = on }
+        }
+
+        b.swReminder.isChecked = prefs.reminderEnabled
+        days.forEach { (cb, day) ->
+            cb.text = Fmt.dayShort(day)
+            cb.isChecked = ReminderTime.has(prefs.reminderDays, day)
+        }
+        showTime()
+        enableInputs(b.swReminder.isChecked)
+        b.swReminder.setOnCheckedChangeListener { _, checked -> enableInputs(checked) }
+        b.tvTime.setOnClickListener {
+            TimePickerDialog(this, R.style.ThemeOverlay_RunTrail_Picker, { _, h, m ->
+                hour = h; minute = m; showTime()
+            }, hour, minute, true).show()
+        }
+        b.tvExact.visibility = if (ReminderScheduler.canExact(this)) View.GONE else View.VISIBLE
+        b.tvExact.setOnClickListener { openExactAlarmSettings() }
+
+        val dialog = com.google.android.material.dialog.MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.setting_reminder)
+            .setView(b.root)
+            .setNegativeButton(R.string.action_cancel, null)
+            .setPositiveButton(R.string.action_save, null)
+            .create()
+        dialog.setOnShowListener {
+            dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
+                val mask = days.filter { it.first.isChecked }.sumOf { ReminderTime.bit(it.second) }
+                val on = b.swReminder.isChecked
+                if (on && mask == 0) { toast(getString(R.string.reminder_no_days)); return@setOnClickListener }
+                prefs.reminderEnabled = on
+                prefs.reminderHour = hour
+                prefs.reminderMinute = minute
+                if (mask != 0) prefs.reminderDays = mask
+                val at = ReminderScheduler.schedule(this)
+                dialog.dismiss()
+                render()
+                if (at == null) { toast(getString(R.string.reminder_turned_off)); return@setOnClickListener }
+                toast(getString(R.string.reminder_saved, Fmt.cardDate(at)))
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU &&
+                    checkSelfPermission(Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED
+                ) notifPermission.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+        dialog.show()
+    }
+
+    /** Android 12+: พาไปหน้าระบบเพื่ออนุญาต "การปลุกและการช่วยเตือน" (ACTION_REQUEST_SCHEDULE_EXACT_ALARM) */
+    private fun openExactAlarmSettings() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S) return
+        try {
+            startActivity(Intent(Settings.ACTION_REQUEST_SCHEDULE_EXACT_ALARM, Uri.parse("package:$packageName")))
+        } catch (e: android.content.ActivityNotFoundException) {
+            startActivity(Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS, Uri.parse("package:$packageName")))
+        }
+    }
+
     private fun changePassword() {
         val box = layoutInflater.inflate(R.layout.dialog_password, null)
         val old = box.findViewById<android.widget.EditText>(R.id.etOld)
@@ -260,10 +419,25 @@ class SettingsActivity : AppCompatActivity() {
             dialog.getButton(android.app.AlertDialog.BUTTON_POSITIVE).setOnClickListener {
                 if (new.text.length < 8) { new.error = getString(R.string.auth_password_short); return@setOnClickListener }
                 val o = old.text.toString(); val n = new.text.toString()
-                runAsync({ App.services.api.changePassword(o, n, App.services.deviceName) }) { r ->
-                    r.onSuccess { dialog.dismiss(); toast(getString(R.string.setting_password_changed)) }
-                        .onFailure { old.error = it.userMessage() }
+                val body = JSONObject().apply {
+                    put("old_password", o); put("new_password", n); put("device_name", App.services.deviceName)
                 }
+                // MA11: POST + body → ④ สำเร็จ / ⑤ ผิดพลาด
+                val q = ApiRequest(
+                    Request.Method.POST, ApiConfig.CHANGE_PASSWORD, body,
+                    { r ->
+                        // server ออก token ชุดใหม่ (เครื่องอื่นถูกออกจากระบบ) → เก็บไว้ใช้ต่อ
+                        val sessions = App.services.sessions
+                        sessions.get()?.let { s ->
+                            sessions.save(s.copy(accessToken = r.getString("access_token"), refreshToken = r.getString("refresh_token")))
+                        }
+                        dialog.dismiss()
+                        toast(getString(R.string.setting_password_changed))
+                    },
+                    { e -> old.error = e.userMessage() },
+                )
+                q.setTag(this)
+                VolleyApi.getQueue(this).add(q)
             }
         }
         dialog.show()
