@@ -41,3 +41,4 @@ secrets/
 *.tfvars.json
 !*.tfvars.example
 crash.log
+.neon

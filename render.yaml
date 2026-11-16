@@ -3,7 +3,7 @@
 #
 # Render Dashboard → New → Blueprint → เลือก repo นี้ → Render อ่านไฟล์นี้ แล้วถามค่าที่มี `sync: false`
 # (ค่าความลับ ไม่เก็บใน git) · JWT_SECRET สุ่มให้อัตโนมัติ (256 บิต base64)
-# ฐานข้อมูลอยู่ที่ Neon และรูปอยู่ที่ Cloudflare R2 (ไม่ใช้ Postgres/ดิสก์ของ Render)
+# ฐานข้อมูลและรูปอยู่ที่ Neon (Postgres + Object Storage) · ไม่ใช้ Postgres/ดิสก์ของ Render
 
 services:
   - type: web
@@ -23,8 +23,8 @@ services:
       # ---- ตั้งให้แล้ว
       - key: PUBLIC_BASE_URL
         value: https://runtrail-api.onrender.com
-      - key: S3_REGION
-        value: auto
+      - key: S3_REGION               # Neon Object Storage (Singapore) · ถ้าใช้ Cloudflare R2 ให้เปลี่ยนเป็น auto
+        value: ap-southeast-1
       - key: S3_BUCKET
         value: runtrail-photos
       - key: S3_PATH_STYLE
@@ -38,9 +38,9 @@ services:
       # ---- ใส่เองตอนสร้าง Blueprint (Render ถามครั้งแรกครั้งเดียว)
       - key: DATABASE_URL            # Neon, แบบ direct (ไม่มี -pooler) และมี ?sslmode=require
         sync: false
-      - key: S3_ENDPOINT             # https://<ACCOUNT_ID>.r2.cloudflarestorage.com
+      - key: S3_ENDPOINT             # Neon: AWS_ENDPOINT_URL_S3 (https://br-xxxx.storage.c-4.ap-southeast-1.aws.neon.tech)
         sync: false
-      - key: S3_ACCESS_KEY           # R2 API token: Access Key ID
+      - key: S3_ACCESS_KEY           # Neon: AWS_ACCESS_KEY_ID
         sync: false
-      - key: S3_SECRET_KEY           # R2 API token: Secret Access Key
+      - key: S3_SECRET_KEY           # Neon: AWS_SECRET_ACCESS_KEY
         sync: false
