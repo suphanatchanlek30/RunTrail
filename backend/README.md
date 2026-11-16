@@ -1,6 +1,8 @@
 # RunTrail Backend
 
-Go 1.27 · Fiber v3.7 · PostgreSQL 17 · S3 (RustFS ตอนรันในเครื่อง / AWS S3 ตอนขึ้นจริง) · Docker
+Go 1.27 · Fiber v3.7 · PostgreSQL 17 · S3 (RustFS ตอนรันในเครื่อง / Neon Object Storage ตอนใช้จริง) · Docker
+
+**ระบบจริง:** <https://runtrail-api.onrender.com> (Render + Neon) · ขั้นตอนอยู่ที่ [`../docs/DEPLOY_RENDER.md`](../docs/DEPLOY_RENDER.md)
 
 แผนและเหตุผลของการออกแบบทั้งหมดอยู่ที่ [`../docs/BACKEND_PLAN.md`](../docs/BACKEND_PLAN.md)
 
@@ -41,7 +43,7 @@ make smoke      # ทดสอบทั้ง flow กับ server จริง
 
 ### ทำไมใช้ RustFS แทน MinIO
 MinIO หยุดแจก Docker image ฟรีแล้ว (`minio/minio` ดึงไม่ได้) จึงใช้ [RustFS](https://github.com/rustfs/rustfs) (Apache-2.0) ที่ใช้ S3 API เหมือนกัน
-โค้ดใช้ AWS SDK ปกติ จึงสลับไป AWS S3 จริงได้โดยแค่เปลี่ยน env (ไม่ต้องแก้โค้ด) — console ดูไฟล์ได้ที่ `http://localhost:9001`
+โค้ดใช้ AWS SDK ปกติ จึงสลับไปที่เก็บ S3 เจ้าอื่น (Neon Object Storage, AWS S3) ได้โดยแค่เปลี่ยน env (ไม่ต้องแก้โค้ด) — console ดูไฟล์ได้ที่ `http://localhost:9001`
 
 ---
 
@@ -267,6 +269,16 @@ Response (ใช้กับ GET/PATCH ด้วย):
   รูป (ก่อน/หลังอัปโหลด, แทนที่, cleanup), อันดับ (manual/เร็วผิดปกติ/สัปดาห์ก่อนไม่นับ, ประเทศ, opt-out), แชร์ซ่อนบ้าน, ลบบัญชี
 - `scripts/smoke.sh` — ทั้ง flow กับ Docker จริง รวมอัปโหลดรูปเข้า RustFS และ body 7 MB → 413
 
-## ขึ้น AWS
-ยังไม่ได้ทำในงานนี้ (แผนข้อ 6) — image เดียวกันนี้รันบน EC2 ได้ โดยเปลี่ยน env: ไม่ตั้ง `S3_ENDPOINT` / `S3_ACCESS_KEY` (ใช้ IAM Role),
-`S3_PATH_STYLE=false`, `PUBLIC_BASE_URL=https://<โดเมน>`, `PROXY_HEADER=X-Forwarded-For` เมื่ออยู่หลัง Caddy
+## ขึ้นระบบจริง
+
+ใช้ Render (backend) + Neon (PostgreSQL + Object Storage) แพ็กเกจฟรี ตาม [`render.yaml`](../render.yaml) และ [`../docs/DEPLOY_RENDER.md`](../docs/DEPLOY_RENDER.md)
+
+```bash
+make deploy-check URL=https://runtrail-api.onrender.com   # ปลุกเซิร์ฟเวอร์ แล้วรัน smoke test 29 ข้อกับระบบจริง
+```
+
+env ที่ต่างจากในเครื่อง: `DATABASE_URL` (Neon แบบ direct), `S3_ENDPOINT` / `S3_ACCESS_KEY` / `S3_SECRET_KEY` (Neon),
+`S3_REGION=ap-southeast-1`, `S3_CREATE_BUCKET=false` (bucket สร้างด้วย `neon bucket create`), `PUBLIC_BASE_URL=https://runtrail-api.onrender.com`,
+`PROXY_HEADER=X-Forwarded-For` (เชื่อ header เฉพาะจาก proxy ใน private network แล้วใช้ IP ขวาสุดที่ proxy เติม เพื่อให้ rate limit แยกต่อผู้ใช้)
+
+image เดียวกันรันบน AWS EC2 ได้ด้วย: ไม่ตั้ง `S3_ENDPOINT` / `S3_ACCESS_KEY` (ใช้ IAM Role) และ `S3_PATH_STYLE=false`

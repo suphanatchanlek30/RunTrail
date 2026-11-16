@@ -125,10 +125,16 @@ class AddEditRunActivity : AppCompatActivity() {
         binding.btnGallery.setOnClickListener { pickPhoto.launch("image/*") }
         binding.photoChip.setOnClickListener { pickPhoto.launch("image/*") }
         binding.btnRemovePhoto.setOnClickListener {
-            photoPath = null
-            photoChanged = true
-            renderPhoto()
-            toast(getString(R.string.edit_photo_removed))
+            Sheets.confirm(
+                this, R.drawable.ic_trash, getString(R.string.edit_photo_remove_title), getString(R.string.edit_photo_remove_body),
+                confirmText = getString(R.string.action_delete), cancelText = getString(R.string.action_cancel),
+                tone = Sheets.Tone.DANGER,
+            ) {
+                photoPath = null
+                photoChanged = true
+                renderPhoto()
+                toast(getString(R.string.edit_photo_removed))
+            }
         }
         // GPS runs carry timestamps on every point, so their date cannot be edited (the server rejects it too).
         val dateLocked = editing?.isGps == true

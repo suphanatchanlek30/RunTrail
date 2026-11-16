@@ -1,29 +1,28 @@
-# Deploy ฟรี: Render + Neon + Cloudflare R2
+# Deploy ฟรี: Render + Neon
 
-คู่มือขึ้นระบบจริงแบบไม่เสียเงิน สำหรับผู้ใช้จำนวนน้อย (ออกแบบสำหรับ 1 คน) ทำตามทีละขั้นได้ทันที
+[← กลับไปหน้า README](../README.md)
 
-| ส่วน | ใช้ | แทนของเดิมในเครื่อง |
+ระบบจริงที่ใช้งานอยู่ ไม่เสียเงินและไม่ต้องผูกบัตร
+
+| ส่วน | ใช้ | แทนของเดิมในเครื่อง (Docker) |
 |---|---|---|
-| Backend (Go, Docker) | **Render** — Web Service แพ็กเกจ Free | container `api` |
-| ฐานข้อมูล | **Neon** — PostgreSQL แพ็กเกจ Free | container `db` (Postgres 17) |
-| ที่เก็บรูป | **Cloudflare R2** — แพ็กเกจ Free | container `s3` (RustFS) |
+| Backend (Go, Docker) | **Render**: Web Service แพ็กเกจ Free | container `api` |
+| ฐานข้อมูล | **Neon**: PostgreSQL 17 แพ็กเกจ Free | container `db` |
+| ที่เก็บรูป | **Neon Object Storage** (S3 API) ในโปรเจค Neon เดียวกัน | container `s3` (RustFS) |
 
-**สิ่งที่เตรียมไว้ในโปรเจคแล้ว** (ไม่ต้องแก้โค้ดก่อน deploy):
+**สถานะ:** deploy แล้วที่ **<https://runtrail-api.onrender.com>** · `make deploy-check` ผ่าน 29/29 ·
+end-to-end test ฝั่งแอปผ่านกับเซิร์ฟเวอร์จริง · แอป release ต่อเซิร์ฟเวอร์นี้เป็นค่าเริ่มต้น
 
-| ไฟล์ | ทำอะไร |
-|---|---|
-| [`render.yaml`](../render.yaml) | Blueprint ของ Render: Docker, Free, Singapore, health check, ตัวแปรทั้งหมด, สุ่ม `JWT_SECRET` ให้เอง |
-| `backend` `S3_CREATE_BUCKET` | ปิดการสร้าง bucket ตอนเริ่ม (bucket ของ R2 สร้างในหน้าเว็บ) |
-| `backend` `/readyz` | ตรวจที่เก็บรูปด้วยสิทธิ์ระดับไฟล์ — ใช้ได้กับ token R2 แบบ "Object Read & Write" |
-| `backend/Makefile` `deploy-check` | ปลุกเซิร์ฟเวอร์ที่หลับ แล้วรัน smoke test 29 ข้อกับเซิร์ฟเวอร์จริง |
-| แอป `ApiClient` | รอคำตอบได้ 90 วินาที (เดิม 30) — เซิร์ฟเวอร์ที่เพิ่งตื่นไม่ทำให้ล้ม |
-| แอป `App` / หน้าเข้าสู่ระบบ | ปลุกเซิร์ฟเวอร์ล่วงหน้าตอนเปิดแอปและตอนเปิดหน้าเข้าสู่ระบบ |
-| แอป หน้าเข้าสู่ระบบ/สมัคร | รอเกิน 6 วินาที → แจ้ง "เซิร์ฟเวอร์กำลังตื่น อาจใช้เวลาถึง 1 นาที" |
-| `app/build.gradle.kts` | release build ชี้ `https://runtrail-api.onrender.com` (เปลี่ยนได้ด้วย `-PreleaseApiUrl=`) · debug ยังชี้ emulator |
+```mermaid
+flowchart LR
+    App["แอป Android<br/>(release)"] -- "HTTPS /api/v1" --> API["Render<br/>runtrail-api (Go)"]
+    Web["เบราว์เซอร์<br/>ลิงก์แชร์ /s/{code}"] --> API
+    API --> PG[("Neon<br/>PostgreSQL 17")]
+    API -- "เซ็น presigned URL" --> S3[("Neon Object Storage<br/>bucket runtrail-photos")]
+    App -. "อัปโหลด/ดาวน์โหลดรูปตรง" .-> S3
+```
 
-ทั้งหมดซ้อมในเครื่องแล้วด้วยค่าตั้งแบบเดียวกับ Render (image ที่ build จาก `./backend`, `PORT=10000`, ฐานข้อมูลว่างใหม่,
-`S3_REGION=auto`, `S3_CREATE_BUCKET=false`) → `make deploy-check` ผ่าน 29/29
-**ยังไม่เคย deploy ขึ้น Render/Neon/R2 จริง** — จุดที่ยืนยันกับของจริงไม่ได้มีป้าย ⚠️
+ทุกส่วนอยู่ภูมิภาค **Singapore** (Render `singapore` · Neon `aws-ap-southeast-1`)
 
 ---
 
@@ -31,66 +30,69 @@
 
 | เจ้า | ข้อจำกัด | ผลกับแอป |
 |---|---|---|
-| Render | หลับหลังไม่มีคนเรียก 15 นาที ปลุกใช้ ~1 นาที · RAM 512 MB · CPU 0.1 · 750 ชม./เดือน | แอปรอได้และแจ้งผู้ใช้แล้ว · ลิงก์แชร์ที่เพื่อนเปิดครั้งแรกจะช้า |
-| Render | ไม่มีดิสก์ถาวร · บางแหล่งรายงานว่า bandwidth ฟรีเหลือ 5 GB/เดือน | ไม่กระทบ — รูปโหลดตรงจาก R2 ไม่ผ่าน Render |
-| Neon | 1 GB/โปรเจค · compute 100 CU-ชม./เดือน · พักเองเมื่อว่าง | เกินพอสำหรับ 1 คน |
-| R2 | 10 GB/เดือน · ดาวน์โหลดฟรี | รูปละ ≤ 1280 px (~200 KB) → หลายหมื่นรูป |
+| Render | หลับเมื่อไม่มีคนเรียก 15 นาที ปลุกใช้ ~1 นาที · RAM 512 MB · CPU 0.1 · 750 ชม./เดือน (รวมทุก service ฟรีในบัญชี) | แอปปลุกเซิร์ฟเวอร์ล่วงหน้า รอได้ 90 วินาที และแจ้ง "เซิร์ฟเวอร์กำลังตื่น" · ลิงก์แชร์ที่เปิดครั้งแรกจะช้า |
+| Neon Postgres | 1 GB · compute พักเองเมื่อว่าง | เกินพอสำหรับงานนี้ |
+| Neon Object Storage | 5 GB ต่อโปรเจค | รูปละ ≤ 1280 px (~200 KB) → ราว 25,000 รูป |
+| Neon (รวม) | ข้อมูลออก 5 GB/เดือน ใช้ร่วมกันทั้งฐานข้อมูลและรูป | ถ้าเกิน Neon หยุด compute ถึงรอบเดือนถัดไป (ไม่เก็บเงิน ข้อมูลไม่หาย) |
 
-**ห้ามใช้ Postgres ฟรีของ Render** — ถูกลบพร้อมข้อมูลหลัง 30 วัน (+14 วันผ่อนผัน) และไม่มี backup
+ไม่มีบัตร = ไม่มีทางถูกเก็บเงิน ใช้เกินโควตาแค่หยุดชั่วคราว
+**ห้ามใช้ Postgres ฟรีของ Render** เพราะถูกลบพร้อมข้อมูลหลัง 30 วัน
 
 ---
 
-## 1. Neon — ฐานข้อมูล
+## 1. Neon: ฐานข้อมูล + ที่เก็บรูป
 
-1. สมัครที่ <https://neon.com> → **Create project**
-   - ชื่อ `runtrail` · Postgres **17** · Region **AWS Asia Pacific (Singapore)**
-2. **Connection details** → database `neondb` → **ปิด Connection pooling** → คัดลอก connection string แบบ direct (host ไม่มี `-pooler`)
-   ⚠️ แบบ pooled ยังไม่ได้ทดสอบ (backend รัน migration ด้วย goose และมี pool ของ pgx อยู่แล้ว)
-3. ตรวจว่าท้าย URL มี `sslmode=require`:
-   ```
-   postgresql://neondb_owner:xxxx@ep-xxxx.ap-southeast-1.aws.neon.tech/neondb?sslmode=require
-   ```
-   → ค่า **`DATABASE_URL`** · ตารางสร้างเองตอน backend เริ่ม (migration ฝังอยู่ใน binary)
+### หน้าเว็บ
+1. <https://neon.com> → **New project** → ชื่อ `runtrail` · Region **AWS Asia Pacific 1 (Singapore)** · Postgres 17
+2. Services: เปิด **Postgres database** (ที่เหลือปิดได้)
 
-## 2. Cloudflare R2 — ที่เก็บรูป
+### ด้วย Neon CLI (สร้าง bucket และดึงกุญแจ)
+```bash
+npm i -g neon
+neon login                                    # เปิดเบราว์เซอร์ให้ล็อกอิน
+neon link --project-id <PROJECT_ID> -y        # ผูกโฟลเดอร์นี้กับโปรเจค · ดึง env ลง .env.local (git-ignored)
+neon bucket create runtrail-photos --branch production   # bucket แบบ private
+neon env pull                                 # เพิ่ม AWS_* ของ Object Storage ลง .env.local
+```
 
-1. Cloudflare → **R2 Object Storage** → เปิดใช้ (ผูกบัตรเพื่อยืนยัน ไม่ถูกเก็บเงินถ้าไม่เกินโควตาฟรี)
-2. **Create bucket** ชื่อ **`runtrail-photos`** · ปล่อยเป็น **private** (แอปใช้ลิงก์ presigned อายุสั้น ไม่ต้องเปิด public)
-3. **Manage R2 API Tokens → Create API token** → Permissions **Object Read & Write** → Specify bucket `runtrail-photos`
-   → คัดลอก **Access Key ID** และ **Secret Access Key** (Secret เห็นได้ครั้งเดียว)
-4. คัดลอก **Account ID** → endpoint คือ `https://<ACCOUNT_ID>.r2.cloudflarestorage.com`
+`.env.local` จะมีค่าที่ต้องใช้ใน Render:
 
-## 3. Render — backend (ใช้ Blueprint)
+| ใน `.env.local` | ใส่ใน Render เป็น | หน้าตา |
+|---|---|---|
+| `DATABASE_URL_UNPOOLED` | `DATABASE_URL` | `postgresql://…@ep-….ap-southeast-1.aws.neon.tech/neondb?sslmode=require` (ไม่มี `-pooler`) |
+| `AWS_ENDPOINT_URL_S3` | `S3_ENDPOINT` | `https://br-….storage.c-4.ap-southeast-1.aws.neon.tech` |
+| `AWS_ACCESS_KEY_ID` | `S3_ACCESS_KEY` | ขึ้นต้น `nak_live_` (41 ตัว) |
+| `AWS_SECRET_ACCESS_KEY` | `S3_SECRET_KEY` | 73 ตัว |
 
-1. สมัคร <https://render.com> ด้วย GitHub และให้สิทธิ์ repo `RunTrail`
-2. **New → Blueprint** → เลือก repo → Render อ่าน [`render.yaml`](../render.yaml)
-3. Render ถามค่าความลับ 4 ตัว:
+คัดลอกเฉพาะค่าหลัง `=` ไม่เอาเครื่องหมาย `"` · ตารางในฐานข้อมูลสร้างเองตอน backend เริ่ม (migration ฝังอยู่ใน binary)
 
-   | Key | ค่า |
-   |---|---|
-   | `DATABASE_URL` | จากขั้นที่ 1 |
-   | `S3_ENDPOINT` | `https://<ACCOUNT_ID>.r2.cloudflarestorage.com` |
-   | `S3_ACCESS_KEY` | Access Key ID ของ R2 |
-   | `S3_SECRET_KEY` | Secret Access Key ของ R2 |
+> [!TIP]
+> คัดลอกค่าเข้าคลิปบอร์ดโดยไม่ต้องลากเลือก (macOS):
+> ```bash
+> grep '^AWS_SECRET_ACCESS_KEY=' .env.local | cut -d= -f2- | tr -d '"\n' | pbcopy
+> ```
 
-   ค่าที่เหลือตั้งไว้ใน `render.yaml` แล้ว: `PUBLIC_BASE_URL`, `S3_REGION=auto`, `S3_BUCKET=runtrail-photos`, `S3_PATH_STYLE=true`,
-   `S3_CREATE_BUCKET=false`, `LOG_LEVEL=info` และ `JWT_SECRET` (Render สุ่มให้ 256 บิต) · `PORT` Render ใส่ให้เอง
-4. **Apply** → รอ build (หลายนาทีครั้งแรก) → Logs ต้องเห็น `"database ready"` และ `"listening"`
-5. ⚠️ **ถ้าได้ URL ไม่ใช่ `runtrail-api.onrender.com`** (ชื่อซ้ำกับคนอื่น) → แก้ `PUBLIC_BASE_URL` ในหน้า Environment ให้ตรง URL จริง
-   และ build แอปด้วย `-PreleaseApiUrl=<URL จริง>` (ขั้นที่ 5)
+---
 
-**หมายเหตุ Blueprint:** ค่า `sync: false` ถูกถามแค่ตอนสร้างครั้งแรก ถ้าภายหลังเพิ่ม secret ใหม่ใน `render.yaml` ต้องไปใส่ในหน้า Environment เอง
-· deploy ใหม่อัตโนมัติเมื่อ push เข้า `main` และมีไฟล์ใน `backend/` เปลี่ยน
+## 2. Render: backend (Blueprint)
 
-<details>
-<summary>ทางเลือก: สร้าง Web Service เองโดยไม่ใช้ Blueprint</summary>
+1. <https://render.com> → สมัครด้วย GitHub และให้สิทธิ์ repo `RunTrail`
+2. **+ New → Blueprint** → เลือก repo → Blueprint Name `runtrail` · Branch `main`
+3. Render อ่าน [`render.yaml`](../render.yaml) แล้วถามค่าลับ 4 ช่องตามตารางในข้อ 1
+4. **Deploy Blueprint** → service `runtrail-api` → แท็บ **Logs** ต้องเห็น `"database ready"` และ `"listening"` → สถานะ **Live**
 
-New → Web Service → repo นี้ → Language **Docker** · Dockerfile path `./backend/Dockerfile` · Docker build context `./backend` ·
-Instance **Free** · Region **Singapore** · Health Check Path `/healthz` · แล้วใส่ตัวแปรทั้ง 11 ตัวตาม `render.yaml`
-(`JWT_SECRET` สร้างเองด้วย `openssl rand -hex 32`)
-</details>
+ค่าที่ `render.yaml` ตั้งให้แล้ว: Docker (`backend/Dockerfile`) · Free · Singapore · health check `/healthz` ·
+`PUBLIC_BASE_URL=https://runtrail-api.onrender.com` · `S3_REGION=ap-southeast-1` · `S3_BUCKET=runtrail-photos` ·
+`S3_PATH_STYLE=true` · `S3_CREATE_BUCKET=false` · `PROXY_HEADER=X-Forwarded-For` · `LOG_LEVEL=info` ·
+`JWT_SECRET` (Render สุ่มให้) · `PORT` (Render ใส่เอง)
 
-## 4. ตรวจหลัง deploy
+- ถ้าได้ URL อื่น (ชื่อซ้ำ) → แก้ `PUBLIC_BASE_URL` ในหน้า Environment และ build แอปด้วย `-PreleaseApiUrl=<URL>`
+- ค่า `sync: false` ถูกถามแค่ครั้งแรก แก้ภายหลังที่ **runtrail-api → Environment → Save Changes**
+- push เข้า `main` แล้วมีไฟล์ใน `backend/` เปลี่ยน → Render deploy ใหม่เอง
+
+---
+
+## 3. ตรวจหลัง deploy
 
 ```bash
 cd backend
@@ -100,50 +102,50 @@ make deploy-check URL=https://runtrail-api.onrender.com
 
 smoke test สร้างบัญชีทดสอบ `smoke…@example.com` ทิ้งไว้ (การวิ่งของบัญชีนั้นถูกลบตอนจบ)
 
-| ถ้า… | ตรวจ |
+| `/readyz` ตอบ | สาเหตุ / วิธีแก้ |
 |---|---|
-| `readyz` บอก db ไม่ ok | `DATABASE_URL`, `sslmode=require`, ใช้ direct ไม่ใช่ pooler |
-| `readyz` บอก storage ไม่ ok | `S3_ENDPOINT`, key, ชื่อ bucket, token มีสิทธิ์กับ bucket นี้ |
-| อัปโหลดรูปได้ 403 `SignatureDoesNotMatch` | `S3_REGION=auto`, `S3_PATH_STYLE=true` |
+| db ไม่ ok | `DATABASE_URL` ผิด · มี `"` ติดมา · ต้องเป็นแบบ direct (ไม่มี `-pooler`) และมี `sslmode=require` |
+| `Custom endpoint … was not a valid URI` | วางค่าผิดช่อง: `S3_ENDPOINT` ต้องเป็น URL `https://br-…neon.tech` |
+| `HeadObject … 403 Forbidden` | `S3_ACCESS_KEY` / `S3_SECRET_KEY` ไม่ตรงคู่กัน (สลับช่องหรือมีอักษรติดมา) → วางใหม่ทั้งคู่ |
+| `SignatureDoesNotMatch` | `S3_REGION` ต้องเป็น `ap-southeast-1` และ `S3_PATH_STYLE=true` |
 | ลิงก์แชร์ชี้ผิดที่ | `PUBLIC_BASE_URL` ต้องตรง URL ของ Render |
 
-## 5. ตั้งค่าแอป
+---
 
-- **build release** (ชี้ Render ให้แล้ว): `./gradlew assembleRelease` — ถ้า URL ไม่ตรง: `./gradlew assembleRelease -PreleaseApiUrl=https://<url>`
-  (การติดตั้ง release ต้อง sign APK เอง — ยังไม่ได้ตั้ง signing config ในโปรเจค)
-- **ใช้ debug build ก็ได้:** หน้าเข้าสู่ระบบ → **เซิร์ฟเวอร์** → `https://runtrail-api.onrender.com`
-- สมัครบัญชีใหม่บนเซิร์ฟเวอร์นี้ (คนละฐานข้อมูลกับใน Mac)
-- ถ้าแอปล็อกอินกับเซิร์ฟเวอร์ใน Mac อยู่ แอปจะไม่ยอมย้ายไปเซิร์ฟเวอร์อื่นจนกว่าจะออกจากระบบ (กันข้อมูลซิงก์ผิดที่):
-  ซิงก์ให้ครบ → ออกจากระบบ → เปลี่ยนเซิร์ฟเวอร์ → สมัคร/ล็อกอิน · การวิ่งตอนเป็น Guest จะถูกผูกบัญชีและอัปโหลดให้เอง
+## 4. แอป
 
-## 6. ดูแลระบบ
+- **APK พร้อมใช้:** `./gradlew assembleRelease` ชี้ `https://runtrail-api.onrender.com` และเซ็นด้วย release key
+  (ตั้งค่า signing ที่ [SETUP.md](SETUP.md#build-apk-สำหรับติดตั้งจริง))
+- **debug build** ยังชี้ Emulator (`http://10.0.2.2:8080`) ถ้าจะใช้กับเซิร์ฟเวอร์จริง: หน้าเข้าสู่ระบบ → **เซิร์ฟเวอร์** → `https://runtrail-api.onrender.com`
+- ถ้าแอปล็อกอินกับเซิร์ฟเวอร์อื่นอยู่ แอปจะไม่ยอมเปลี่ยนเซิร์ฟเวอร์จนกว่าจะออกจากระบบ (กันข้อมูลซิงก์ผิดที่):
+  ซิงก์ให้ครบ → ออกจากระบบ → เปลี่ยนเซิร์ฟเวอร์ → สมัคร/ล็อกอิน
 
-- **สำรองข้อมูล** (แพ็กเกจฟรีไม่ควรถือเป็นที่เก็บถาวร):
+---
+
+## 5. ดูแลระบบ
+
+- **สำรองข้อมูล** (`brew install libpq` ครั้งแรก เพื่อให้มี `pg_dump`):
   ```bash
   pg_dump "<DATABASE_URL>" --format=custom --file=runtrail_$(date +%F).dump
   pg_restore --clean --if-exists -d "<DATABASE_URL>" runtrail_YYYY-MM-DD.dump   # คืนข้อมูล
   ```
-  รูปใน R2 ไม่ได้อยู่ใน dump
-- **อัปเดต:** push เข้า `main` → Render deploy ใหม่เอง · migration ใหม่รันตอนเริ่ม
-- **Log:** Render Dashboard → `runtrail-api` → Logs (JSON)
-- **งานลบรูปที่อัปโหลดค้าง** รันทุกชั่วโมงเฉพาะตอนเซิร์ฟเวอร์ตื่น — บนแพ็กเกจฟรีจึงช้ากว่าปกติ ไม่กระทบการใช้งาน
-- **เปลี่ยนความลับ:** เปลี่ยน `JWT_SECRET` = ทุกเครื่องต้องล็อกอินใหม่ · หมุน key R2 = แก้ `S3_ACCESS_KEY/S3_SECRET_KEY`
-- `PROXY_HEADER` ปล่อยว่าง: rate limit นับทุกคำขอที่ผ่าน proxy ของ Render รวมกัน (พอสำหรับ 1 คน)
-  ⚠️ ถ้าจะตั้ง `X-Forwarded-For` ต้องทดสอบก่อนว่า IP ที่อ่านได้ถูกต้อง
+  รูปไม่ได้อยู่ใน dump · ดูรายการรูป: `neon bucket object list runtrail-photos --branch production`
+- **Log:** Render → `runtrail-api` → Logs (JSON) · Neon storage: `neon logs query --branch production --source storage --since 1h`
+- **งานลบรูปที่อัปโหลดค้าง** รันทุกชั่วโมงเฉพาะตอนเซิร์ฟเวอร์ตื่น
+- **เปลี่ยนความลับ:** เปลี่ยน `JWT_SECRET` = ทุกเครื่องต้องล็อกอินใหม่ · หมุนกุญแจรูป: `neon credentials rotate <tokenId>` แล้วแก้ `S3_ACCESS_KEY` / `S3_SECRET_KEY`
+- **Rate limit:** `PROXY_HEADER=X-Forwarded-For` ทำให้นับแยกตาม IP จริงของผู้ใช้ เซิร์ฟเวอร์เชื่อ header นี้เฉพาะเมื่อคำขอมาจาก proxy ใน private network (Render) และใช้ IP ขวาสุดที่ proxy เติม ผู้ใช้จึงปลอม IP เพื่อหลบ limit ไม่ได้
 
-## 7. Checklist
+---
 
-- [ ] Neon: โปรเจค Singapore · Postgres 17 · direct URL + `sslmode=require`
-- [ ] R2: bucket `runtrail-photos` (private) · token Object Read & Write · Account ID
-- [ ] Render: New → Blueprint → ใส่ 4 ค่า → Apply → Logs มี `listening`
-- [ ] URL ตรง `runtrail-api.onrender.com` (ถ้าไม่ตรง แก้ `PUBLIC_BASE_URL`)
-- [ ] `make deploy-check URL=https://runtrail-api.onrender.com` → 29/29
-- [ ] แอป: ตั้งเซิร์ฟเวอร์ → สมัคร → วิ่ง → ซิงก์ → แชร์ลิงก์ → เปิดลิงก์ในเบราว์เซอร์
+## 6. Checklist
+
+- [x] Neon: โปรเจค `runtrail` Singapore · Postgres 17 · bucket `runtrail-photos` (private)
+- [x] Render: Blueprint → ใส่ 4 ค่า → Live ที่ `runtrail-api.onrender.com`
+- [x] `make deploy-check URL=https://runtrail-api.onrender.com` → 29/29
+- [x] แอป release ต่อเซิร์ฟเวอร์จริง: สมัคร → วิ่ง → ซิงก์ → รูป → แชร์ลิงก์ → อันดับ
 - [ ] ตั้งเตือนตัวเองให้ `pg_dump` เป็นระยะ
 
 ## อ้างอิง
 
-- Render: [Free instances](https://render.com/docs/free) · [Blueprint YAML reference](https://render.com/docs/blueprint-spec) · [Monorepo support](https://render.com/docs/monorepo-support)
-- Neon: [Free plan limits](https://neon.com/faqs/free-plan-limits-and-quotas) · [Pricing](https://neon.com/pricing)
-- Cloudflare R2: [Docs](https://developers.cloudflare.com/r2/) · [Pricing](https://developers.cloudflare.com/r2/pricing/)
-- สรุปข้อจำกัดจากบุคคลที่สาม: [agentdeals.dev/vendor/render](https://agentdeals.dev/vendor/render), [temps.sh](https://temps.sh/blog/render-pricing-2026)
+- Render: [Free instances](https://render.com/docs/free) · [Blueprint YAML reference](https://render.com/docs/blueprint-spec)
+- Neon: [Pricing / Free plan](https://neon.com/pricing) · [Object Storage](https://neon.com/docs/storage/overview) · [S3 compatibility](https://neon.com/docs/storage/s3-compatibility) · [CLI](https://neon.com/docs/cli/install)

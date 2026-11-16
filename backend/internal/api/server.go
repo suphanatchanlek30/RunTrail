@@ -57,7 +57,13 @@ func New(d Deps) (*fiber.App, *Server) {
 		ErrorHandler: httpx.ErrorHandler,
 		ReadTimeout:  15 * time.Second,
 		WriteTimeout: 15 * time.Second,
-		ProxyHeader:  d.Config.ProxyHeader,
+		// Fiber reads ProxyHeader only for requests from a trusted proxy. Trust private and loopback peers
+		// (Render, Caddy, Docker) and validate the header, so c.IP() is the rightmost address added by a
+		// proxy we trust, not whatever the client wrote into X-Forwarded-For.
+		ProxyHeader:        d.Config.ProxyHeader,
+		TrustProxy:         d.Config.ProxyHeader != "",
+		TrustProxyConfig:   fiber.TrustProxyConfig{Private: true, Loopback: true},
+		EnableIPValidation: true,
 		// Do not let Fiber decode gzip for us; httpx.Decode does it with its own size cap.
 	})
 	app.Use(recover.New())

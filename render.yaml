@@ -23,16 +23,18 @@ services:
       # ---- ตั้งให้แล้ว
       - key: PUBLIC_BASE_URL
         value: https://runtrail-api.onrender.com
-      - key: S3_REGION               # Neon Object Storage (Singapore) · ถ้าใช้ Cloudflare R2 ให้เปลี่ยนเป็น auto
+      - key: S3_REGION               # Neon Object Storage (Singapore)
         value: ap-southeast-1
       - key: S3_BUCKET
         value: runtrail-photos
       - key: S3_PATH_STYLE
         value: "true"
-      - key: S3_CREATE_BUCKET        # bucket สร้างเองในหน้าเว็บ R2 · token ของ R2 อาจไม่มีสิทธิ์สร้าง bucket
+      - key: S3_CREATE_BUCKET        # bucket สร้างด้วย `neon bucket create runtrail-photos` · กุญแจของ Neon ไม่ต้องมีสิทธิ์สร้าง bucket
         value: "false"
       - key: LOG_LEVEL
         value: info
+      - key: PROXY_HEADER            # IP จริงของผู้ใช้จาก proxy ของ Render → rate limit แยกต่อคน
+        value: X-Forwarded-For
       - key: JWT_SECRET
         generateValue: true
       # ---- ใส่เองตอนสร้าง Blueprint (Render ถามครั้งแรกครั้งเดียว)

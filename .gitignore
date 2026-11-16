@@ -42,3 +42,8 @@ secrets/
 !*.tfvars.example
 crash.log
 .neon
+
+# ---- local coding-agent tooling (Neon CLI skills / MCP) ----
+.claude/
+.mcp.json
+skills-lock.json

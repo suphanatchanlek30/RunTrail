@@ -12,6 +12,7 @@
 ![Fiber](https://img.shields.io/badge/Fiber-v3-00ACD7)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)
+![Render](https://img.shields.io/badge/deploy-Render%20%2B%20Neon-46E3B7?logo=render&logoColor=white)
 ![Map](https://img.shields.io/badge/map-OpenStreetMap-7EBC6F)
 
 โครงงานรายวิชา CS364 Mobile Application Development<br/>
@@ -55,6 +56,9 @@ RunTrail มี 2 ส่วนที่ทำงานร่วมกัน
 
 กดเริ่มวิ่งได้ทันทีแม้ไม่มีเน็ต แอปบันทึกลงเครื่องก่อน แล้วอัปโหลดให้เองเมื่อกลับมาออนไลน์
 
+**ระบบจริง:** backend ทำงานอยู่ที่ **<https://runtrail-api.onrender.com>** (Render + Neon แพ็กเกจฟรี)
+ติดตั้ง APK แล้วสมัครบัญชีได้ทันที ไม่ต้องตั้งค่าเซิร์ฟเวอร์เอง
+
 ## ภาพหน้าจอ
 
 | หน้าหลัก | วิ่งสด | สรุปผล | แชร์ | อันดับโลก |
@@ -81,11 +85,13 @@ RunTrail มี 2 ส่วนที่ทำงานร่วมกัน
 ```mermaid
 flowchart LR
     App["แอป Android"] --> Local[("SQLite<br/>ใช้ได้ออฟไลน์")]
-    App -- "HTTPS /api/v1" --> API["Backend Go"]
-    API --> PG[("PostgreSQL")]
-    API --> S3[("S3<br/>รูปภาพ")]
-    App -. "อัปโหลดรูปตรง" .-> S3
+    App -- "HTTPS /api/v1" --> API["Backend Go<br/>Render"]
+    API --> PG[("PostgreSQL 17<br/>Neon")]
+    API -- "เซ็น presigned URL" --> S3[("Object Storage (S3)<br/>Neon · รูปภาพ")]
+    App -. "อัปโหลด/โหลดรูปตรง" .-> S3
 ```
+
+ตอนพัฒนาในเครื่อง ทั้ง 3 ส่วนรันด้วย Docker Compose (Go API · PostgreSQL · RustFS แทน S3) โค้ดชุดเดียวกัน ต่างกันแค่ env
 
 👉 [ดูแผนภาพเต็มและคำอธิบาย](docs/ARCHITECTURE.md#สถาปัตยกรรม)
 
@@ -94,7 +100,8 @@ flowchart LR
 | ส่วน | ใช้ |
 |---|---|
 | แอป | Kotlin · XML + ViewBinding · Material 3 · SQLite · Volley · OkHttp · WorkManager · osmdroid |
-| Backend | Go · Fiber · PostgreSQL · S3 / RustFS · JWT + argon2id · Docker Compose |
+| Backend | Go · Fiber · PostgreSQL · S3 API · JWT + argon2id · Docker |
+| ระบบจริง | Render (backend) · Neon (PostgreSQL + Object Storage) · ในเครื่องใช้ Docker Compose + RustFS |
 
 👉 [ดูรายการเทคโนโลยีทั้งหมดและเวอร์ชัน](docs/ARCHITECTURE.md#เทคโนโลยีที่ใช้)
 
@@ -112,13 +119,22 @@ RunTrail/
 
 ## เริ่มต้นใช้งาน
 
+**ใช้งานจริง (แนะนำ):** ติดตั้ง `RunTrail-1.1.apk` (release) บนมือถือ Android 9 ขึ้นไป → สมัครบัญชี → ใช้ได้ทุกฟีเจอร์
+แอปต่อ `https://runtrail-api.onrender.com` ให้เอง ใช้ได้ทั้ง 4G และ Wi-Fi
+
+```bash
+./gradlew assembleRelease    # build APK เอง → app/build/outputs/apk/release/app-release.apk
+```
+
+**พัฒนาในเครื่อง:**
+
 ```bash
 cd backend && make env && make up    # รัน backend (ต้องมี Docker)
 ```
 
-จากนั้นเปิดโปรเจคใน Android Studio แล้วกด **Run ▶** บน Emulator แอปต่อ `http://10.0.2.2:8080` ให้เอง
+จากนั้นเปิดโปรเจคใน Android Studio แล้วกด **Run ▶** บน Emulator แอป debug ต่อ `http://10.0.2.2:8080` ให้เอง
 
-👉 [ขั้นตอนเต็ม รวมการต่อจากมือถือจริง](docs/SETUP.md#เริ่มต้นใช้งาน)
+👉 [ขั้นตอนเต็ม: ติดตั้ง APK · signing · ต่อจากมือถือจริง](docs/SETUP.md#เริ่มต้นใช้งาน)
 
 ## ทดสอบด้วย GPS
 
@@ -133,6 +149,7 @@ cd backend && make env && make up    # รัน backend (ต้องมี Doc
 | แอป · JVM (77 ข้อ) | `./gradlew testDebugUnitTest` |
 | แอป · บนเครื่อง (41 ข้อ) | `./gradlew connectedDebugAndroidTest -Pe2eApiUrl=http://10.0.2.2:8080` |
 | Backend | `cd backend && make test` |
+| ระบบจริง · smoke (29 ข้อ) | `cd backend && make deploy-check URL=https://runtrail-api.onrender.com` |
 
 👉 [ดูว่าแต่ละชุดทดสอบอะไรบ้าง](docs/SETUP.md#การทดสอบอัตโนมัติ-test)
 
@@ -175,7 +192,7 @@ REST API ใต้ `/api/v1` แบ่งเป็นกลุ่ม บัญ�
 ## ข้อจำกัดและแผนถัดไป
 
 - แผนที่ใช้ tile ฟรีของ OpenStreetMap ถ้าผู้ใช้เยอะควรใช้ผู้ให้บริการแผนที่ของตัวเอง
-- backend ในเครื่องต้องอยู่ Wi-Fi เดียวกับมือถือ ถ้าจะใช้จริงให้ขึ้นเซิร์ฟเวอร์ตาม [`docs/DEPLOY_RENDER.md`](docs/DEPLOY_RENDER.md)
+- เซิร์ฟเวอร์แพ็กเกจฟรีหลับเมื่อไม่มีคนใช้ 15 นาที เปิดแอปครั้งแรกหลังจากนั้นรอ ~1 นาที (แอปแจ้งผู้ใช้และรอให้เอง) ดู [`docs/DEPLOY_RENDER.md`](docs/DEPLOY_RENDER.md)
 - แผนถัดไป: ลืมรหัสผ่านทางอีเมล · ดาวน์โหลดแผนที่ไว้ใช้ออฟไลน์
 
 ## เอกสารเพิ่มเติม
@@ -183,10 +200,12 @@ REST API ใต้ `/api/v1` แบ่งเป็นกลุ่ม บัญ�
 | ไฟล์ | เนื้อหา |
 |---|---|
 | [`backend/README.md`](backend/README.md) | วิธีรัน backend และ API ฉบับเต็ม |
-| [`docs/DEPLOY_RENDER.md`](docs/DEPLOY_RENDER.md) | ขึ้นระบบจริงแบบฟรี (Render + Neon + Cloudflare R2) |
-| [`docs/BACKEND_PLAN.md`](docs/BACKEND_PLAN.md) | แผนระบบและการตัดสินใจออกแบบ |
+| [`docs/DEPLOY_RENDER.md`](docs/DEPLOY_RENDER.md) | ระบบจริงแบบฟรี (Render + Neon Postgres + Neon Object Storage) |
+| [`docs/SETUP.md`](docs/SETUP.md) | ติดตั้ง APK · build · รันในเครื่อง · การทดสอบ |
+| [`docs/BACKEND_PLAN.md`](docs/BACKEND_PLAN.md) | แผนระบบและการตัดสินใจออกแบบ (บันทึกช่วงพัฒนา) |
 | [`docs/AUDIT.md`](docs/AUDIT.md) | ผลตรวจทั้งระบบและผลทดสอบ |
 | [`tools/gps-bridge/README.md`](tools/gps-bridge/README.md) | ทดสอบด้วย GPS จริงจาก iPhone |
+| [`docs/rubric-evidence/`](docs/rubric-evidence/) | ภาพหลักฐานตามเกณฑ์ให้คะแนน (ชื่อไฟล์ขึ้นต้นด้วยเลขข้อ เช่น `3-1_…`, `4-2_…`) |
 
 ## ไลบรารีและลิขสิทธิ์
 

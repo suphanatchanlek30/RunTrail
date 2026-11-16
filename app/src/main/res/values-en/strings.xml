@@ -511,6 +511,8 @@
     <string name="stats_no_route">No GPS route to chart</string>
     <string name="edit_photo_remove">Remove photo</string>
     <string name="edit_photo_removed">Photo removed · tap Save to confirm</string>
+    <string name="edit_photo_remove_title">Remove this photo?</string>
+    <string name="edit_photo_remove_body">The photo will be removed from this run when you tap Save.</string>
     <string name="photo_processing">Preparing photo…</string>
     <string name="setting_country">Country (for rankings)</string>
     <string name="lb_set_country">Set country</string>

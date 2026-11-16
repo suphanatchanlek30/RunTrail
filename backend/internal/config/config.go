@@ -15,7 +15,8 @@ type Config struct {
 
 	// Base URL that phones and browsers use to reach this server (share links are built from it).
 	PublicBaseURL string `env:"PUBLIC_BASE_URL" envDefault:"http://localhost:8080"`
-	// Header holding the real client IP when running behind Caddy/ALB. Empty = use the socket address.
+	// Header holding the real client IP behind a proxy (Render, Caddy, ALB), e.g. X-Forwarded-For.
+	// Trusted only from private/loopback peers; empty = use the socket address.
 	ProxyHeader string `env:"PROXY_HEADER"`
 
 	JWTSecret    string        `env:"JWT_SECRET,required"`
@@ -37,7 +38,7 @@ type Config struct {
 	S3SecretKey      string `env:"S3_SECRET_KEY"`
 	S3PathStyle      bool   `env:"S3_PATH_STYLE" envDefault:"false"`
 	// Create the bucket at startup when S3_ENDPOINT is set (local RustFS/MinIO). Set false for a hosted
-	// bucket created in the provider's console (Cloudflare R2), whose token may not manage buckets.
+	// bucket created by the provider (Neon: `neon bucket create`), whose credential may not manage buckets.
 	S3CreateBucket bool `env:"S3_CREATE_BUCKET" envDefault:"true"`
 }
 

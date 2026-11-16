@@ -509,6 +509,8 @@
     <string name="stats_no_route">ไม่มีเส้นทาง GPS สำหรับวาดกราฟ</string>
     <string name="edit_photo_remove">ลบรูป</string>
     <string name="edit_photo_removed">ลบรูปแล้ว · กดบันทึกเพื่อยืนยัน</string>
+    <string name="edit_photo_remove_title">ลบรูปนี้?</string>
+    <string name="edit_photo_remove_body">รูปจะถูกเอาออกจากการวิ่งนี้เมื่อกดบันทึก</string>
     <string name="photo_processing">กำลังเตรียมรูป…</string>
     <string name="setting_country">ประเทศ (อันดับประเทศ)</string>
     <string name="lb_set_country">ตั้งประเทศ</string>
