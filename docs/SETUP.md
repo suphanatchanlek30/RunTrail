@@ -2,7 +2,51 @@
 
 [← กลับไปหน้า README](../README.md)
 
-**สารบัญ:** [เริ่มต้นใช้งาน](#เริ่มต้นใช้งาน) · [ทดสอบด้วย GPS](#ทดสอบด้วย-gps) · [การทดสอบอัตโนมัติ (Test)](#การทดสอบอัตโนมัติ-test)
+**สารบัญ:** [ติดตั้งแอปใช้งานจริง](#ติดตั้งแอปใช้งานจริง) · [Build APK สำหรับติดตั้งจริง](#build-apk-สำหรับติดตั้งจริง) · [เริ่มต้นใช้งาน (พัฒนาในเครื่อง)](#เริ่มต้นใช้งาน) · [ทดสอบด้วย GPS](#ทดสอบด้วย-gps) · [การทดสอบอัตโนมัติ (Test)](#การทดสอบอัตโนมัติ-test)
+
+---
+
+## ติดตั้งแอปใช้งานจริง
+
+แอป release ต่อเซิร์ฟเวอร์จริง `https://runtrail-api.onrender.com` ให้เอง ไม่ต้องรัน backend หรือตั้งค่าอะไร
+
+1. คัดลอก `RunTrail-1.1.apk` ลงมือถือ Android 9 ขึ้นไป (AirDrop ไม่ได้ ใช้ Google Drive / LINE / สาย USB)
+2. แตะไฟล์ → อนุญาต **ติดตั้งจากแหล่งที่ไม่รู้จัก** ให้แอปที่เปิดไฟล์ → **ติดตั้ง**
+   (ถ้า Play Protect เตือน เลือก **ติดตั้งต่อไป** เพราะแอปไม่ได้มาจาก Play Store)
+3. เปิดแอป → ให้สิทธิ์ตำแหน่ง/กิจกรรม/แจ้งเตือน → **สมัครบัญชี** (หรือใช้แบบ Guest ก่อนก็ได้)
+
+ติดตั้งผ่านสาย USB: `adb install -r RunTrail-1.1.apk`
+
+> [!IMPORTANT]
+> - ถ้าเครื่องเคยลงแอป **debug** ไว้ ต้องถอนก่อน (`INSTALL_FAILED_UPDATE_INCOMPATIBLE` เพราะเซ็นคนละกุญแจ)
+>   การถอนจะลบการวิ่งที่ยังไม่ได้ซิงก์ ให้ **ซิงก์** หรือ **ตั้งค่า → ส่งออกประวัติการวิ่ง** ก่อน แล้วใช้ **นำเข้าจากไฟล์สำรอง** ในแอปใหม่
+> - เปิดแอปครั้งแรกหลังเซิร์ฟเวอร์ว่าง 15 นาที จะขึ้น "เซิร์ฟเวอร์กำลังตื่น" รอไม่เกิน 1 นาที
+
+---
+
+## Build APK สำหรับติดตั้งจริง
+
+release build เซ็นด้วยกุญแจที่ระบุใน `keystore.properties` ที่ราก repo (ไฟล์นี้และ keystore ไม่ถูกเก็บใน git)
+
+```bash
+# ครั้งแรก: สร้างกุญแจไว้นอก repo (ใช้ keytool ของ Android Studio)
+"/Applications/Android Studio.app/Contents/jbr/Contents/Home/bin/keytool" -genkeypair \
+  -keystore ~/.android/runtrail-release.jks -storetype PKCS12 -alias runtrail \
+  -keyalg RSA -keysize 2048 -validity 10000
+
+cat > keystore.properties <<EOF
+storeFile=/Users/<you>/.android/runtrail-release.jks
+storePassword=<รหัส>
+keyAlias=runtrail
+keyPassword=<รหัส>
+EOF
+
+./gradlew clean assembleRelease     # → app/build/outputs/apk/release/app-release.apk
+```
+
+- ไม่มี `keystore.properties` → ได้ `app-release-unsigned.apk` (ติดตั้งไม่ได้)
+- เซิร์ฟเวอร์อื่น: `./gradlew assembleRelease -PreleaseApiUrl=https://<url>`
+- **สำรอง keystore และรหัสไว้** ถ้าหาย APK รุ่นถัดไปจะอัปเดตทับแอปเดิมไม่ได้ ต้องถอนแล้วลงใหม่
 
 ---
 
@@ -48,7 +92,8 @@ curl localhost:8080/readyz  # ควรได้ {"db":"ok","storage":"ok"}
 
 | อุปกรณ์ | ที่อยู่ |
 |---|---|
-| Emulator | `http://10.0.2.2:8080` (ค่าเริ่มต้น) |
+| เซิร์ฟเวอร์จริง | `https://runtrail-api.onrender.com` (ค่าเริ่มต้นของ release) |
+| Emulator | `http://10.0.2.2:8080` (ค่าเริ่มต้นของ debug) |
 | มือถือจริง (Wi-Fi เดียวกัน) | `http://<IP ของเครื่อง>:8080` ดู IP ด้วย `ipconfig getifaddr en0` |
 
 > [!TIP]
@@ -85,6 +130,12 @@ adb emu geo fix 100.5386 13.7293 5
 | แอป · บนเครื่อง (41 ข้อ) | `./gradlew connectedDebugAndroidTest -Pe2eApiUrl=http://10.0.2.2:8080` |
 | Backend | `cd backend && make test` |
 | Backend · smoke (29 ข้อ) | `cd backend && make smoke` |
+| ระบบจริง · smoke (29 ข้อ) | `cd backend && make deploy-check URL=https://runtrail-api.onrender.com` |
+| แอป · end-to-end กับระบบจริง | `./gradlew connectedDebugAndroidTest -Pe2eApiUrl=https://runtrail-api.onrender.com` |
+
+> [!NOTE]
+> end-to-end test สมัครบัญชีทดสอบใหม่ทุกข้อ ถ้ารันกับระบบจริงหลายชุดติดกันอาจเจอ rate limit
+> (สมัคร/ล็อกอินได้ 10 ครั้งต่อนาทีต่อ IP) ให้รันทีละ class หรือเว้น 1 นาที
 
 ### แต่ละชุดตรวจอะไร
 

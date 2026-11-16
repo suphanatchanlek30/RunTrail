@@ -1,5 +1,10 @@
 # RunTrail — แผนระบบ Backend + Database + การเชื่อมแอป
 
+> [!NOTE]
+> **เอกสารนี้คือบันทึกแผนช่วงพัฒนา** เก็บไว้เพื่อแสดงเหตุผลการออกแบบ บางส่วนเปลี่ยนไปตอนลงมือ
+> (เช่น RustFS แทน MinIO และขึ้นระบบจริงด้วย Render + Neon แทน AWS/Terraform)
+> สถานะปัจจุบันดูที่ [ARCHITECTURE.md](ARCHITECTURE.md) และ [DEPLOY_RENDER.md](DEPLOY_RENDER.md)
+
 > สถานะ: **แผน (ยังไม่ลงมือ)** · เขียนเมื่อ 10 พ.ย. 2026
 > Frontend: Kotlin + XML + ViewBinding (ตามที่อาจารย์อนุญาต — โปรเจคตอนนี้เป็นแบบนี้อยู่แล้ว 100%)
 > Backend: Go + Fiber v3 (ล่าสุด v3.7.0) · PostgreSQL · S3 (MinIO ตอนรันในเครื่อง) · Docker · Terraform บน AWS

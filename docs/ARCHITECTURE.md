@@ -14,11 +14,22 @@
 flowchart LR
     App["แอป Android"] --> Local[("SQLite<br/>ใช้ได้ออฟไลน์")]
     App -- "HTTPS /api/v1" --> API["Backend Go"]
-    API --> PG[("PostgreSQL")]
-    API --> S3[("S3<br/>รูปภาพ")]
-    App -. "อัปโหลดรูปตรง" .-> S3
+    API --> PG[("PostgreSQL 17")]
+    API -- "เซ็น presigned URL" --> S3[("S3<br/>รูปภาพ")]
+    App -. "อัปโหลด/โหลดรูปตรง" .-> S3
     Web["เบราว์เซอร์"] -- "/s/{code}" --> API
 ```
+
+### ที่รันจริงกับที่รันในเครื่อง
+
+โค้ดและ Docker image ชุดเดียวกัน ต่างกันแค่ env
+
+| ส่วน | ระบบจริง ([DEPLOY_RENDER.md](DEPLOY_RENDER.md)) | ในเครื่อง (`backend/docker-compose.yml`) |
+|---|---|---|
+| Backend Go | Render Web Service (Free, Singapore) · `https://runtrail-api.onrender.com` | container `api` · `http://<IP>:8080` |
+| PostgreSQL | Neon (Postgres 17, `aws-ap-southeast-1`) | container `db` (postgres:17-alpine) |
+| ที่เก็บรูป (S3) | Neon Object Storage · bucket `runtrail-photos` | container `s3` (RustFS) |
+| แอปที่ใช้ | release APK (ค่าเริ่มต้นชี้ Render) | debug build (ค่าเริ่มต้น `http://10.0.2.2:8080`) |
 
 ### ภายในแอป
 
@@ -71,9 +82,9 @@ flowchart TB
 |---|---|
 | ภาษา / Framework | Go 1.27 · Fiber v3 |
 | ฐานข้อมูล | PostgreSQL 17 · pgx v5 · goose (migration ฝังใน binary) |
-| เก็บไฟล์ | S3 API (aws-sdk-go-v2) · RustFS ในเครื่อง · S3 หรือ Cloudflare R2 ตอนขึ้นจริง |
+| เก็บไฟล์ | S3 API (aws-sdk-go-v2, path-style, presigned URL) · RustFS ในเครื่อง · Neon Object Storage ตอนใช้จริง |
 | ความปลอดภัย | argon2id · JWT (HS256) · refresh token แบบหมุนเวียน · rate limit |
-| รันระบบ | Docker multi-stage (distroless) · Docker Compose · Makefile |
+| รันระบบ | Docker multi-stage (distroless) · Docker Compose · Makefile · Render Blueprint (`render.yaml`) |
 | ทดสอบ | `go test` + testcontainers (PostgreSQL จริง) · `scripts/smoke.sh` |
 
 ---

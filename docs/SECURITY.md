@@ -24,7 +24,9 @@
 
 - ที่เก็บรูปไม่เปิดสาธารณะ เข้าถึงผ่านลิงก์ชั่วคราว (presigned URL) เท่านั้น
 - build ที่ใช้จริงต่อเซิร์ฟเวอร์ผ่าน HTTPS เท่านั้น HTTP อนุญาตเฉพาะ build debug
-- ไฟล์ลับ (`.env`, key, keystore) ไม่ถูกเก็บใน git
+- จำกัดความถี่ต่อ IP: สมัคร/ล็อกอิน 10 ครั้ง/นาที · หน้าแชร์สาธารณะ 60 ครั้ง/นาที
+  บน Render ใช้ IP จริงจาก `X-Forwarded-For` เฉพาะที่ proxy ใน private network เติม ผู้ใช้ปลอม header เพื่อหลบไม่ได้
+- ไฟล์ลับ (`.env`, `.env.local`, key, `keystore.properties`, keystore) ไม่ถูกเก็บใน git · release APK เซ็นด้วยกุญแจที่เก็บนอก repo
 
 ---
 
